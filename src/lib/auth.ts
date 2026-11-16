@@ -17,8 +17,12 @@ export const googleEnabled = Boolean(googleClientId && googleClientSecret);
  * production domains plus this project's own preview deployments.
  */
 const ALLOWED_HOSTS = [
+  // milliongoats.mn redirects (308) to www; kept in case the redirect changes.
   "milliongoats.mn",
   "www.milliongoats.mn",
+  // Production alias Vercel assigns to the project.
+  "million-goats-seven.vercel.app",
+  // Preview deployments and branch URLs of this project.
   "million-goats-*-nasaavercels-projects.vercel.app",
 ];
 
