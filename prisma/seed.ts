@@ -1,4 +1,5 @@
-// Seeds the Trading Lab (4 rooms × 25 seats) that /lab books through QPay.
+// Seeds the Trading Lab (4 rooms × 25 seats) that /lab books through QPay and
+// the merch shop's T-shirt with its sizes (/merch).
 // Run: pnpm db:seed (idempotent — re-running keeps existing seats and orders).
 import "dotenv/config";
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -43,8 +44,33 @@ async function seedLab() {
   console.log(`Event "${event.title}" ready (${count} new seats).`);
 }
 
+/** Merch: the T-shirt, priced in MNT (₮). */
+const MERCH = {
+  slug: "traders-dept-tee",
+  name: "Traders Dept. футболк",
+  description:
+    "Million Goats-ын “Traders Dept.” хар футболк. Урд талд лого, ар талд Traders Dept. бичиг болон ямааны дүрс.",
+  priceMnt: 99_000,
+  imagePath: "/merch/traders-dept-tee.jpg",
+};
+const MERCH_SIZES = ["S", "M", "L", "XL", "XXL"];
+
+async function seedMerch() {
+  const product = await prisma.product.upsert({
+    where: { slug: MERCH.slug },
+    update: {},
+    create: MERCH,
+  });
+  const { count } = await prisma.productVariant.createMany({
+    data: MERCH_SIZES.map((size, i) => ({ productId: product.id, size, sortOrder: i })),
+    skipDuplicates: true,
+  });
+  console.log(`Product "${product.name}" ready (${count} new sizes).`);
+}
+
 async function main() {
   await seedLab();
+  await seedMerch();
 }
 
 main()

@@ -3,6 +3,7 @@
 export const navLinks = [
   { href: "/#about", label: "Бидний тухай" },
   { href: "/lab", label: "Trading Lab" },
+  { href: "/merch", label: "Merch" },
 ] as const;
 
 // TODO: add real profile URLs; entries without an href render as plain text.

@@ -44,14 +44,29 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   const order = await getOrderForUser(id, session.user.id);
   if (!order) notFound();
 
+  const merch = order.kind === "MERCH";
   const summary = (
     <div className="flex flex-col gap-4 rounded-[20px] border border-mg-line bg-white p-6">
-      <div className="flex flex-col gap-1">
-        <span className="text-mg-muted text-sm">{formatEventDate(order.event.startsAt)}</span>
-        <h2 className="m-0 font-bold text-xl">{order.event.title}</h2>
-        <span className="text-mg-muted text-sm">{order.event.venue}</span>
-      </div>
-      <SeatChips labels={order.seatLabels} />
+      {merch ? (
+        <div className="flex flex-col gap-3">
+          <h2 className="m-0 font-bold text-xl">{order.itemLabel}</h2>
+          <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            <dt className="text-mg-muted">Утас</dt>
+            <dd className="m-0">{order.contactPhone}</dd>
+          </dl>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-1">
+            <span className="text-mg-muted text-sm">
+              {formatEventDate(order.event?.startsAt ?? null)}
+            </span>
+            <h2 className="m-0 font-bold text-xl">{order.event?.title}</h2>
+            <span className="text-mg-muted text-sm">{order.event?.venue}</span>
+          </div>
+          <SeatChips labels={order.seatLabels} />
+        </>
+      )}
       <div className="flex items-center justify-between border-mg-line border-t pt-4">
         <span className="text-mg-body">Нийт дүн</span>
         <span className="font-bold text-2xl">{formatMnt(order.amountMnt)}</span>
@@ -78,10 +93,12 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
             </svg>
           </span>
           <h1 className="m-0 font-black text-[clamp(28px,4vw,44px)] uppercase leading-tight">
-            Суудал баталгаажлаа
+            {merch ? "Захиалга баталгаажлаа" : "Суудал баталгаажлаа"}
           </h1>
           <p className="m-0 text-white/80">
-            Төлбөр амжилттай. Эвентийн өдөр бүртгэлийн имэйл болон суудлын дугаараа хэлээрэй.
+            {merch
+              ? `Төлбөр амжилттай. Захиалгын талаар ${order.contactPhone} дугаарт холбогдоно.`
+              : "Төлбөр амжилттай. Суудал таны бүртгэл дээр баталгаажлаа."}
           </p>
         </div>
         {summary}
@@ -95,9 +112,9 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   if (order.status !== "PENDING") {
     const message =
       order.status === "REFUND_REQUIRED"
-        ? `Төлбөр орж ирсэн ч суудлын хугацаа дууссан тул өөр хүнд шилжсэн байна. Буцаан олголтын талаар ${site.contact.email} хаягаар холбогдоно уу.`
+        ? `Төлбөр орж ирсэн ч хугацаа дууссан тул суудал өөр хүнд шилжсэн байна. Буцаан олголтын талаар ${site.contact.email} хаягаар холбогдоно уу.`
         : order.status === "EXPIRED"
-          ? "Төлбөрийн хугацаа дууссан тул суудлууд чөлөөлөгдлөө."
+          ? `Төлбөрийн хугацаа дууссан тул ${merch ? "захиалга цуцлагдлаа" : "суудлууд чөлөөлөгдлөө"}.`
           : "Захиалга цуцлагдсан.";
     return (
       <div className="flex flex-col gap-6">
@@ -109,10 +126,10 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         </div>
         {summary}
         <Link
-          href="/lab"
+          href={merch ? "/merch" : "/lab"}
           className="inline-flex min-h-12 items-center self-start rounded-[10px] bg-mg-blue px-5 font-semibold text-white"
         >
-          Дахин суудал сонгох
+          {merch ? "Дахин захиалах" : "Дахин суудал сонгох"}
         </Link>
       </div>
     );
