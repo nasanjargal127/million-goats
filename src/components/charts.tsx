@@ -1,5 +1,4 @@
-import { makeCandles, makeSparkline } from "@/lib/chart";
-import type { Bias } from "@/lib/content";
+import { makeCandles } from "@/lib/chart";
 
 const W = 520;
 const H = 260;
@@ -67,47 +66,6 @@ export function CandleChart({
           </g>
         );
       })}
-    </svg>
-  );
-}
-
-const trendByBias: Record<Bias, number> = { bullish: 0.35, bearish: -0.35, neutral: 0.02 };
-
-const biasColors: Record<Bias, { dark: string; light: string }> = {
-  bullish: { dark: "#00FFCE", light: "#00B492" },
-  bearish: { dark: "#FF3600", light: "#FF3600" },
-  neutral: { dark: "#55A2FF", light: "#0068FF" },
-};
-
-/** Illustrative sparkline with a soft area fill. */
-export function Sparkline({
-  bias,
-  seed,
-  tone = "dark",
-  className = "h-24",
-}: {
-  bias: Bias;
-  seed: number;
-  tone?: "dark" | "light";
-  className?: string;
-}) {
-  const { line, area } = makeSparkline({
-    count: 40,
-    width: 320,
-    height: 96,
-    seed,
-    trend: trendByBias[bias],
-  });
-  const color = biasColors[bias][tone];
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 320 96"
-      preserveAspectRatio="none"
-      className={`block w-full ${className}`}
-    >
-      <path d={area} fill={color} fillOpacity={tone === "dark" ? 0.14 : 0.1} />
-      <path d={line} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

@@ -51,10 +51,10 @@ async function AccountView() {
           <div className="flex flex-col items-start gap-3 rounded-[20px] border border-mg-line bg-white p-8">
             <p className="m-0 text-mg-body">Одоогоор захиалга алга.</p>
             <Link
-              href="/events"
+              href="/lab"
               className="inline-flex min-h-12 items-center rounded-[10px] bg-mg-blue px-5 font-semibold text-white"
             >
-              Эвент үзэх
+              Trading Lab үзэх
             </Link>
           </div>
         ) : (

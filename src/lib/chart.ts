@@ -63,29 +63,3 @@ export function makeCandles(opts: {
   });
   return { candles, bodyWidth: step * 0.56 };
 }
-
-export function makeSparkline(opts: {
-  count: number;
-  width: number;
-  height: number;
-  seed: number;
-  trend: number;
-}): { line: string; area: string } {
-  const { count, width, height, seed, trend } = opts;
-  const rand = mulberry32(seed);
-  const values: number[] = [];
-  let v = 0;
-  for (let i = 0; i < count; i++) {
-    v += gaussian(rand, trend, 1);
-    values.push(v);
-  }
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const points = values.map((val, i) => {
-    const px = (i * width) / (count - 1);
-    const py = 4 + ((max - val) / (max - min || 1)) * (height - 8);
-    return `${px.toFixed(1)} ${py.toFixed(1)}`;
-  });
-  const line = `M${points.join(" L")}`;
-  return { line, area: `${line} L${width} ${height} L0 ${height} Z` };
-}

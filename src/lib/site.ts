@@ -13,8 +13,8 @@ export const site = {
   shortName: "Million Goats",
   tagline: "One community. A million goals.",
   description:
-    "Million Goats — шинэ үеийн трейдерүүдийн хамт олон. Live техник шинжилгээ, өдрийн чарт, сургалт ба менторшип.",
-  keywords: ["Million Goats", "трейдинг", "техник шинжилгээ", "Forex", "трейдерүүдийн хамт олон"],
+    "Million Goats — шинэ үеийн трейдерүүдийн хамт олон. Trading Lab: 4 танхим, 100 суудал, QPay-ээр захиалга.",
+  keywords: ["Million Goats", "трейдинг", "Trading Lab", "Forex", "трейдерүүдийн хамт олон"],
   url: resolveSiteUrl().replace(/\/$/, ""),
   locale: "mn_MN",
   colors: {

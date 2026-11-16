@@ -5,9 +5,9 @@ import { ArrowRight, HighlightTitle, LiveDot } from "../brand";
 import { CandleChart } from "../charts";
 
 const highlights = [
-  { label: "Live техник шинжилгээ", dot: "bg-mg-mint" },
-  { label: "Өдрийн чарт", dot: "bg-mg-sky" },
-  { label: "Сургалт ба менторшип", dot: "bg-mg-orange" },
+  { label: "Trading Lab", dot: "bg-mg-mint" },
+  { label: "4 танхим · 100 суудал", dot: "bg-mg-sky" },
+  { label: "QPay-ээр захиалга", dot: "bg-mg-orange" },
 ];
 
 export function Hero() {
@@ -51,17 +51,17 @@ export function Hero() {
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
-              href="/#join"
+              href="/lab"
               className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-mg-blue px-7 py-4 font-semibold text-[17px] text-white transition hover:brightness-110"
             >
               Хамт олонд нэгдэх
               <ArrowRight />
             </Link>
             <Link
-              href="/analysis"
+              href="/#about"
               className="inline-flex items-center justify-center rounded-xl border border-white/40 px-6.5 py-4 font-semibold text-[17px] text-white transition hover:border-white"
             >
-              Өнөөдрийн шинжилгээ
+              Бидний тухай
             </Link>
           </div>
           <ul className="m-0 flex list-none flex-wrap gap-x-7 gap-y-3 p-0 text-[15px] text-white/80">
