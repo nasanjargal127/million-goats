@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { navLinks } from "@/lib/content";
 import { site } from "@/lib/site";
 import { MobileMenu } from "./mobile-menu";
+import { UserNav, UserNavFallback } from "./user-nav";
 
 export function SiteHeader({ current }: { current?: string }) {
   return (
@@ -20,7 +22,7 @@ export function SiteHeader({ current }: { current?: string }) {
         </Link>
 
         <nav aria-label="Үндсэн цэс" className="hidden lg:block">
-          <ul className="m-0 flex list-none gap-7 p-0 font-medium text-[15px]">
+          <ul className="m-0 flex list-none gap-5 whitespace-nowrap p-0 font-medium text-[15px] xl:gap-7">
             {navLinks.map((l) => (
               <li key={l.href}>
                 <Link
@@ -36,12 +38,9 @@ export function SiteHeader({ current }: { current?: string }) {
         </nav>
 
         <div className="flex items-center gap-2 lg:gap-3">
-          <Link
-            href="/#join"
-            className="rounded-[10px] bg-mg-blue px-4 py-3 font-semibold text-sm text-white transition hover:brightness-110 lg:px-5.5 lg:text-[15px]"
-          >
-            Нэгдэх
-          </Link>
+          <Suspense fallback={<UserNavFallback />}>
+            <UserNav />
+          </Suspense>
           <MobileMenu current={current} />
         </div>
       </div>

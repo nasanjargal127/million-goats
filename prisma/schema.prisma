@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Better Auth (generated with @better-auth/cli, keep in sync) ───────────
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  orders        Order[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ─── Events, seats and QPay orders ─────────────────────────────────────────
+
+model Event {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  venue       String
+  startsAt    DateTime
+  /// Price of one seat in MNT (₮).
+  priceMnt    Int
+  /// Seat map layout: rows are lettered A, B, C…; seats numbered 1…seatsPerRow.
+  rowCount    Int
+  seatsPerRow Int
+  /// Draw an aisle after this seat number (e.g. 6 → gap between 6 and 7).
+  aisleAfter  Int?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  seats       Seat[]
+  orders      Order[]
+
+  @@map("event")
+}
+
+enum SeatStatus {
+  AVAILABLE
+  /// Held for a pending order until heldUntil; free again afterwards.
+  HELD
+  SOLD
+}
+
+model Seat {
+  id        String     @id @default(cuid())
+  eventId   String
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  row       String
+  number    Int
+  status    SeatStatus @default(AVAILABLE)
+  heldUntil DateTime?
+  orderId   String?
+  order     Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, row, number])
+  @@index([orderId])
+  @@map("seat")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
+  CANCELLED
+  /// Paid after the hold expired and the seats went to someone else: refund manually.
+  REFUND_REQUIRED
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId       String
+  event         Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status        OrderStatus @default(PENDING)
+  amountMnt     Int
+  /// Snapshot of the seat labels, e.g. ["B-5", "B-6"].
+  seatLabels    String[]
+  expiresAt     DateTime
+  qpayInvoiceId String?     @unique
+  qpayQrText    String?
+  qpayQrImage   String?
+  qpayShortUrl  String?
+  /// Bank app deep links returned by QPay: [{ name, description, logo, link }].
+  qpayUrls      Json?
+  qpayPaymentId String?
+  checkedAt     DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  seats         Seat[]
+
+  @@index([userId])
+  @@index([eventId])
+  @@map("order")
+}

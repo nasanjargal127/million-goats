@@ -6,6 +6,7 @@ export const navLinks = [
   { href: "/#services", label: "Сургалт" },
   { href: "/analysis", label: "Шинжилгээ" },
   { href: "/lab", label: "Trading Lab" },
+  { href: "/events", label: "Эвент" },
   { href: "/#live", label: "Live" },
   { href: "/#join", label: "Хамт олон" },
 ] as const;
