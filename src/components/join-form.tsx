@@ -33,7 +33,7 @@ export function JoinForm() {
       />
       <label className="flex items-start gap-2.5 text-mg-on-dark text-sm leading-normal">
         <input type="checkbox" name="notify" className="mt-0.5 size-4.5 shrink-0 accent-mg-blue" />
-        Шинэ шинжилгээ, live хуваарийн мэдэгдэл авах
+        Шинэ мэдээ, Trading Lab-ийн мэдээллийг имэйлээр авах
       </label>
       <button
         type="submit"

@@ -109,7 +109,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         </div>
         {summary}
         <Link
-          href={`/events/${order.event.slug}`}
+          href="/lab"
           className="inline-flex min-h-12 items-center self-start rounded-[10px] bg-mg-blue px-5 font-semibold text-white"
         >
           Дахин суудал сонгох

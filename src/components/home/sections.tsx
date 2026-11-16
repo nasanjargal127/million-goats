@@ -1,13 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { analyses, liveSessions, type ServiceIcon, services } from "@/lib/content";
 import { site } from "@/lib/site";
-import { AnalysisCard } from "../analysis-card";
-import { ChevronStrip, Eyebrow, HighlightTitle, LiveDot } from "../brand";
+import { ArrowRight, ChevronStrip, Eyebrow, HighlightTitle } from "../brand";
 import { JoinForm } from "../join-form";
 
 const sectionPad = "px-4 py-20 sm:px-[clamp(16px,4vw,64px)] lg:py-30";
-const h2 = "m-0 font-black text-[clamp(30px,4vw,52px)] uppercase leading-[1.05]";
 
 export function Manifesto() {
   return (
@@ -51,209 +48,54 @@ export function Manifesto() {
   );
 }
 
-const iconStyles: Record<ServiceIcon, { bg: string; stroke: string }> = {
-  live: { bg: "bg-mg-blue", stroke: "#FFFFFF" },
-  chart: { bg: "bg-mg-navy", stroke: "#00FFCE" },
-  education: { bg: "bg-mg-orange", stroke: "#010D26" },
-  community: { bg: "bg-mg-sky", stroke: "#010D26" },
-};
+const labRooms = ["Tokyo", "London", "New York", "Sydney"];
 
-function ServiceGlyph({ icon }: { icon: ServiceIcon }) {
-  const s = iconStyles[icon];
+/** Short Trading Lab promo between the about and join sections. */
+export function LabTeaser() {
   return (
-    <span
-      aria-hidden="true"
-      className={`flex size-13 items-center justify-center rounded-[14px] ${s.bg}`}
-    >
-      <svg
+    <section id="lab" className={`relative overflow-hidden bg-mg-navy text-white ${sectionPad}`}>
+      <div
         aria-hidden="true"
-        className="size-6.5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={s.stroke}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {icon === "live" && (
-          <>
-            <circle cx="12" cy="12" r="2" />
-            <path d="M16.24 7.76a6 6 0 0 1 0 8.48" />
-            <path d="M7.76 16.24a6 6 0 0 1 0-8.48" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-            <path d="M4.93 19.07a10 10 0 0 1 0-14.14" />
-          </>
-        )}
-        {icon === "chart" && (
-          <>
-            <path d="M6 3v4" />
-            <rect x="4" y="7" width="4" height="8" />
-            <path d="M6 15v6" />
-            <path d="M14 2v4" />
-            <rect x="12" y="6" width="4" height="6" />
-            <path d="M14 12v4" />
-            <path d="M20 6v3" />
-            <rect x="18" y="9" width="4" height="8" stroke="#FF3600" />
-            <path d="M20 17v3" />
-          </>
-        )}
-        {icon === "education" && (
-          <>
-            <path d="M22 10L12 5 2 10l10 5 10-5z" />
-            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-          </>
-        )}
-        {icon === "community" && (
-          <>
-            <circle cx="9" cy="8" r="3.5" />
-            <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" />
-            <circle cx="17" cy="9" r="2.5" />
-            <path d="M17 14c2.6 0 4.5 1.9 4.5 4.5" />
-          </>
-        )}
-      </svg>
-    </span>
-  );
-}
-
-export function Services() {
-  return (
-    <section id="services" className={`bg-white ${sectionPad}`}>
-      <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:gap-14">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <Eyebrow className="text-mg-orange-text">Сэдэв:</Eyebrow>
-            <h2 className={h2}>Бид юу хийдэг вэ?</h2>
-          </div>
-          <p className="m-0 max-w-110 text-[17px] text-mg-body leading-relaxed">
-            Зах зээлийг ойлгох, сахилга баттай арилжаа хийх, хамтдаа өсөхөд хэрэгтэй бүхнийг нэг
-            дор.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-5">
-          {services.map((s, i) => (
-            <article
-              key={s.title}
-              className="flex min-w-0 flex-[1_1_260px] flex-col gap-4.5 rounded-[20px] border border-mg-line bg-white px-7 py-8 transition-colors hover:border-mg-blue"
-            >
-              <div className="flex items-center justify-between">
-                <ServiceGlyph icon={s.icon} />
-                <span className="font-bold text-[#6B768C] text-sm">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-              </div>
-              <h3 className="m-0 font-bold text-[22px]">{s.title}</h3>
-              <p className="m-0 text-base text-mg-body leading-relaxed">{s.body}</p>
-              <Link
-                href={s.href}
-                className="mt-auto font-semibold text-[15px] text-mg-link hover:text-mg-navy"
-              >
-                {s.cta} →
-              </Link>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function LiveSessions() {
-  return (
-    <section id="live" className={`bg-mg-surface ${sectionPad}`}>
-      <div className="mx-auto flex max-w-7xl flex-wrap gap-12">
-        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-8">
-          <div>
-            <Eyebrow className="inline-flex items-center gap-2 text-mg-orange-text">
-              <LiveDot />
-              Live
-            </Eyebrow>
-            <h2 className={h2}>Дараагийн дамжуулалт</h2>
-          </div>
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
-            {liveSessions.map((s, i) => (
-              <li
-                key={s.title}
-                className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-2xl bg-white px-6 py-5"
-              >
-                <div className="flex size-19 flex-col items-center justify-center gap-0.5 rounded-[14px] bg-mg-navy text-white">
-                  <span className="font-semibold text-mg-sky text-xs tracking-[0.08em]">
-                    {s.month}
-                  </span>
-                  <span className="font-extrabold text-[26px]">{s.day}</span>
-                </div>
-                <div className="min-w-0 flex-[1_1_260px]">
-                  <h3 className="m-0 mb-1.5 font-bold text-xl">{s.title}</h3>
-                  <p className="m-0 text-[15px] text-mg-muted">{s.meta}</p>
-                </div>
-                {/* TODO: wire reminders (calendar file or notification sign-up). */}
-                <Link
-                  href="/#join"
-                  className={`inline-flex min-h-12 items-center rounded-[10px] px-5.5 font-semibold text-[15px] transition ${
-                    i === 0
-                      ? "bg-mg-blue text-white hover:brightness-110"
-                      : "border border-mg-blue bg-white text-mg-link hover:bg-mg-surface"
-                  }`}
-                >
-                  Сануулах
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <aside className="relative flex min-h-130 min-w-0 flex-[1_1_380px] flex-col justify-end overflow-hidden rounded-3xl bg-mg-blue text-white">
-          <div
-            aria-hidden="true"
-            className="absolute top-[8%] left-[8%] h-[30%] w-[84%] bg-linear-to-r from-white to-white/40 [clip-path:polygon(0_0,30%_0,50%_45%,70%_0,100%_0,65%_100%,35%_100%)]"
+        className="absolute top-0 -right-40 h-full w-190 bg-linear-to-r from-mg-blue/0 to-mg-blue/50 [clip-path:polygon(50%_0,100%_0,50%_100%,0_100%)]"
+      />
+      <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-12">
+        <div className="flex min-w-0 flex-[1_1_480px] flex-col gap-6">
+          <Eyebrow className="text-mg-mint">Trading Lab</Eyebrow>
+          <HighlightTitle
+            className="text-[clamp(34px,4.6vw,64px)]"
+            lines={[
+              { text: "Мэргэжлийн", className: "bg-white text-mg-navy" },
+              {
+                text: "трейдерүүдийн танхим",
+                className: "bg-mg-orange text-mg-navy",
+                indent: true,
+              },
+            ]}
           />
-          {/* TODO: replace with the host's photo (next/image). */}
-          <div className="absolute inset-[14%_14%_34%_14%] flex items-center justify-center rounded-2xl border-2 border-white/55 border-dashed bg-mg-navy/25 text-sm">
-            Хөтлөгчийн зураг
-          </div>
-          <div className="relative flex flex-col gap-2.5 rounded-t-[28px] rounded-b-3xl bg-mg-navy p-7">
-            <div className="flex items-center justify-between gap-3">
-              <p className="m-0 text-mg-on-dark-muted text-[13px]">[ОГНОО] · [ЦАГ] (GMT+8)</p>
-              <Image
-                src={site.logos.symbolOnDark}
-                alt=""
-                width={512}
-                height={308}
-                className="h-4.5 w-auto"
-              />
-            </div>
-            <p className="m-0 text-[26px] text-mg-sky leading-tight">
-              Live technical analysis with Niju Trader
-            </p>
-            <p className="m-0 text-mg-on-dark-muted text-[13px]">{site.contact.web}</p>
-          </div>
-        </aside>
-      </div>
-    </section>
-  );
-}
-
-export function AnalysisPreview() {
-  return (
-    <section className={`bg-mg-navy text-white ${sectionPad}`}>
-      <div className="mx-auto flex max-w-7xl flex-col gap-12">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <Eyebrow className="text-mg-mint">Daily chart</Eyebrow>
-            <h2 className={h2}>Өдрийн шинжилгээ</h2>
-          </div>
+          <p className="m-0 max-w-140 text-lg text-white/80 leading-relaxed">
+            4 танхим, 100 суудал. 3D танхимаас суудлаа сонгоод QPay-ээр төлж баталгаажуулаарай.
+          </p>
           <Link
-            href="/analysis"
-            className="py-3 font-semibold text-base text-mg-sky hover:text-mg-mint"
+            href="/lab"
+            className="inline-flex items-center gap-2.5 self-start rounded-xl bg-mg-blue px-7 py-4 font-semibold text-[17px] text-white transition hover:brightness-110"
           >
-            Бүгдийг харах →
+            Суудал сонгох
+            <ArrowRight />
           </Link>
         </div>
-        <div className="flex flex-wrap gap-5">
-          {analyses.slice(0, 3).map((a) => (
-            <AnalysisCard key={a.id} analysis={a} />
+        <ul className="m-0 grid min-w-0 flex-[1_1_320px] list-none grid-cols-2 gap-3 p-0">
+          {labRooms.map((room) => (
+            <li key={room}>
+              <Link
+                href="/lab"
+                className="flex min-h-28 flex-col justify-between rounded-2xl border border-white/15 bg-white/5 p-5 transition hover:border-mg-blue hover:bg-mg-blue/15"
+              >
+                <span className="font-black text-xl uppercase">{room}</span>
+                <span className="text-mg-mint text-sm">25 суудал</span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
@@ -283,8 +125,8 @@ export function Join() {
             ]}
           />
           <p className="m-0 max-w-130 text-lg leading-relaxed lg:text-[19px]">
-            Million Goats хамт олонд нэгдэж, шинжилгээ, live дамжуулалт, сургалтын мэдээллийг
-            хамгийн түрүүнд аваарай.
+            Million Goats хамт олонд нэгдэж, Trading Lab болон хамт олны шинэ мэдээллийг хамгийн
+            түрүүнд аваарай.
           </p>
         </div>
         <JoinForm />

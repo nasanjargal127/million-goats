@@ -1,12 +1,6 @@
 import { ChevronStrip } from "@/components/brand";
 import { Hero } from "@/components/home/hero";
-import {
-  AnalysisPreview,
-  Join,
-  LiveSessions,
-  Manifesto,
-  Services,
-} from "@/components/home/sections";
+import { Join, LabTeaser, Manifesto } from "@/components/home/sections";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -18,9 +12,7 @@ export default function Home() {
         <Hero />
         <ChevronStrip id="mg-chevron-hero" />
         <Manifesto />
-        <Services />
-        <LiveSessions />
-        <AnalysisPreview />
+        <LabTeaser />
         <Join />
       </main>
       <SiteFooter />

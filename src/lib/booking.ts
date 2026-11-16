@@ -7,7 +7,7 @@ import { site } from "./site";
 
 /** How long selected seats stay reserved while the visitor pays. */
 export const HOLD_MINUTES = 15;
-export const MAX_SEATS_PER_ORDER = 6;
+const MAX_SEATS_PER_ORDER = 6;
 /** Don't ask QPay about the same order more often than this. */
 const CHECK_INTERVAL_MS = 4_000;
 

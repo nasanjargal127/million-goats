@@ -1,6 +1,4 @@
-// Seeds one SAMPLE event with a seat map so the booking flow can be tried, and
-// the Trading Lab (4 rooms × 25 seats) that /lab books through QPay.
-// Replace the sample event's title, date, venue and price before launch.
+// Seeds the Trading Lab (4 rooms × 25 seats) that /lab books through QPay.
 // Run: pnpm db:seed (idempotent — re-running keeps existing seats and orders).
 import "dotenv/config";
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -10,19 +8,6 @@ import { LAB_EVENT_SLUG, ROOM_IDS, ROOM_NAMES, SEATS_PER_ROOM } from "../src/lib
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is not set");
 const prisma = new PrismaClient({ adapter: new PrismaNeon({ connectionString }) });
-
-const sample = {
-  slug: "trading-seminar",
-  title: "Трейдинг семинар (жишээ)",
-  description:
-    "Техник шинжилгээ, эрсдэлийн менежмент, трейдерийн сэтгэлзүйн талаарх нэг өдрийн семинар. Энэ бол жишээ эвент — бодит мэдээллээр солино уу.",
-  venue: "[ХАЯГ], Улаанбаатар",
-  startsAt: new Date("2026-12-20T02:00:00.000Z"), // 10:00 GMT+8 — sample date
-  priceMnt: 50_000, // sample price
-  rowCount: 8,
-  seatsPerRow: 12,
-  aisleAfter: 6,
-};
 
 /** Price of one Trading Lab seat in MNT (₮). */
 const LAB_PRICE_MNT = 5_400_000;
@@ -59,23 +44,6 @@ async function seedLab() {
 }
 
 async function main() {
-  const event = await prisma.event.upsert({
-    where: { slug: sample.slug },
-    update: {},
-    create: sample,
-  });
-
-  const rows = Array.from({ length: event.rowCount }, (_, i) => String.fromCharCode(65 + i));
-  const seats = rows.flatMap((row) =>
-    Array.from({ length: event.seatsPerRow }, (_, i) => ({
-      eventId: event.id,
-      row,
-      number: i + 1,
-    })),
-  );
-  const { count } = await prisma.seat.createMany({ data: seats, skipDuplicates: true });
-  console.log(`Event "${event.title}" ready (${count} new seats).`);
-
   await seedLab();
 }
 
