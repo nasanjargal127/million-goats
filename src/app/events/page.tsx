@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 async function EventList() {
   await connection();
   const events = await prisma.event.findMany({
-    where: { published: true },
+    where: { published: true, listed: true },
     orderBy: { startsAt: "asc" },
     include: { _count: { select: { seats: { where: { status: "SOLD" } } } } },
   });

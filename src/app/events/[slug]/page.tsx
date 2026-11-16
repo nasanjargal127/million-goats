@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SeatPicker } from "@/components/seat-picker";
 import { SiteFooter } from "@/components/site-footer";
@@ -6,9 +6,12 @@ import { SiteHeader } from "@/components/site-header";
 import { getSession } from "@/lib/auth";
 import { getEventWithSeats, HOLD_MINUTES, MAX_SEATS_PER_ORDER } from "@/lib/booking";
 import { formatEventDate, formatMnt } from "@/lib/format";
+import { LAB_EVENT_SLUG } from "@/lib/lab/seats";
 
 async function EventDetail({ params }: { params: PageProps<"/events/[slug]">["params"] }) {
   const { slug } = await params;
+  // The Trading Lab has its own 3D seat picker.
+  if (slug === LAB_EVENT_SLUG) redirect("/lab");
   const [event, session] = await Promise.all([getEventWithSeats(slug), getSession()]);
   if (!event) notFound();
 

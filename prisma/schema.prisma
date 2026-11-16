@@ -81,7 +81,8 @@ model Event {
   title       String
   description String
   venue       String
-  startsAt    DateTime
+  /// Empty for ongoing offerings such as the Trading Lab.
+  startsAt    DateTime?
   /// Price of one seat in MNT (₮).
   priceMnt    Int
   /// Seat map layout: rows are lettered A, B, C…; seats numbered 1…seatsPerRow.
@@ -90,6 +91,8 @@ model Event {
   /// Draw an aisle after this seat number (e.g. 6 → gap between 6 and 7).
   aisleAfter  Int?
   published   Boolean  @default(true)
+  /// Shown on /events. The Trading Lab is booked from /lab instead.
+  listed      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   seats       Seat[]

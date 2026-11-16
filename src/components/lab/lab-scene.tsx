@@ -210,15 +210,16 @@ function Seats({ chart }: { chart: THREE.Texture }) {
     [],
   );
 
+  const taken = useLab((s) => s.taken);
   const colors = useMemo(
     () =>
       SEATS.map((seat) => {
-        if (seat.sold) return COLOR.sold;
+        if (taken.has(seat.id)) return COLOR.sold;
         if (seat.id === selected) return COLOR.selected;
         if (seat.id === hovered) return COLOR.hover;
         return COLOR.available;
       }),
-    [selected, hovered],
+    [selected, hovered, taken],
   );
 
   useEffect(() => {
@@ -271,12 +272,13 @@ function Room({ id, chart }: { id: RoomId; chart: THREE.Texture }) {
   const active = useLab((s) => s.room === id);
   const lang = useLab((s) => s.lang);
   const setRoom = useLab((s) => s.setRoom);
+  const taken = useLab((s) => s.taken);
   const [hover, setHover] = useState(false);
   const t = DICT[lang];
   const [cx, cz] = ROOM_CENTER[id];
   const lit = active || hover;
   const labelText = ROOM_NAMES[id];
-  const labelSub = `${availableIn(id)}/${SEATS_PER_ROOM} ${t.free}`;
+  const labelSub = `${availableIn(id, taken)}/${SEATS_PER_ROOM} ${t.free}`;
   const label = useMemo(() => makeLabelTexture(labelText, labelSub), [labelText, labelSub]);
   useEffect(() => () => label.dispose(), [label]);
 
