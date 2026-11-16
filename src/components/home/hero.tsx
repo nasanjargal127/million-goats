@@ -51,17 +51,17 @@ export function Hero() {
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
-              href="/#join"
+              href="/lab"
               className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-mg-blue px-7 py-4 font-semibold text-[17px] text-white transition hover:brightness-110"
             >
               Хамт олонд нэгдэх
               <ArrowRight />
             </Link>
             <Link
-              href="/lab"
+              href="/#about"
               className="inline-flex items-center justify-center rounded-xl border border-white/40 px-6.5 py-4 font-semibold text-[17px] text-white transition hover:border-white"
             >
-              Trading Lab үзэх
+              Бидний тухай
             </Link>
           </div>
           <ul className="m-0 flex list-none flex-wrap gap-x-7 gap-y-3 p-0 text-[15px] text-white/80">

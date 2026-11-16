@@ -1,8 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { ArrowRight, ChevronStrip, Eyebrow, HighlightTitle } from "../brand";
-import { JoinForm } from "../join-form";
+import { ArrowRight, Eyebrow, HighlightTitle } from "../brand";
 
 const sectionPad = "px-4 py-20 sm:px-[clamp(16px,4vw,64px)] lg:py-30";
 
@@ -97,41 +96,6 @@ export function LabTeaser() {
           ))}
         </ul>
       </div>
-    </section>
-  );
-}
-
-export function Join() {
-  return (
-    <section
-      id="join"
-      className="relative overflow-hidden bg-mg-blue px-4 pt-20 pb-28 text-white sm:px-[clamp(16px,4vw,64px)] lg:pt-30 lg:pb-38"
-    >
-      <div
-        aria-hidden="true"
-        className="absolute top-0 right-[8%] h-60 w-105 bg-linear-135 from-mg-navy/0 to-mg-orange/90 [clip-path:polygon(0_0,55%_0,100%_100%,45%_100%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute right-[16%] bottom-8 hidden h-50 w-95 bg-linear-to-r from-mg-orange to-mg-orange/20 [clip-path:polygon(0_0,55%_0,100%_100%,45%_100%)] lg:block"
-      />
-      <div className="relative mx-auto flex max-w-7xl flex-wrap items-center gap-12">
-        <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-6">
-          <HighlightTitle
-            className="text-[clamp(40px,5.6vw,80px)]"
-            lines={[
-              { text: "Traders", className: "bg-white text-mg-navy" },
-              { text: "Dept.", className: "bg-white text-mg-navy", indent: true },
-            ]}
-          />
-          <p className="m-0 max-w-130 text-lg leading-relaxed lg:text-[19px]">
-            Million Goats хамт олонд нэгдэж, Trading Lab болон хамт олны шинэ мэдээллийг хамгийн
-            түрүүнд аваарай.
-          </p>
-        </div>
-        <JoinForm />
-      </div>
-      <ChevronStrip id="mg-chevron-join" variant="mixed" className="absolute inset-x-0 bottom-0" />
     </section>
   );
 }
