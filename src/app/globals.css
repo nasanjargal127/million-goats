@@ -1,28 +1,41 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #010d26;
-}
-
+/* Million Goats brand tokens — Visual Guideline v2.0 */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-brand-blue: #0068ff;
-  --color-brand-navy: #010d26;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-mg-blue: #0068ff;
+  --color-mg-navy: #010d26;
+  --color-mg-orange: #ff3600;
+  --color-mg-mint: #00ffce;
+  --color-mg-sky: #55a2ff;
+
+  /* UI neutrals */
+  --color-mg-card: #0a1838;
+  --color-mg-surface: #f2f5fa;
+  --color-mg-line: #dde4f0;
+  --color-mg-body: #3a4660;
+  --color-mg-muted: #4a5670;
+  --color-mg-on-dark: #c3ccdd;
+  --color-mg-on-dark-muted: #a9b4c8;
+
+  /* Accessible text variants on white */
+  --color-mg-link: #0057d9;
+  --color-mg-orange-text: #d42d00;
+  --color-mg-mint-text: #00715c;
+
+  --font-sans: var(--font-rubik);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #010d26;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-mg-navy);
+  font-family: var(--font-rubik), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-mg-sky);
+  outline-offset: 3px;
 }
