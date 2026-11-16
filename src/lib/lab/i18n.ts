@@ -5,7 +5,6 @@ const mn = {
   stats: (rooms: number, seats: number, price: string) =>
     `${rooms} танхим · ${seats} суудал · ${price} / суудал`,
   pickRoom: "Танхимаа сонгоно уу",
-  room: "Танхим",
   seat: "Суудал",
   free: "сул",
   available: "Сул",
@@ -26,7 +25,6 @@ const en: typeof mn = {
   tagline: "A room built for serious traders",
   stats: (rooms, seats, price) => `${rooms} rooms · ${seats} seats · ${price} per seat`,
   pickRoom: "Choose a room",
-  room: "Room",
   seat: "Seat",
   free: "free",
   available: "Available",
@@ -40,7 +38,7 @@ const en: typeof mn = {
   loading: "Loading the 3D lab…",
   noWebgl: "Your device does not support the 3D view. Pick your seat from the map below.",
   message: (room, seat, price) =>
-    `Hello! I would like to book seat ${seat} in Room ${room} of the Trading Lab (${price}).`,
+    `Hello! I would like to book seat ${seat} in the ${room} room of the Trading Lab (${price}).`,
 };
 
 export const DICT: Record<Lang, typeof mn> = { mn, en };

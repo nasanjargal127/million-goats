@@ -1,6 +1,14 @@
 export const ROOM_IDS = ["A", "B", "C", "D"] as const;
 export type RoomId = (typeof ROOM_IDS)[number];
 
+/** Танхимын нэр. Суудлын ID үсгээ хэвээр хадгална: "A-7" = Tokyo-ийн 7-р суудал. */
+export const ROOM_NAMES: Record<RoomId, string> = {
+  A: "Tokyo",
+  B: "London",
+  C: "New York",
+  D: "Sydney",
+};
+
 /** Танхимын хэмжээ (3D нэгжээр, дөрвөлжин). */
 export const ROOM_SIZE = 13;
 
@@ -37,6 +45,7 @@ export const TELEGRAM_URL = "https://t.me/+97695286878";
 /**
  * Зарагдсан суудлууд. Суудал зарагдах бүрд энд ID-г нь нэмнэ.
  * Формат: "<танхим>-<дугаар>", жишээ нь "A-7", "C-25".
+ * A = Tokyo, B = London, C = New York, D = Sydney.
  */
 const SOLD_SEATS: readonly string[] = [];
 

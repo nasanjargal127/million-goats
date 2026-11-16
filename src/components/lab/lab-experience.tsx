@@ -9,6 +9,7 @@ import {
   availableIn,
   PRICE_LABEL,
   ROOM_IDS,
+  ROOM_NAMES,
   ROOM_SIZE,
   type RoomId,
   SEAT_BY_ID,
@@ -78,7 +79,7 @@ function SeatMap({ room }: { room: RoomId }) {
             type="button"
             disabled={seat.sold}
             aria-pressed={isSelected}
-            aria-label={`${t.room} ${seat.room}, ${t.seat} ${seat.number}${seat.sold ? ` (${t.sold})` : ""}`}
+            aria-label={`${ROOM_NAMES[seat.room]}, ${t.seat} ${seat.number}${seat.sold ? ` (${t.sold})` : ""}`}
             onClick={() => pickSeat(seat.id)}
             onPointerEnter={() => !seat.sold && setHovered(seat.id)}
             onPointerLeave={() => setHovered(null)}
@@ -119,7 +120,7 @@ function RoomPanel({ room }: { room: RoomId }) {
   const t = DICT[lang];
   const seat = seatId ? SEAT_BY_ID.get(seatId) : undefined;
   const href = seat
-    ? `${TELEGRAM_URL}?text=${encodeURIComponent(t.message(seat.room, seat.number, PRICE_LABEL))}`
+    ? `${TELEGRAM_URL}?text=${encodeURIComponent(t.message(ROOM_NAMES[seat.room], seat.number, PRICE_LABEL))}`
     : undefined;
 
   return (
@@ -132,9 +133,7 @@ function RoomPanel({ room }: { room: RoomId }) {
         ← {t.back}
       </button>
       <div className="flex items-baseline justify-between">
-        <h2 className="m-0 font-black text-2xl uppercase">
-          {t.room} {room}
-        </h2>
+        <h2 className="m-0 font-black text-2xl uppercase">{ROOM_NAMES[room]}</h2>
         <span className="font-semibold text-mg-mint text-sm">
           {availableIn(room)}/{SEATS_PER_ROOM} {t.free}
         </span>
@@ -153,7 +152,7 @@ function RoomPanel({ room }: { room: RoomId }) {
                 : "border-white/15 text-mg-on-dark hover:border-mg-sky"
             }`}
           >
-            {id}
+            {ROOM_NAMES[id]}
           </button>
         ))}
       </div>
@@ -170,7 +169,7 @@ function RoomPanel({ room }: { room: RoomId }) {
           <>
             <div className="flex items-baseline justify-between">
               <p className="m-0 font-semibold text-base">
-                {t.room} {seat.room} · {t.seat} {seat.number}
+                {ROOM_NAMES[seat.room]} · {t.seat} {seat.number}
               </p>
               <p className="m-0 font-bold text-mg-mint text-xl">{PRICE_LABEL}</p>
             </div>
@@ -226,9 +225,7 @@ function Overview() {
             onClick={() => setRoom(id)}
             className="cursor-pointer rounded-xl border border-white/15 bg-mg-navy/70 px-4 py-3 text-left backdrop-blur transition hover:border-mg-blue hover:bg-mg-blue/20"
           >
-            <span className="block font-bold text-base text-white">
-              {t.room} {id}
-            </span>
+            <span className="block font-bold text-base text-white">{ROOM_NAMES[id]}</span>
             <span className="block text-mg-mint text-xs">
               {availableIn(id)}/{SEATS_PER_ROOM} {t.free}
             </span>

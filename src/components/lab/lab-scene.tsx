@@ -8,6 +8,7 @@ import { DICT } from "@/lib/lab/i18n";
 import {
   availableIn,
   ROOM_IDS,
+  ROOM_NAMES,
   ROOM_SIZE,
   type RoomId,
   SEATS,
@@ -274,7 +275,7 @@ function Room({ id, chart }: { id: RoomId; chart: THREE.Texture }) {
   const t = DICT[lang];
   const [cx, cz] = ROOM_CENTER[id];
   const lit = active || hover;
-  const labelText = `${t.room} ${id}`;
+  const labelText = ROOM_NAMES[id];
   const labelSub = `${availableIn(id)}/${SEATS_PER_ROOM} ${t.free}`;
   const label = useMemo(() => makeLabelTexture(labelText, labelSub), [labelText, labelSub]);
   useEffect(() => () => label.dispose(), [label]);
