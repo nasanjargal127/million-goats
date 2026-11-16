@@ -18,18 +18,13 @@ export async function buyMerchAction(
 
   const variantId = String(form.get("variantId") ?? "");
   const quantity = Number(form.get("quantity"));
-  const fulfillment = form.get("fulfillment") === "PICKUP" ? "PICKUP" : "DELIVERY";
   const phone = String(form.get("phone") ?? "").replace(/[\s-]/g, "");
-  const address = String(form.get("address") ?? "").trim();
 
   if (!variantId) return { error: "Хэмжээгээ сонгоно уу." };
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_MERCH_QUANTITY) {
     return { error: `1–${MAX_MERCH_QUANTITY} ширхэг сонгоно уу.` };
   }
   if (!PHONE.test(phone)) return { error: "Утасны дугаараа зөв оруулна уу." };
-  if (fulfillment === "DELIVERY" && address.length < 5) {
-    return { error: "Хүргэлтийн хаягаа дэлгэрэнгүй оруулна уу." };
-  }
 
   let orderId: string;
   try {
@@ -37,9 +32,7 @@ export async function buyMerchAction(
       userId: session.user.id,
       variantId,
       quantity,
-      fulfillment,
       phone,
-      address: fulfillment === "DELIVERY" ? address.slice(0, 500) : null,
     });
   } catch (error) {
     if (error instanceof BookingError) return { error: error.message };

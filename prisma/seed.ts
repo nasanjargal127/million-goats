@@ -44,8 +44,7 @@ async function seedLab() {
   console.log(`Event "${event.title}" ready (${count} new seats).`);
 }
 
-/** Merch: price of one T-shirt in MNT (₮). Sizes start untracked (unlimited); set
- *  ProductVariant.stock to a number in Prisma Studio to start counting. */
+/** Merch: the T-shirt, priced in MNT (₮). */
 const MERCH = {
   slug: "traders-dept-tee",
   name: "Traders Dept. футболк",

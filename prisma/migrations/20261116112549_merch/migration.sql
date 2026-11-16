@@ -1,13 +1,8 @@
 -- CreateEnum
 CREATE TYPE "OrderKind" AS ENUM ('SEAT', 'MERCH');
 
--- CreateEnum
-CREATE TYPE "Fulfillment" AS ENUM ('DELIVERY', 'PICKUP');
-
 -- AlterTable
 ALTER TABLE "order" ADD COLUMN     "contactPhone" TEXT,
-ADD COLUMN     "deliveryAddress" TEXT,
-ADD COLUMN     "fulfillment" "Fulfillment",
 ADD COLUMN     "itemLabel" TEXT,
 ADD COLUMN     "kind" "OrderKind" NOT NULL DEFAULT 'SEAT',
 ADD COLUMN     "quantity" INTEGER,
@@ -34,7 +29,6 @@ CREATE TABLE "product_variant" (
     "id" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "size" TEXT NOT NULL,
-    "stock" INTEGER,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "product_variant_pkey" PRIMARY KEY ("id")
@@ -51,3 +45,4 @@ ALTER TABLE "order" ADD CONSTRAINT "order_variantId_fkey" FOREIGN KEY ("variantI
 
 -- AddForeignKey
 ALTER TABLE "product_variant" ADD CONSTRAINT "product_variant_productId_fkey" FOREIGN KEY ("productId") REFERENCES "product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

@@ -129,7 +129,7 @@ enum OrderStatus {
   PAID
   EXPIRED
   CANCELLED
-  /// Paid after the hold expired and the seats (or stock) went to someone else: refund manually.
+  /// Paid after the hold expired and the seats went to someone else: refund manually.
   REFUND_REQUIRED
 }
 
@@ -138,44 +138,37 @@ enum OrderKind {
   MERCH
 }
 
-enum Fulfillment {
-  DELIVERY
-  PICKUP
-}
-
 model Order {
-  id              String          @id @default(cuid())
-  userId          String
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind            OrderKind       @default(SEAT)
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          OrderKind       @default(SEAT)
   /// Set for seat orders.
-  eventId         String?
-  event           Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  status          OrderStatus     @default(PENDING)
-  amountMnt       Int
+  eventId       String?
+  event         Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status        OrderStatus     @default(PENDING)
+  amountMnt     Int
   /// Snapshot of the seat labels, e.g. ["B-5", "B-6"].
-  seatLabels      String[]
+  seatLabels    String[]
   /// Merch orders: what was bought, e.g. "Traders Dept. футболк · L × 2".
-  itemLabel       String?
-  variantId       String?
-  variant         ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  quantity        Int?
-  fulfillment     Fulfillment?
-  contactPhone    String?
-  deliveryAddress String?
-  expiresAt       DateTime
-  qpayInvoiceId   String?         @unique
-  qpayQrText      String?
-  qpayQrImage     String?
-  qpayShortUrl    String?
+  itemLabel     String?
+  variantId     String?
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  quantity      Int?
+  contactPhone  String?
+  expiresAt     DateTime
+  qpayInvoiceId String?         @unique
+  qpayQrText    String?
+  qpayQrImage   String?
+  qpayShortUrl  String?
   /// Bank app deep links returned by QPay: [{ name, description, logo, link }].
-  qpayUrls        Json?
-  qpayPaymentId   String?
-  checkedAt       DateTime?
-  paidAt          DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  seats           Seat[]
+  qpayUrls      Json?
+  qpayPaymentId String?
+  checkedAt     DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  seats         Seat[]
 
   @@index([userId])
   @@index([eventId])
@@ -206,8 +199,6 @@ model ProductVariant {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   size      String
-  /// Items left; null = not tracked (unlimited). Reserved when an order is created.
-  stock     Int?
   sortOrder Int     @default(0)
   orders    Order[]
 

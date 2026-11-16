@@ -51,7 +51,7 @@ async function Shop() {
           <p className="m-0 text-mg-body leading-relaxed">{product.description}</p>
         </div>
         <MerchForm
-          sizes={product.variants.map((v) => ({ id: v.id, size: v.size, stock: v.stock }))}
+          sizes={product.variants.map((v) => ({ id: v.id, size: v.size }))}
           priceMnt={product.priceMnt}
           maxQuantity={MAX_MERCH_QUANTITY}
           holdMinutes={HOLD_MINUTES}

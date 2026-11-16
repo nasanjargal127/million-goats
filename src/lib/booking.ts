@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import { cancelInvoice, checkInvoicePayment, createInvoice, qpayConfigured } from "./qpay";
 import { site } from "./site";
 
-/** How long selected seats (or merch stock) stay reserved while the visitor pays. */
+/** How long selected seats stay reserved (and invoices stay open) while the visitor pays. */
 export const HOLD_MINUTES = 15;
 const MAX_SEATS_PER_ORDER = 6;
 /** Don't ask QPay about the same order more often than this. */
@@ -146,7 +146,7 @@ export function assertPaymentAvailable() {
 
 /**
  * Creates the QPay invoice for a freshly created PENDING order and stores it.
- * If QPay fails, the order is cancelled (releasing its seats or stock).
+ * If QPay fails, the order is cancelled (releasing any seats it holds).
  */
 export async function attachInvoice(input: {
   orderId: string;
@@ -181,7 +181,7 @@ export async function attachInvoice(input: {
 
 // ─── Payment status ─────────────────────────────────────────────────────────
 
-/** Ends a PENDING order and gives back what it was holding (seats or merch stock). */
+/** Ends a PENDING order and gives back any seats it was holding. */
 async function releaseOrder(orderId: string, status: "EXPIRED" | "CANCELLED") {
   await prisma.$transaction(async (tx) => {
     const ended = await tx.order.updateMany({
@@ -193,42 +193,14 @@ async function releaseOrder(orderId: string, status: "EXPIRED" | "CANCELLED") {
       where: { orderId, status: "HELD" },
       data: { status: "AVAILABLE", heldUntil: null, orderId: null },
     });
-    const order = await tx.order.findUnique({
-      where: { id: orderId },
-      select: { kind: true, variantId: true, quantity: true },
-    });
-    if (order?.kind === "MERCH" && order.variantId && order.quantity) {
-      // Only tracked stock (not null) is given back.
-      await tx.productVariant.updateMany({
-        where: { id: order.variantId, stock: { not: null } },
-        data: { stock: { increment: order.quantity } },
-      });
-    }
   });
 }
 
-/** Merch: stock was reserved at checkout; a late payment after release must re-reserve it. */
-async function confirmMerchPaid(
-  order: { id: string; status: string; variantId: string | null; quantity: number | null },
-  paymentId: string | null,
-) {
-  const now = new Date();
-  await prisma.$transaction(async (tx) => {
-    let ok = true;
-    if (order.status !== "PENDING" && order.variantId && order.quantity) {
-      const variant = await tx.productVariant.findUnique({ where: { id: order.variantId } });
-      if (variant && variant.stock !== null) {
-        const taken = await tx.productVariant.updateMany({
-          where: { id: variant.id, stock: { gte: order.quantity } },
-          data: { stock: { decrement: order.quantity } },
-        });
-        ok = taken.count === 1;
-      }
-    }
-    await tx.order.update({
-      where: { id: order.id },
-      data: { status: ok ? "PAID" : "REFUND_REQUIRED", paidAt: now, qpayPaymentId: paymentId },
-    });
+/** Merch has no stock to hold: a confirmed payment simply marks the order paid. */
+async function confirmMerchPaid(order: { id: string }, paymentId: string | null) {
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { status: "PAID", paidAt: new Date(), qpayPaymentId: paymentId },
   });
 }
 
@@ -240,8 +212,6 @@ async function confirmPaid(
     status: string;
     eventId: string | null;
     seatLabels: string[];
-    variantId: string | null;
-    quantity: number | null;
   },
   paymentId: string | null,
 ) {

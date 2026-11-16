@@ -51,16 +51,8 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         <div className="flex flex-col gap-3">
           <h2 className="m-0 font-bold text-xl">{order.itemLabel}</h2>
           <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-            <dt className="text-mg-muted">Хүлээн авах</dt>
-            <dd className="m-0">{order.fulfillment === "PICKUP" ? "Очиж авна" : "Хүргэлтээр"}</dd>
             <dt className="text-mg-muted">Утас</dt>
             <dd className="m-0">{order.contactPhone}</dd>
-            {order.deliveryAddress && (
-              <>
-                <dt className="text-mg-muted">Хаяг</dt>
-                <dd className="m-0 whitespace-pre-line">{order.deliveryAddress}</dd>
-              </>
-            )}
           </dl>
         </div>
       ) : (
@@ -105,7 +97,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
           </h1>
           <p className="m-0 text-white/80">
             {merch
-              ? `Төлбөр амжилттай. ${order.fulfillment === "PICKUP" ? "Бэлэн болмогц" : "Хүргэлтийн цагийг тохирохоор"} ${order.contactPhone} дугаарт холбогдоно.`
+              ? `Төлбөр амжилттай. Захиалгын талаар ${order.contactPhone} дугаарт холбогдоно.`
               : "Төлбөр амжилттай. Суудал таны бүртгэл дээр баталгаажлаа."}
           </p>
         </div>
@@ -120,7 +112,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   if (order.status !== "PENDING") {
     const message =
       order.status === "REFUND_REQUIRED"
-        ? `Төлбөр орж ирсэн ч хугацаа дууссан тул ${merch ? "бараа дууссан" : "суудал өөр хүнд шилжсэн"} байна. Буцаан олголтын талаар ${site.contact.email} хаягаар холбогдоно уу.`
+        ? `Төлбөр орж ирсэн ч хугацаа дууссан тул суудал өөр хүнд шилжсэн байна. Буцаан олголтын талаар ${site.contact.email} хаягаар холбогдоно уу.`
         : order.status === "EXPIRED"
           ? `Төлбөрийн хугацаа дууссан тул ${merch ? "захиалга цуцлагдлаа" : "суудлууд чөлөөлөгдлөө"}.`
           : "Захиалга цуцлагдсан.";
