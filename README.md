@@ -2,16 +2,34 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+This project uses [pnpm](https://pnpm.io) (version pinned in `package.json` → `packageManager`).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
+```
+
+### Code quality
+
+| Command          | What it does                                                |
+| ---------------- | ----------------------------------------------------------- |
+| `pnpm lint`      | Biome lint + format check                                   |
+| `pnpm format`    | Biome: apply formatting, import sorting and safe lint fixes |
+| `pnpm typecheck` | Generate Next.js route types, then `tsc --noEmit`           |
+| `pnpm knip`      | Find unused files, exports and dependencies                 |
+| `pnpm check`     | All of the above (no writes)                                |
+
+Git hooks (Husky, installed automatically by `pnpm install`):
+
+- **pre-commit** — Biome formats and lints staged files; fixes are re-staged, errors block the commit.
+- **pre-push** — `pnpm typecheck` and `pnpm knip`.
+
+### Brand assets
+
+Regenerate favicon, app icons, OG/Twitter images and web logos from `brand/`:
+
+```bash
+pnpm brand
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

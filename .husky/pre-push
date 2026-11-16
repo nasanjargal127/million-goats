@@ -1,0 +1,3 @@
+# Type-check and look for unused files, exports and dependencies before pushing.
+pnpm typecheck
+pnpm knip
