@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { HighlightTitle } from "@/components/brand";
+import { ShirtViewer } from "@/components/merch/shirt-viewer";
 import { MerchForm } from "@/components/merch-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -32,15 +32,7 @@ async function Shop() {
   return (
     <div className="flex flex-wrap items-start gap-10">
       <div className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-3xl border border-mg-line bg-white">
-        <Image
-          src={product.imagePath ?? "/merch/traders-dept-tee.jpg"}
-          alt={`${product.name} — урд болон ар тал`}
-          width={1600}
-          height={759}
-          priority
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          className="h-auto w-full"
-        />
+        <ShirtViewer alt={`${product.name} — урд болон ар тал`} />
       </div>
       <div className="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
         <div className="flex flex-col gap-3">
