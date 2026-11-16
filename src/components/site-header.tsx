@@ -22,7 +22,7 @@ export function SiteHeader({ current }: { current?: string }) {
         </Link>
 
         <nav aria-label="Үндсэн цэс" className="hidden lg:block">
-          <ul className="m-0 flex list-none gap-7 p-0 font-medium text-[15px]">
+          <ul className="m-0 flex list-none gap-5 whitespace-nowrap p-0 font-medium text-[15px] xl:gap-7">
             {navLinks.map((l) => (
               <li key={l.href}>
                 <Link
