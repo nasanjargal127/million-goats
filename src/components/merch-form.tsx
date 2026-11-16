@@ -4,6 +4,7 @@ import Link from "next/link";
 import { startTransition, useActionState, useState } from "react";
 import { buyMerchAction, type MerchFormState } from "@/app/merch/actions";
 import { formatMnt } from "@/lib/format";
+import { Select } from "./ui/select";
 
 type Size = { id: string; size: string };
 
@@ -77,19 +78,19 @@ export function MerchForm({
         <label htmlFor="merch-qty" className="font-semibold text-sm">
           Тоо ширхэг
         </label>
-        <select
+        <Select
           id="merch-qty"
           name="quantity"
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className={`${field} max-w-32`}
+          wrapperClassName="max-w-32"
         >
           {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
               {n}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-2">
