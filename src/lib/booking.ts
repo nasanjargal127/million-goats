@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import { cancelInvoice, checkInvoicePayment, createInvoice, qpayConfigured } from "./qpay";
 import { site } from "./site";
 
-/** How long selected seats stay reserved while the visitor pays. */
+/** How long selected seats (or merch stock) stay reserved while the visitor pays. */
 export const HOLD_MINUTES = 15;
 const MAX_SEATS_PER_ORDER = 6;
 /** Don't ask QPay about the same order more often than this. */
@@ -53,7 +53,7 @@ export async function getEventWithSeats(slug: string) {
 export function getOrderForUser(orderId: string, userId: string) {
   return prisma.order.findFirst({
     where: { id: orderId, userId },
-    include: { event: true },
+    include: { event: true, variant: { include: { product: true } } },
   });
 }
 
@@ -88,12 +88,7 @@ export async function reserveSeats(input: { userId: string; eventId: string; sea
   if (seatIds.length === 0 || seatIds.length > MAX_SEATS_PER_ORDER) {
     throw new BookingError("INVALID", `1–${MAX_SEATS_PER_ORDER} суудал сонгоно уу.`);
   }
-  if (!qpayConfigured) {
-    throw new BookingError(
-      "PAYMENT_UNAVAILABLE",
-      "Төлбөрийн систем одоогоор тохируулагдаагүй байна.",
-    );
-  }
+  assertPaymentAvailable();
 
   const event = await prisma.event.findUnique({ where: { id: input.eventId } });
   if (!event?.published) throw new BookingError("INVALID", "Эвент олдсонгүй.");
@@ -131,16 +126,44 @@ export async function reserveSeats(input: { userId: string; eventId: string; sea
     return created;
   });
 
+  await attachInvoice({
+    orderId: order.id,
+    userId: input.userId,
+    description: `${event.title}: ${order.seatLabels.join(", ")}`,
+    amount: order.amountMnt,
+  });
+  return order.id;
+}
+
+export function assertPaymentAvailable() {
+  if (!qpayConfigured) {
+    throw new BookingError(
+      "PAYMENT_UNAVAILABLE",
+      "Төлбөрийн систем одоогоор тохируулагдаагүй байна.",
+    );
+  }
+}
+
+/**
+ * Creates the QPay invoice for a freshly created PENDING order and stores it.
+ * If QPay fails, the order is cancelled (releasing its seats or stock).
+ */
+export async function attachInvoice(input: {
+  orderId: string;
+  userId: string;
+  description: string;
+  amount: number;
+}) {
   try {
     const invoice = await createInvoice({
-      senderInvoiceNo: order.id,
+      senderInvoiceNo: input.orderId,
       receiverCode: input.userId,
-      description: `${event.title}: ${order.seatLabels.join(", ")}`.slice(0, 255),
-      amount: order.amountMnt,
-      callbackUrl: callbackUrl(order.id),
+      description: input.description.slice(0, 255),
+      amount: input.amount,
+      callbackUrl: callbackUrl(input.orderId),
     });
     await prisma.order.update({
-      where: { id: order.id },
+      where: { id: input.orderId },
       data: {
         qpayInvoiceId: invoice.invoiceId,
         qpayQrText: invoice.qrText,
@@ -150,37 +173,87 @@ export async function reserveSeats(input: { userId: string; eventId: string; sea
       },
     });
   } catch (error) {
-    await releaseOrder(order.id, "CANCELLED");
+    await releaseOrder(input.orderId, "CANCELLED");
     console.error("QPay invoice creation failed", error);
     throw new BookingError("PAYMENT_UNAVAILABLE", "Нэхэмжлэх үүсгэж чадсангүй. Дахин оролдоно уу.");
   }
-
-  return order.id;
 }
 
 // ─── Payment status ─────────────────────────────────────────────────────────
 
+/** Ends a PENDING order and gives back what it was holding (seats or merch stock). */
 async function releaseOrder(orderId: string, status: "EXPIRED" | "CANCELLED") {
-  await prisma.$transaction([
-    prisma.seat.updateMany({
+  await prisma.$transaction(async (tx) => {
+    const ended = await tx.order.updateMany({
+      where: { id: orderId, status: "PENDING" },
+      data: { status },
+    });
+    if (ended.count === 0) return; // already released, paid or cancelled
+    await tx.seat.updateMany({
       where: { orderId, status: "HELD" },
       data: { status: "AVAILABLE", heldUntil: null, orderId: null },
-    }),
-    prisma.order.updateMany({ where: { id: orderId, status: "PENDING" }, data: { status } }),
-  ]);
+    });
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: { kind: true, variantId: true, quantity: true },
+    });
+    if (order?.kind === "MERCH" && order.variantId && order.quantity) {
+      // Only tracked stock (not null) is given back.
+      await tx.productVariant.updateMany({
+        where: { id: order.variantId, stock: { not: null } },
+        data: { stock: { increment: order.quantity } },
+      });
+    }
+  });
+}
+
+/** Merch: stock was reserved at checkout; a late payment after release must re-reserve it. */
+async function confirmMerchPaid(
+  order: { id: string; status: string; variantId: string | null; quantity: number | null },
+  paymentId: string | null,
+) {
+  const now = new Date();
+  await prisma.$transaction(async (tx) => {
+    let ok = true;
+    if (order.status !== "PENDING" && order.variantId && order.quantity) {
+      const variant = await tx.productVariant.findUnique({ where: { id: order.variantId } });
+      if (variant && variant.stock !== null) {
+        const taken = await tx.productVariant.updateMany({
+          where: { id: variant.id, stock: { gte: order.quantity } },
+          data: { stock: { decrement: order.quantity } },
+        });
+        ok = taken.count === 1;
+      }
+    }
+    await tx.order.update({
+      where: { id: order.id },
+      data: { status: ok ? "PAID" : "REFUND_REQUIRED", paidAt: now, qpayPaymentId: paymentId },
+    });
+  });
 }
 
 /** Marks the order paid and its seats sold — or flags it for a refund if the seats are gone. */
 async function confirmPaid(
-  order: { id: string; eventId: string; seatLabels: string[] },
+  order: {
+    id: string;
+    kind: string;
+    status: string;
+    eventId: string | null;
+    seatLabels: string[];
+    variantId: string | null;
+    quantity: number | null;
+  },
   paymentId: string | null,
 ) {
+  if (order.kind === "MERCH") return confirmMerchPaid(order, paymentId);
+  const eventId = order.eventId;
+  if (!eventId) throw new Error(`Seat order ${order.id} has no event`);
   const now = new Date();
   try {
     await prisma.$transaction(async (tx) => {
       const sold = await tx.seat.updateMany({
         where: {
-          eventId: order.eventId,
+          eventId,
           OR: order.seatLabels.map(parseLabel),
           AND: {
             OR: [

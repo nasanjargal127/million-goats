@@ -68,9 +68,13 @@ async function AccountView() {
                     className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-mg-line bg-white px-6 py-5 text-mg-navy transition-colors hover:border-mg-blue"
                   >
                     <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-1">
-                      <span className="font-bold text-lg">{o.event.title}</span>
+                      <span className="font-bold text-lg">
+                        {o.kind === "MERCH" ? "Merch" : o.event?.title}
+                      </span>
                       <span className="text-mg-muted text-sm">
-                        {formatEventDate(o.event.startsAt)} · {o.seatLabels.join(", ")}
+                        {o.kind === "MERCH"
+                          ? o.itemLabel
+                          : `${formatEventDate(o.event?.startsAt ?? null)} · ${o.seatLabels.join(", ")}`}
                       </span>
                     </div>
                     <span className="font-bold">{formatMnt(o.amountMnt)}</span>
