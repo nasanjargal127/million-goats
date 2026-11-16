@@ -11,8 +11,20 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 /** Google sign-in is offered only when its OAuth credentials are configured. */
 export const googleEnabled = Boolean(googleClientId && googleClientSecret);
 
+/**
+ * Hosts Better Auth may serve. BETTER_AUTH_URL (set locally) pins a single origin;
+ * on Vercel it is left unset so each request's host is used if it is listed here —
+ * production domains plus this project's own preview deployments.
+ */
+const ALLOWED_HOSTS = [
+  "milliongoats.mn",
+  "www.milliongoats.mn",
+  "million-goats-*-nasaavercels-projects.vercel.app",
+];
+
 function createAuth() {
   return betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL ?? { allowedHosts: ALLOWED_HOSTS, protocol: "https" },
     database: prismaAdapter(prisma, { provider: "postgresql" }),
     emailAndPassword: {
       enabled: true,
