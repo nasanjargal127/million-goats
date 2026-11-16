@@ -38,6 +38,24 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Database (Neon + Prisma)
+
+Copy `.env.example` to `.env` and fill it in. The app connects through the pooled
+`DATABASE_URL`; the Prisma CLI uses the direct `DIRECT_URL`.
+
+- Change the schema in `prisma/schema.prisma`, then create a migration with
+  `pnpm db:migrate --name <change>` (applies it to the database in `.env`).
+- **Production migrations run automatically**: Vercel production builds run
+  `prisma migrate deploy` (`scripts/migrate-on-deploy.mjs`) before `next build`.
+  A failed migration fails the build and the previous deployment stays live.
+  Preview and local builds skip this step.
+- Migrations run while the old deployment still serves traffic, so keep them
+  backward-compatible: add columns/tables first, remove old ones in a later release.
+- `pnpm db:seed` adds the sample event and the Trading Lab (run it by hand).
+- `pnpm db:studio` opens a table editor.
+
+Note: local, preview and production currently share one Neon database.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
