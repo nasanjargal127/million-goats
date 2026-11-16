@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "event" ADD COLUMN     "listed" BOOLEAN NOT NULL DEFAULT true,
+ALTER COLUMN "startsAt" DROP NOT NULL;

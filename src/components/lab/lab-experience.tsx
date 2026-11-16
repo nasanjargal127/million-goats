@@ -3,11 +3,13 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
+import { reserveLabSeatAction } from "@/app/lab/actions";
+import { formatMnt } from "@/lib/format";
 import { DICT } from "@/lib/lab/i18n";
 import {
   availableIn,
-  PRICE_LABEL,
   ROOM_IDS,
   ROOM_NAMES,
   ROOM_SIZE,
@@ -21,6 +23,9 @@ import {
 import { useLab } from "@/lib/lab/store";
 import { site } from "@/lib/site";
 import { HighlightTitle } from "../brand";
+
+/** Online booking details from the database; null until the Lab event is set up. */
+export type LabBooking = { priceMnt: number; holdMinutes: number; signedIn: boolean } | null;
 
 const LabScene = dynamic(() => import("./lab-scene"), {
   ssr: false,
@@ -55,6 +60,7 @@ function SeatMap({ room }: { room: RoomId }) {
   const hovered = useLab((s) => s.hovered);
   const pickSeat = useLab((s) => s.pickSeat);
   const setHovered = useLab((s) => s.setHovered);
+  const taken = useLab((s) => s.taken);
   const t = DICT[useLab((s) => s.lang)];
 
   return (
@@ -66,7 +72,8 @@ function SeatMap({ room }: { room: RoomId }) {
         const left = ((seat.x + Math.sin(seat.rot) * 0.8) / ROOM_SIZE + 0.5) * 100;
         const top = ((seat.z + Math.cos(seat.rot) * 0.8) / ROOM_SIZE + 0.5) * 100;
         const isSelected = seat.id === selected;
-        const state = seat.sold
+        const isTaken = taken.has(seat.id);
+        const state = isTaken
           ? "cursor-not-allowed border-[#2A3550] bg-[#2A3550] text-[#7D89A3] line-through"
           : isSelected
             ? "border-mg-orange bg-mg-orange text-mg-navy"
@@ -77,11 +84,11 @@ function SeatMap({ room }: { room: RoomId }) {
           <button
             key={seat.id}
             type="button"
-            disabled={seat.sold}
+            disabled={isTaken}
             aria-pressed={isSelected}
-            aria-label={`${ROOM_NAMES[seat.room]}, ${t.seat} ${seat.number}${seat.sold ? ` (${t.sold})` : ""}`}
+            aria-label={`${ROOM_NAMES[seat.room]}, ${t.seat} ${seat.number}${isTaken ? ` (${t.sold})` : ""}`}
             onClick={() => pickSeat(seat.id)}
-            onPointerEnter={() => !seat.sold && setHovered(seat.id)}
+            onPointerEnter={() => !isTaken && setHovered(seat.id)}
             onPointerLeave={() => setHovered(null)}
             style={{ left: `${left}%`, top: `${top}%` }}
             className={`absolute size-6.5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-md border font-semibold text-[11px] transition ${state}`}
@@ -113,15 +120,75 @@ function Legend() {
   );
 }
 
-function RoomPanel({ room }: { room: RoomId }) {
+function TelegramIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M21.9 4.6 18.8 19.3c-.2 1-.8 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.8 8.8-7.9c.4-.3-.1-.5-.6-.2L6.7 13.3 2.1 11.9c-1-.3-1-1 .2-1.5L20.5 3.4c.8-.3 1.6.2 1.4 1.2z" />
+    </svg>
+  );
+}
+
+function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) {
+  const router = useRouter();
+  const t = DICT[useLab((s) => s.lang)];
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  if (!booking) {
+    return <p className="m-0 mt-3 text-mg-on-dark-muted text-sm">{t.bookingClosed}</p>;
+  }
+
+  if (!booking.signedIn) {
+    return (
+      <Link
+        href="/sign-in?next=/lab"
+        className="mt-3 flex min-h-12 items-center justify-center rounded-xl bg-mg-blue px-6 font-semibold text-base text-white transition hover:brightness-110"
+      >
+        {t.signInToBook}
+      </Link>
+    );
+  }
+
+  function pay() {
+    setError(null);
+    startTransition(async () => {
+      // On success the action redirects to the QPay payment page.
+      const result = await reserveLabSeatAction(seatId);
+      if (result?.error) {
+        setError(result.error);
+        router.refresh(); // pick up seats that were just taken
+      }
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={pay}
+        disabled={pending}
+        className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border-0 bg-mg-orange px-6 font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {pending ? t.booking : t.book}
+      </button>
+      <p className="m-0 mt-2 text-mg-on-dark-muted text-xs">{t.holdNote(booking.holdMinutes)}</p>
+      <p role="alert" className="m-0 mt-2 font-medium text-[#FF7A52] text-sm empty:hidden">
+        {error}
+      </p>
+    </>
+  );
+}
+
+function RoomPanel({ room, booking }: { room: RoomId; booking: LabBooking }) {
   const lang = useLab((s) => s.lang);
   const seatId = useLab((s) => s.seat);
   const setRoom = useLab((s) => s.setRoom);
+  const taken = useLab((s) => s.taken);
   const t = DICT[lang];
   const seat = seatId ? SEAT_BY_ID.get(seatId) : undefined;
-  const href = seat
-    ? `${TELEGRAM_URL}?text=${encodeURIComponent(t.message(ROOM_NAMES[seat.room], seat.number, PRICE_LABEL))}`
-    : undefined;
+  const askHref = `${TELEGRAM_URL}?text=${encodeURIComponent(
+    seat ? t.message(ROOM_NAMES[seat.room], seat.number) : "Trading Lab",
+  )}`;
 
   return (
     <aside className="pointer-events-auto absolute inset-x-0 bottom-0 h-[50dvh] overflow-y-auto rounded-t-3xl border border-white/10 bg-mg-navy/90 p-4 text-white backdrop-blur lg:inset-x-auto lg:top-22 lg:right-4 lg:bottom-auto lg:h-auto lg:max-h-[calc(100dvh-7rem)] lg:w-84 lg:rounded-3xl lg:p-5">
@@ -135,7 +202,7 @@ function RoomPanel({ room }: { room: RoomId }) {
       <div className="flex items-baseline justify-between">
         <h2 className="m-0 font-black text-2xl uppercase">{ROOM_NAMES[room]}</h2>
         <span className="font-semibold text-mg-mint text-sm">
-          {availableIn(room)}/{SEATS_PER_ROOM} {t.free}
+          {availableIn(room, taken)}/{SEATS_PER_ROOM} {t.free}
         </span>
       </div>
 
@@ -167,37 +234,39 @@ function RoomPanel({ room }: { room: RoomId }) {
       <div className="mt-4 border-white/10 border-t pt-4">
         {seat ? (
           <>
-            <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline justify-between gap-3">
               <p className="m-0 font-semibold text-base">
                 {ROOM_NAMES[seat.room]} · {t.seat} {seat.number}
               </p>
-              <p className="m-0 font-bold text-mg-mint text-xl">{PRICE_LABEL}</p>
+              {booking && (
+                <p className="m-0 font-bold text-mg-mint text-xl">{formatMnt(booking.priceMnt)}</p>
+              )}
             </div>
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-mg-blue px-6 font-semibold text-base text-white transition hover:brightness-110"
-            >
-              <svg aria-hidden="true" className="size-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21.9 4.6 18.8 19.3c-.2 1-.8 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.8 8.8-7.9c.4-.3-.1-.5-.6-.2L6.7 13.3 2.1 11.9c-1-.3-1-1 .2-1.5L20.5 3.4c.8-.3 1.6.2 1.4 1.2z" />
-              </svg>
-              {t.book}
-            </a>
+            <BookSeat key={seat.id} seatId={seat.id} booking={booking} />
           </>
         ) : (
           <p className="m-0 text-mg-on-dark-muted text-sm">
-            {availableIn(room) > 0 ? t.pickSeat : t.soldOut}
+            {availableIn(room, taken) > 0 ? t.pickSeat : t.soldOut}
           </p>
         )}
+        <a
+          href={askHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 text-mg-sky text-sm hover:text-mg-mint"
+        >
+          <TelegramIcon />
+          {t.ask}
+        </a>
       </div>
     </aside>
   );
 }
 
-function Overview() {
+function Overview({ booking }: { booking: LabBooking }) {
   const lang = useLab((s) => s.lang);
   const setRoom = useLab((s) => s.setRoom);
+  const taken = useLab((s) => s.taken);
   const t = DICT[lang];
 
   return (
@@ -212,7 +281,7 @@ function Overview() {
       />
       <p className="m-0 mt-4 text-base text-white/80 sm:text-lg">{t.tagline}</p>
       <p className="m-0 mt-1 font-semibold text-mg-mint text-sm sm:text-base">
-        {t.stats(ROOM_IDS.length, TOTAL_SEATS, PRICE_LABEL)}
+        {t.stats(ROOM_IDS.length, TOTAL_SEATS, booking ? formatMnt(booking.priceMnt) : null)}
       </p>
       <p className="m-0 mt-5 font-semibold text-mg-on-dark-muted text-xs uppercase tracking-[0.12em]">
         {t.pickRoom}
@@ -227,7 +296,7 @@ function Overview() {
           >
             <span className="block font-bold text-base text-white">{ROOM_NAMES[id]}</span>
             <span className="block text-mg-mint text-xs">
-              {availableIn(id)}/{SEATS_PER_ROOM} {t.free}
+              {availableIn(id, taken)}/{SEATS_PER_ROOM} {t.free}
             </span>
           </button>
         ))}
@@ -236,10 +305,19 @@ function Overview() {
   );
 }
 
-export function LabExperience() {
+export function LabExperience({
+  booking,
+  taken,
+}: {
+  booking: LabBooking;
+  /** Lab seat ids ("A-7") that are sold or currently held. */
+  taken: string[];
+}) {
   const lang = useLab((s) => s.lang);
   const room = useLab((s) => s.room);
   const setLang = useLab((s) => s.setLang);
+  const setTaken = useLab((s) => s.setTaken);
+  useEffect(() => setTaken(taken), [taken, setTaken]);
   const webgl = useSyncExternalStore(subscribeNever, hasWebGL, () => true);
   const t = DICT[lang];
 
@@ -297,7 +375,7 @@ export function LabExperience() {
         </div>
       </header>
 
-      {room ? <RoomPanel room={room} /> : <Overview />}
+      {room ? <RoomPanel room={room} booking={booking} /> : <Overview booking={booking} />}
     </main>
   );
 }

@@ -4,7 +4,9 @@ export function formatMnt(amount: number) {
   return `${new Intl.NumberFormat("en-US").format(amount)}₮`;
 }
 
-export function formatEventDate(date: Date) {
+/** Event date and time in Ulaanbaatar time; ongoing offerings (no date) read "Байнгын". */
+export function formatEventDate(date: Date | null) {
+  if (!date) return "Байнгын";
   const d = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
     year: "numeric",

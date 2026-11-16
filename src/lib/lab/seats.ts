@@ -39,15 +39,27 @@ const SEAT_LAYOUT: readonly Spot[] = [
 ];
 
 export const SEATS_PER_ROOM = SEAT_LAYOUT.length;
-const SEAT_PRICE_USD = 1500;
 export const TELEGRAM_URL = "https://t.me/+97695286878";
 
+/** Slug of the database event that holds the Lab's seats (see prisma/seed.ts). */
+export const LAB_EVENT_SLUG = "trading-lab";
+
 /**
- * Зарагдсан суудлууд. Суудал зарагдах бүрд энд ID-г нь нэмнэ.
- * Формат: "<танхим>-<дугаар>", жишээ нь "A-7", "C-25".
- * A = Tokyo, B = London, C = New York, D = Sydney.
+ * In the database a Lab seat is stored with the room name as its row, so order
+ * labels read naturally: "A-7" here is row "Tokyo", number 7 → "Tokyo-7".
  */
-const SOLD_SEATS: readonly string[] = [];
+export function toDbSeat(id: string) {
+  const seat = SEAT_BY_ID.get(id);
+  return seat ? { row: ROOM_NAMES[seat.room], number: seat.number } : null;
+}
+
+const ROOM_BY_NAME = new Map(ROOM_IDS.map((id) => [ROOM_NAMES[id], id]));
+
+/** Inverse of toDbSeat: database row + number → Lab seat id, e.g. "Tokyo", 7 → "A-7". */
+export function fromDbSeat(row: string, number: number) {
+  const room = ROOM_BY_NAME.get(row);
+  return room ? `${room}-${number}` : null;
+}
 
 export type Seat = {
   id: string;
@@ -56,22 +68,10 @@ export type Seat = {
   x: number;
   z: number;
   rot: number;
-  sold: boolean;
 };
 
-const sold = new Set(SOLD_SEATS);
-
 export const SEATS: readonly Seat[] = ROOM_IDS.flatMap((room) =>
-  SEAT_LAYOUT.map((spot, i) => {
-    const id = `${room}-${i + 1}`;
-    return {
-      id,
-      room,
-      number: i + 1,
-      ...spot,
-      sold: sold.has(id),
-    };
-  }),
+  SEAT_LAYOUT.map((spot, i) => ({ id: `${room}-${i + 1}`, room, number: i + 1, ...spot })),
 );
 
 export const SEAT_BY_ID = new Map(SEATS.map((s) => [s.id, s]));
@@ -82,8 +82,7 @@ export function seatsOf(room: RoomId) {
   return SEATS.filter((s) => s.room === room);
 }
 
-export function availableIn(room: RoomId) {
-  return SEATS.filter((s) => s.room === room && !s.sold).length;
+/** Free seats in a room, given the ids of seats that are sold or held. */
+export function availableIn(room: RoomId, taken: ReadonlySet<string>) {
+  return SEATS.filter((s) => s.room === room && !taken.has(s.id)).length;
 }
-
-export const PRICE_LABEL = `$${SEAT_PRICE_USD.toLocaleString("en-US")}`;
