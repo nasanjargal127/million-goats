@@ -16,10 +16,9 @@ export function userIdsFromEnv(name: string) {
   );
 }
 
-const adminIds = userIdsFromEnv("ADMIN_USER_IDS");
-
+/** Read on every check, so an env change applies without restarting the server. */
 export function isAdmin(userId: string) {
-  return adminIds.has(userId);
+  return userIdsFromEnv("ADMIN_USER_IDS").has(userId);
 }
 
 /** Session of an admin; sends others to sign in, and hides the page from non-admins. */

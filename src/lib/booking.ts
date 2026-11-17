@@ -165,14 +165,10 @@ export function assertPaymentAvailable() {
 }
 
 /**
- * Accounts (QPAY_TEST_USER_IDS) whose orders show the real price but are
- * invoiced TEST_CHARGE_MNT, so payments can be tested in production.
- */
-const testUserIds = userIdsFromEnv("QPAY_TEST_USER_IDS");
-
-/**
  * Creates the QPay invoice for a freshly created PENDING order and stores it.
  * If QPay fails, the order is cancelled (releasing any seats it holds).
+ * Test accounts (QPAY_TEST_USER_IDS) keep the real price on the order but are
+ * invoiced TEST_CHARGE_MNT, so payments can be tested in production.
  */
 export async function attachInvoice(input: {
   orderId: string;
@@ -181,7 +177,7 @@ export async function attachInvoice(input: {
   amount: number;
 }) {
   try {
-    const test = testUserIds.has(input.userId);
+    const test = userIdsFromEnv("QPAY_TEST_USER_IDS").has(input.userId);
     const charged = test ? Math.min(TEST_CHARGE_MNT, input.amount) : input.amount;
     const invoice = await createInvoice({
       senderInvoiceNo: input.orderId,
