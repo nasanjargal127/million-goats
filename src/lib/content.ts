@@ -10,6 +10,5 @@ export const navLinks = [
 export const socialLinks: { label: string; href?: string }[] = [
   { label: "Facebook", href: "https://www.facebook.com/milliongoats" },
   { label: "Instagram", href: "https://www.instagram.com/milliongoats" },
-  { label: "YouTube" },
-  { label: "Discord" },
+  { label: "YouTube", href: "https://www.youtube.com/@milliongoat" },
 ];
