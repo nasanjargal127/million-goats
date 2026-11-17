@@ -12,11 +12,21 @@ export const PSYCHOLOGIST_ADDON_MNT = 75_000;
 /** Pro members pick one teacher whose classes they join. Rename here. */
 export const TEACHERS = ["Багш 1", "Багш 2", "Багш 3", "Багш 4"] as const;
 
-type PackageText = { tagline: string; features: string[] };
+type PackageText = {
+  tagline: string;
+  features: string[];
+  /** Price warning shown on the card, e.g. what later months cost. */
+  notice?: string;
+};
 
 export const LAB_PACKAGES: Record<
   LabPackageId,
-  { name: string; priceMnt: number; text: Record<Lang, PackageText> }
+  {
+    name: string;
+    /** Charged at booking (the first month for Pro). */
+    priceMnt: number;
+    text: Record<Lang, PackageText>;
+  }
 > = {
   PRO: {
     name: "Pro",
@@ -29,6 +39,7 @@ export const LAB_PACKAGES: Record<
           "Merch",
           "4 багшийн нэгийг сонгон хичээлд нь суух",
         ],
+        notice: "2 дахь сараас эхлэн сарын төлбөр 555,000₮ болно.",
       },
       en: {
         tagline: "Build your own office",
@@ -37,6 +48,7 @@ export const LAB_PACKAGES: Record<
           "Merch",
           "Join the classes of one of 4 teachers",
         ],
+        notice: "From the 2nd month, Pro costs 555,000₮ per month.",
       },
     },
   },

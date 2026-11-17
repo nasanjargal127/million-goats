@@ -155,6 +155,24 @@ function CheckIcon() {
   );
 }
 
+function WarningIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-3.5 shrink-0"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 1.8 15 14H1z" />
+      <path d="M8 6.2v3.6M8 11.9v.1" />
+    </svg>
+  );
+}
+
 /** Pro / Premium cards; Pro also asks for a teacher and the optional psychologist. */
 function PackagePicker({
   pkg,
@@ -218,6 +236,12 @@ function PackagePicker({
                   </li>
                 ))}
               </ul>
+              {text.notice && (
+                <span className="ml-6.5 flex gap-2 rounded-lg border border-[#FFC24D]/40 bg-[#FFC24D]/10 px-2.5 py-2 font-medium text-[#FFD27A] text-xs">
+                  <WarningIcon />
+                  {text.notice}
+                </span>
+              )}
             </label>
 
             {id === "PRO" && active && (
