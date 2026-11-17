@@ -18,6 +18,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "/merch" },
 };
 
+function GiftIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 8h18v4H3zM5 12v9h14v-9M12 8v13" />
+      <path d="M12 8S10.5 3 7.5 3a2.5 2.5 0 0 0 0 5M12 8s1.5-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+    </svg>
+  );
+}
+
 async function Shop() {
   await connection();
   const [product, session] = await Promise.all([getProduct(MERCH_SLUG), getSession()]);
@@ -45,6 +63,17 @@ async function Shop() {
           </h2>
           <p className="m-0 font-bold text-3xl text-mg-link">{formatMnt(product.priceMnt)}</p>
           <p className="m-0 text-mg-body leading-relaxed">{product.description}</p>
+        </div>
+        <div className="flex items-start gap-3 rounded-2xl border border-mg-orange/40 bg-mg-orange/10 p-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mg-orange text-mg-navy">
+            <GiftIcon />
+          </span>
+          <p className="m-0 text-mg-navy leading-snug">
+            <span className="block font-bold">Бонус: Амралтын өдрийн лекц</span>
+            <span className="text-mg-body text-sm">
+              Манай merch-ийг худалдаж авбал амралтын өдрийн лекцэнд суух эрх нэмэгдэнэ.
+            </span>
+          </p>
         </div>
         <MerchForm
           sizes={product.variants.map((v) => ({ id: v.id, size: v.size }))}
