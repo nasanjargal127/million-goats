@@ -4,15 +4,24 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { BookingError, reserveSeats } from "@/lib/booking";
 import { prisma } from "@/lib/db";
+import { parseLabChoice } from "@/lib/lab/packages";
 import { LAB_EVENT_SLUG, toDbSeat } from "@/lib/lab/seats";
 
-/** Holds one Trading Lab seat (e.g. "A-7") and sends the user to the QPay payment page. */
-export async function reserveLabSeatAction(seatId: unknown): Promise<{ error: string }> {
+/**
+ * Holds one Trading Lab seat (e.g. "A-7") with the chosen package and sends the
+ * user to the QPay payment page.
+ */
+export async function reserveLabSeatAction(
+  seatId: unknown,
+  choice: unknown,
+): Promise<{ error: string }> {
   const session = await getSession();
   if (!session) return { error: "Захиалахын тулд нэвтэрнэ үү." };
 
   const spot = typeof seatId === "string" ? toDbSeat(seatId) : null;
   if (!spot) return { error: "Буруу суудал." };
+  const lab = parseLabChoice(choice);
+  if (!lab) return { error: "Багц болон багшаа сонгоно уу." };
 
   const seat = await prisma.seat.findFirst({
     where: { event: { slug: LAB_EVENT_SLUG, published: true }, row: spot.row, number: spot.number },
@@ -26,6 +35,7 @@ export async function reserveLabSeatAction(seatId: unknown): Promise<{ error: st
       userId: session.user.id,
       eventId: seat.eventId,
       seatIds: [seat.id],
+      lab,
     });
   } catch (error) {
     if (error instanceof BookingError) return { error: error.message };

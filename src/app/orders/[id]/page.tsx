@@ -63,6 +63,11 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
             </span>
             <h2 className="m-0 font-bold text-xl">{order.event?.title}</h2>
             <span className="text-mg-muted text-sm">{order.event?.venue}</span>
+            {order.itemLabel && (
+              <span className="mt-1 self-start rounded-full bg-mg-orange/15 px-3 py-1 font-semibold text-mg-navy text-sm">
+                {order.itemLabel}
+              </span>
+            )}
           </div>
           <SeatChips labels={order.seatLabels} />
         </>

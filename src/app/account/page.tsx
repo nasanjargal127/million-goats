@@ -74,7 +74,13 @@ async function AccountView() {
                       <span className="text-mg-muted text-sm">
                         {o.kind === "MERCH"
                           ? o.itemLabel
-                          : `${formatEventDate(o.event?.startsAt ?? null)} · ${o.seatLabels.join(", ")}`}
+                          : [
+                              formatEventDate(o.event?.startsAt ?? null),
+                              o.seatLabels.join(", "),
+                              o.itemLabel,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
                       </span>
                     </div>
                     <span className="font-bold">{formatMnt(o.amountMnt)}</span>

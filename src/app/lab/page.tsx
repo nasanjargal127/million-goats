@@ -7,7 +7,7 @@ import { getEventWithSeats, HOLD_MINUTES } from "@/lib/booking";
 import { fromDbSeat, LAB_EVENT_SLUG } from "@/lib/lab/seats";
 
 const description =
-  "Million Goats Trading Lab — 4 танхим, 100 суудал. 3D танхимаас суудлаа сонгоод QPay-ээр төлж баталгаажуулаарай.";
+  "Million Goats Trading Lab — 4 танхим, 100 суудал. 3D танхимаас суудлаа сонгоод Pro эсвэл Premium багцаа QPay-ээр төлж баталгаажуулаарай.";
 
 export const metadata: Metadata = {
   title: "Trading Lab",
@@ -30,11 +30,7 @@ async function LabWithBooking() {
   return (
     <LabExperience
       taken={taken}
-      booking={
-        event
-          ? { priceMnt: event.priceMnt, holdMinutes: HOLD_MINUTES, signedIn: Boolean(session) }
-          : null
-      }
+      booking={event ? { holdMinutes: HOLD_MINUTES, signedIn: Boolean(session) } : null}
     />
   );
 }

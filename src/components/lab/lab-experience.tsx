@@ -9,6 +9,16 @@ import { reserveLabSeatAction } from "@/app/lab/actions";
 import { formatMnt } from "@/lib/format";
 import { DICT } from "@/lib/lab/i18n";
 import {
+  LAB_PACKAGE_IDS,
+  LAB_PACKAGES,
+  type LabChoice,
+  type LabPackageId,
+  LOWEST_PACKAGE_PRICE_MNT,
+  labChoicePrice,
+  PSYCHOLOGIST_ADDON_MNT,
+  TEACHERS,
+} from "@/lib/lab/packages";
+import {
   availableIn,
   ROOM_IDS,
   ROOM_NAMES,
@@ -25,7 +35,7 @@ import { site } from "@/lib/site";
 import { HighlightTitle } from "../brand";
 
 /** Online booking details from the database; null until the Lab event is set up. */
-export type LabBooking = { priceMnt: number; holdMinutes: number; signedIn: boolean } | null;
+export type LabBooking = { holdMinutes: number; signedIn: boolean } | null;
 
 const LabScene = dynamic(() => import("./lab-scene"), {
   ssr: false,
@@ -128,9 +138,164 @@ function TelegramIcon() {
   );
 }
 
+function CheckIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="mt-0.5 size-3.5 shrink-0 text-mg-mint"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 8.5l3.2 3L13 4.5" />
+    </svg>
+  );
+}
+
+function WarningIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-3.5 shrink-0"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 1.8 15 14H1z" />
+      <path d="M8 6.2v3.6M8 11.9v.1" />
+    </svg>
+  );
+}
+
+/** Pro / Premium cards; Pro also asks for a teacher and the optional psychologist. */
+function PackagePicker({
+  pkg,
+  setPkg,
+  teacher,
+  setTeacher,
+  psychologist,
+  setPsychologist,
+}: {
+  pkg: LabPackageId;
+  setPkg: (id: LabPackageId) => void;
+  teacher: string | null;
+  setTeacher: (name: string) => void;
+  psychologist: boolean;
+  setPsychologist: (on: boolean) => void;
+}) {
+  const lang = useLab((s) => s.lang);
+  const t = DICT[lang];
+
+  return (
+    <fieldset className="m-0 mt-4 flex flex-col gap-2 border-0 p-0">
+      <legend className="mb-2 p-0 font-semibold text-mg-on-dark-muted text-xs uppercase tracking-[0.12em]">
+        {t.pickPackage}
+      </legend>
+      {LAB_PACKAGE_IDS.map((id) => {
+        const info = LAB_PACKAGES[id];
+        const text = info.text[lang];
+        const active = id === pkg;
+        return (
+          <div
+            key={id}
+            className={`rounded-2xl border transition ${
+              active ? "border-mg-orange bg-mg-orange/10" : "border-white/15 hover:border-mg-sky"
+            }`}
+          >
+            <label className="flex cursor-pointer flex-col gap-2 p-3.5">
+              <span className="flex items-start justify-between gap-3">
+                <span className="flex items-center gap-2.5">
+                  <input
+                    type="radio"
+                    name="lab-package"
+                    value={id}
+                    checked={active}
+                    onChange={() => setPkg(id)}
+                    className="size-4 accent-mg-orange"
+                  />
+                  <span>
+                    <span className="block font-black text-base uppercase leading-tight">
+                      {info.name}
+                    </span>
+                    <span className="block text-mg-on-dark-muted text-xs">{text.tagline}</span>
+                  </span>
+                </span>
+                <span className="font-bold text-base text-mg-mint">{formatMnt(info.priceMnt)}</span>
+              </span>
+              <ul className="m-0 flex list-none flex-col gap-1 p-0 pl-6.5 text-sm text-white/85">
+                {text.features.map((feature) => (
+                  <li key={feature} className="flex gap-2">
+                    <CheckIcon />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              {text.notice && (
+                <span className="ml-6.5 flex gap-2 rounded-lg border border-[#FFC24D]/40 bg-[#FFC24D]/10 px-2.5 py-2 font-medium text-[#FFD27A] text-xs">
+                  <WarningIcon />
+                  {text.notice}
+                </span>
+              )}
+            </label>
+
+            {id === "PRO" && active && (
+              <div className="flex flex-col gap-3 border-white/10 border-t p-3.5">
+                <div>
+                  <p className="m-0 mb-1.5 font-semibold text-sm">{t.pickTeacher}</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {TEACHERS.map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => setTeacher(name)}
+                        aria-pressed={teacher === name}
+                        className={`min-h-10 cursor-pointer rounded-lg border px-2 font-semibold text-sm transition ${
+                          teacher === name
+                            ? "border-mg-orange bg-mg-orange text-mg-navy"
+                            : "border-white/15 text-mg-on-dark hover:border-mg-sky"
+                        }`}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg border border-white/15 px-3 py-2 text-sm">
+                  <span className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={psychologist}
+                      onChange={(e) => setPsychologist(e.target.checked)}
+                      className="size-4 accent-mg-orange"
+                    />
+                    {t.addPsychologist}
+                  </span>
+                  <span className="font-semibold text-mg-mint">
+                    +{formatMnt(PSYCHOLOGIST_ADDON_MNT)}
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <p className="m-0 text-mg-on-dark-muted text-xs">{t.merchNote}</p>
+    </fieldset>
+  );
+}
+
 function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) {
   const router = useRouter();
   const t = DICT[useLab((s) => s.lang)];
+  const [pkg, setPkg] = useState<LabPackageId>("PRO");
+  const [teacher, setTeacher] = useState<string | null>(null);
+  const [psychologist, setPsychologist] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -138,22 +303,17 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
     return <p className="m-0 mt-3 text-mg-on-dark-muted text-sm">{t.bookingClosed}</p>;
   }
 
-  if (!booking.signedIn) {
-    return (
-      <Link
-        href="/sign-in?next=/lab"
-        className="mt-3 flex min-h-12 items-center justify-center rounded-xl bg-mg-blue px-6 font-semibold text-base text-white transition hover:brightness-110"
-      >
-        {t.signInToBook}
-      </Link>
-    );
-  }
+  const choice: LabChoice =
+    pkg === "PRO"
+      ? { labPackage: "PRO", teacher, withPsychologist: psychologist }
+      : { labPackage: "PREMIUM", teacher: null, withPsychologist: false };
+  const needsTeacher = pkg === "PRO" && !teacher;
 
   function pay() {
     setError(null);
     startTransition(async () => {
       // On success the action redirects to the QPay payment page.
-      const result = await reserveLabSeatAction(seatId);
+      const result = await reserveLabSeatAction(seatId, choice);
       if (result?.error) {
         setError(result.error);
         router.refresh(); // pick up seats that were just taken
@@ -163,18 +323,43 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
 
   return (
     <>
-      <button
-        type="button"
-        onClick={pay}
-        disabled={pending}
-        className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border-0 bg-mg-orange px-6 font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {pending ? t.booking : t.book}
-      </button>
-      <p className="m-0 mt-2 text-mg-on-dark-muted text-xs">{t.holdNote(booking.holdMinutes)}</p>
-      <p role="alert" className="m-0 mt-2 font-medium text-[#FF7A52] text-sm empty:hidden">
-        {error}
-      </p>
+      <PackagePicker
+        pkg={pkg}
+        setPkg={setPkg}
+        teacher={teacher}
+        setTeacher={setTeacher}
+        psychologist={psychologist}
+        setPsychologist={setPsychologist}
+      />
+      <div className="mt-4 flex items-baseline justify-between gap-3">
+        <span className="text-mg-on-dark-muted text-sm">{t.total}</span>
+        <span className="font-bold text-2xl text-mg-mint">{formatMnt(labChoicePrice(choice))}</span>
+      </div>
+      {booking.signedIn ? (
+        <>
+          <button
+            type="button"
+            onClick={pay}
+            disabled={pending || needsTeacher}
+            className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border-0 bg-mg-orange px-6 font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pending ? t.booking : needsTeacher ? t.pickTeacher : t.book}
+          </button>
+          <p className="m-0 mt-2 text-mg-on-dark-muted text-xs">
+            {t.holdNote(booking.holdMinutes)}
+          </p>
+          <p role="alert" className="m-0 mt-2 font-medium text-[#FF7A52] text-sm empty:hidden">
+            {error}
+          </p>
+        </>
+      ) : (
+        <Link
+          href="/sign-in?next=/lab"
+          className="mt-3 flex min-h-12 items-center justify-center rounded-xl bg-mg-blue px-6 font-semibold text-base text-white transition hover:brightness-110"
+        >
+          {t.signInToBook}
+        </Link>
+      )}
     </>
   );
 }
@@ -234,14 +419,9 @@ function RoomPanel({ room, booking }: { room: RoomId; booking: LabBooking }) {
       <div className="mt-4 border-white/10 border-t pt-4">
         {seat ? (
           <>
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="m-0 font-semibold text-base">
-                {ROOM_NAMES[seat.room]} · {t.seat} {seat.number}
-              </p>
-              {booking && (
-                <p className="m-0 font-bold text-mg-mint text-xl">{formatMnt(booking.priceMnt)}</p>
-              )}
-            </div>
+            <p className="m-0 font-semibold text-base">
+              {ROOM_NAMES[seat.room]} · {t.seat} {seat.number}
+            </p>
             <BookSeat key={seat.id} seatId={seat.id} booking={booking} />
           </>
         ) : (
@@ -281,7 +461,11 @@ function Overview({ booking }: { booking: LabBooking }) {
       />
       <p className="m-0 mt-4 text-base text-white/80 sm:text-lg">{t.tagline}</p>
       <p className="m-0 mt-1 font-semibold text-mg-mint text-sm sm:text-base">
-        {t.stats(ROOM_IDS.length, TOTAL_SEATS, booking ? formatMnt(booking.priceMnt) : null)}
+        {t.stats(
+          ROOM_IDS.length,
+          TOTAL_SEATS,
+          booking ? formatMnt(LOWEST_PACKAGE_PRICE_MNT) : null,
+        )}
       </p>
       <p className="m-0 mt-5 font-semibold text-mg-on-dark-muted text-xs uppercase tracking-[0.12em]">
         {t.pickRoom}
