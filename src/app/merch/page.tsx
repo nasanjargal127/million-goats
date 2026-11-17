@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { HighlightTitle } from "@/components/brand";
 import { ShirtViewer } from "@/components/merch/shirt-viewer";
 import { MerchForm } from "@/components/merch-form";
+import { Reveal } from "@/components/motion/reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSession } from "@/lib/auth";
@@ -31,10 +32,13 @@ async function Shop() {
 
   return (
     <div className="flex flex-wrap items-start gap-10">
-      <div className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-3xl border border-mg-line bg-white">
+      <Reveal
+        from="left"
+        className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-3xl border border-mg-line bg-white"
+      >
         <ShirtViewer alt={`${product.name} — урд болон ар тал`} />
-      </div>
-      <div className="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
+      </Reveal>
+      <Reveal from="right" delay={0.1} className="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
         <div className="flex flex-col gap-3">
           <h2 className="m-0 font-black text-[clamp(28px,3vw,40px)] uppercase leading-tight">
             {product.name}
@@ -49,7 +53,7 @@ async function Shop() {
           holdMinutes={HOLD_MINUTES}
           signedIn={Boolean(session)}
         />
-      </div>
+      </Reveal>
     </div>
   );
 }
