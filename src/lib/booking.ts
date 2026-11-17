@@ -300,3 +300,47 @@ export async function syncOrder(orderId: string, { force = false } = {}) {
   }
   return prisma.order.findUnique({ where: { id: order.id } });
 }
+
+// ─── Cleanup ────────────────────────────────────────────────────────────────
+
+/**
+ * Unpaid orders are kept this long after their hold ends, then deleted. The
+ * purge re-checks QPay first, so this only has to cover a payment in flight.
+ */
+const PURGE_AFTER_MS = 60 * 60_000;
+const PURGE_BATCH = 200;
+
+/**
+ * Deletes unpaid orders whose hold ended more than PURGE_AFTER_MS ago. Each one
+ * is checked with QPay first (which also cancels its invoice and frees its
+ * seats), so a late payment turns it PAID or REFUND_REQUIRED and keeps it.
+ * Orders QPay cannot be asked about right now are left for the next run.
+ */
+export async function purgeExpiredOrders() {
+  const cutoff = new Date(Date.now() - PURGE_AFTER_MS);
+  const stale = await prisma.order.findMany({
+    where: { status: { in: ["PENDING", "EXPIRED"] }, expiresAt: { lt: cutoff } },
+    select: { id: true, qpayInvoiceId: true },
+    orderBy: { expiresAt: "asc" },
+    take: PURGE_BATCH,
+  });
+
+  let deleted = 0;
+  let kept = 0;
+  for (const order of stale) {
+    try {
+      if (order.qpayInvoiceId) {
+        await syncOrder(order.id, { force: true });
+      } else {
+        await releaseOrder(order.id, "EXPIRED"); // never got an invoice, so nothing to pay
+      }
+      const removed = await prisma.order.deleteMany({ where: { id: order.id, status: "EXPIRED" } });
+      if (removed.count > 0) deleted += 1;
+      else kept += 1;
+    } catch (error) {
+      console.error(`Could not purge order ${order.id}`, error);
+      kept += 1;
+    }
+  }
+  return { checked: stale.length, deleted, kept };
+}
