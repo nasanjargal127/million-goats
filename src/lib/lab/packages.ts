@@ -54,7 +54,7 @@ export const LAB_PACKAGES: Record<
   },
   PREMIUM: {
     name: "Premium",
-    priceMnt: 5_400_000,
+    priceMnt: 5_550_000,
     text: {
       mn: {
         tagline: "Бүгдийг нэг дороос",
