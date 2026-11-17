@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { LabExperience } from "@/components/lab/lab-experience";
 import { getSession } from "@/lib/auth";
 import { getEventWithSeats, HOLD_MINUTES } from "@/lib/booking";
+import { installmentsOpen } from "@/lib/lab/packages";
 import { fromDbSeat, LAB_EVENT_SLUG } from "@/lib/lab/seats";
 
 const description =
@@ -30,7 +31,15 @@ async function LabWithBooking() {
   return (
     <LabExperience
       taken={taken}
-      booking={event ? { holdMinutes: HOLD_MINUTES, signedIn: Boolean(session) } : null}
+      booking={
+        event
+          ? {
+              holdMinutes: HOLD_MINUTES,
+              signedIn: Boolean(session),
+              installments: installmentsOpen(),
+            }
+          : null
+      }
     />
   );
 }

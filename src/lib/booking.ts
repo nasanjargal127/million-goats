@@ -1,9 +1,15 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { userIdsFromEnv } from "./admin";
 import { prisma } from "./db";
-import { type LabChoice, labChoiceLabel, labChoicePrice } from "./lab/packages";
+import {
+  installmentsOpen,
+  type LabChoice,
+  labChoiceLabel,
+  labChoicePrice,
+  PREMIUM_INSTALLMENTS,
+} from "./lab/packages";
 import { cancelInvoice, checkInvoicePayment, createInvoice, qpayConfigured } from "./qpay";
 import { site } from "./site";
 
@@ -102,11 +108,21 @@ export async function reserveSeats(input: {
 
   const event = await prisma.event.findUnique({ where: { id: input.eventId } });
   if (!event?.published) throw new BookingError("INVALID", "Эвент олдсонгүй.");
+  if (input.lab?.installments && !installmentsOpen()) {
+    throw new BookingError(
+      "INVALID",
+      "Хувааж төлөх хугацаа дууссан. Нэг дор төлөх сонголтыг сонгоно уу.",
+    );
+  }
 
   const now = new Date();
   const expiresAt = new Date(now.getTime() + HOLD_MINUTES * 60_000);
   const seatPrice = input.lab ? labChoicePrice(input.lab) : event.priceMnt;
   const itemLabel = input.lab ? labChoiceLabel(input.lab) : null;
+  // Installments: the first invoice is only for the first part of each seat.
+  const depositMnt = input.lab?.installments
+    ? PREMIUM_INSTALLMENTS.firstMnt * seatIds.length
+    : null;
 
   const order = await prisma.$transaction(async (tx) => {
     const seats = await tx.seat.findMany({
@@ -126,6 +142,10 @@ export async function reserveSeats(input: {
           labPackage: input.lab.labPackage,
           teacher: input.lab.teacher,
           withPsychologist: input.lab.withPsychologist,
+        }),
+        ...(depositMnt !== null && {
+          depositMnt,
+          balanceDueAt: PREMIUM_INSTALLMENTS.balanceDueAt,
         }),
         expiresAt,
       },
@@ -147,10 +167,14 @@ export async function reserveSeats(input: {
   await attachInvoice({
     orderId: order.id,
     userId: input.userId,
-    description: [`${event.title}: ${order.seatLabels.join(", ")}`, itemLabel]
+    description: [
+      `${event.title}: ${order.seatLabels.join(", ")}`,
+      itemLabel,
+      depositMnt !== null ? "1-р төлөлт" : null,
+    ]
       .filter(Boolean)
       .join(" · "),
-    amount: order.amountMnt,
+    amount: depositMnt ?? order.amountMnt,
   });
   return order.id;
 }
@@ -177,31 +201,87 @@ export async function attachInvoice(input: {
   amount: number;
 }) {
   try {
-    const test = userIdsFromEnv("QPAY_TEST_USER_IDS").has(input.userId);
-    const charged = test ? Math.min(TEST_CHARGE_MNT, input.amount) : input.amount;
-    const invoice = await createInvoice({
-      senderInvoiceNo: input.orderId,
-      receiverCode: input.userId,
-      description: `${test ? "[TEST] " : ""}${input.description}`.slice(0, 255),
-      amount: charged,
-      callbackUrl: callbackUrl(input.orderId),
-    });
-    await prisma.order.update({
-      where: { id: input.orderId },
-      data: {
-        chargedMnt: charged,
-        qpayInvoiceId: invoice.invoiceId,
-        qpayQrText: invoice.qrText,
-        qpayQrImage: invoice.qrImage,
-        qpayShortUrl: invoice.shortUrl,
-        qpayUrls: invoice.urls as Prisma.InputJsonValue,
-      },
-    });
+    const data = await issueInvoice({ ...input, invoiceNo: input.orderId });
+    await prisma.order.update({ where: { id: input.orderId }, data });
   } catch (error) {
     await releaseOrder(input.orderId, "CANCELLED");
     console.error("QPay invoice creation failed", error);
     throw new BookingError("PAYMENT_UNAVAILABLE", "Нэхэмжлэх үүсгэж чадсангүй. Дахин оролдоно уу.");
   }
+}
+
+/** Asks QPay for an invoice and returns the order fields that store it. */
+async function issueInvoice(input: {
+  orderId: string;
+  /** QPay's sender_invoice_no: the order id, plus a suffix for a balance invoice. */
+  invoiceNo: string;
+  userId: string;
+  description: string;
+  amount: number;
+}) {
+  const test = userIdsFromEnv("QPAY_TEST_USER_IDS").has(input.userId);
+  const charged = test ? Math.min(TEST_CHARGE_MNT, input.amount) : input.amount;
+  const invoice = await createInvoice({
+    senderInvoiceNo: input.invoiceNo,
+    receiverCode: input.userId,
+    description: `${test ? "[TEST] " : ""}${input.description}`.slice(0, 255),
+    amount: charged,
+    callbackUrl: callbackUrl(input.orderId),
+  });
+  return {
+    chargedMnt: charged,
+    qpayInvoiceId: invoice.invoiceId,
+    qpayQrText: invoice.qrText,
+    qpayQrImage: invoice.qrImage,
+    qpayShortUrl: invoice.shortUrl,
+    qpayUrls: invoice.urls as Prisma.InputJsonValue,
+  };
+}
+
+/**
+ * Creates the QPay invoice for the balance of an installment order whose first
+ * part is paid. Does nothing if that invoice already exists.
+ */
+export async function startBalancePayment(orderId: string, userId: string) {
+  assertPaymentAvailable();
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId },
+    include: { event: true },
+  });
+  if (order?.status !== "DEPOSIT_PAID" || order.depositMnt === null) {
+    throw new BookingError("INVALID", "Үлдэгдэл төлөх захиалга олдсонгүй.");
+  }
+  if (order.qpayInvoiceId) return;
+  if (order.balanceDueAt && order.balanceDueAt.getTime() < Date.now()) {
+    await syncOrder(order.id);
+    throw new BookingError("INVALID", "Үлдэгдэл төлөх хугацаа дууссан.");
+  }
+
+  let data: Awaited<ReturnType<typeof issueInvoice>>;
+  try {
+    data = await issueInvoice({
+      orderId: order.id,
+      invoiceNo: `${order.id}-2`,
+      userId,
+      description: [
+        `${order.event?.title}: ${order.seatLabels.join(", ")}`,
+        order.itemLabel,
+        "Үлдэгдэл",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      amount: order.amountMnt - order.depositMnt,
+    });
+  } catch (error) {
+    console.error("QPay balance invoice creation failed", error);
+    throw new BookingError("PAYMENT_UNAVAILABLE", "Нэхэмжлэх үүсгэж чадсангүй. Дахин оролдоно уу.");
+  }
+  // Two clicks at once: keep the first invoice and drop this one.
+  const saved = await prisma.order.updateMany({
+    where: { id: order.id, status: "DEPOSIT_PAID", qpayInvoiceId: null },
+    data,
+  });
+  if (saved.count === 0) await cancelInvoice(data.qpayInvoiceId);
 }
 
 // ─── Payment status ─────────────────────────────────────────────────────────
@@ -214,6 +294,86 @@ async function releaseOrder(orderId: string, status: "EXPIRED" | "CANCELLED") {
       data: { status },
     });
     if (ended.count === 0) return; // already released, paid or cancelled
+    await tx.seat.updateMany({
+      where: { orderId, status: "HELD" },
+      data: { status: "AVAILABLE", heldUntil: null, orderId: null },
+    });
+  });
+}
+
+/**
+ * The first part of an installment order is paid: hold its seats until the
+ * balance is due, and move the paid invoice aside so the balance can get its
+ * own. If the seats went to someone else meanwhile, flag it for a refund.
+ */
+async function confirmDepositPaid(
+  order: {
+    id: string;
+    eventId: string | null;
+    seatLabels: string[];
+    balanceDueAt: Date | null;
+    qpayInvoiceId: string | null;
+    chargedMnt: number | null;
+  },
+  paymentId: string | null,
+) {
+  const eventId = order.eventId;
+  const due = order.balanceDueAt;
+  if (!eventId || !due) throw new Error(`Installment order ${order.id} has no event or due date`);
+  const now = new Date();
+  try {
+    await prisma.$transaction(async (tx) => {
+      const held = await tx.seat.updateMany({
+        where: {
+          eventId,
+          OR: order.seatLabels.map(parseLabel),
+          AND: {
+            OR: [
+              { orderId: order.id, status: "HELD" },
+              { status: "AVAILABLE" },
+              { status: "HELD", heldUntil: { lt: now } },
+            ],
+          },
+        },
+        data: { status: "HELD", heldUntil: due, orderId: order.id },
+      });
+      if (held.count !== order.seatLabels.length) throw new Error("SEATS_LOST");
+      await tx.order.updateMany({
+        where: { id: order.id, depositPaidAt: null },
+        data: {
+          status: "DEPOSIT_PAID",
+          expiresAt: due,
+          depositPaidAt: now,
+          depositPaymentId: paymentId,
+          depositInvoiceId: order.qpayInvoiceId,
+          depositChargedMnt: order.chargedMnt,
+          chargedMnt: null,
+          qpayInvoiceId: null,
+          qpayQrText: null,
+          qpayQrImage: null,
+          qpayShortUrl: null,
+          qpayUrls: Prisma.DbNull,
+          checkedAt: null,
+        },
+      });
+    });
+  } catch (error) {
+    if (!(error instanceof Error && error.message === "SEATS_LOST")) throw error;
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "REFUND_REQUIRED", paidAt: now, qpayPaymentId: paymentId },
+    });
+  }
+}
+
+/** The balance was not paid in time: release the seats and keep the first part. */
+async function markBalanceUnpaid(orderId: string) {
+  await prisma.$transaction(async (tx) => {
+    const ended = await tx.order.updateMany({
+      where: { id: orderId, status: "DEPOSIT_PAID" },
+      data: { status: "BALANCE_UNPAID" },
+    });
+    if (ended.count === 0) return;
     await tx.seat.updateMany({
       where: { orderId, status: "HELD" },
       data: { status: "AVAILABLE", heldUntil: null, orderId: null },
@@ -277,15 +437,29 @@ async function confirmPaid(
 
 /**
  * Brings an order up to date: confirms it if QPay reports payment, or expires it
- * once the hold runs out. Safe to call from the status poller and the QPay callback.
+ * once the hold (or, for installments, the balance deadline) runs out. Safe to
+ * call from the status poller, the QPay callback and the daily cron.
  */
 export async function syncOrder(orderId: string, { force = false } = {}) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order?.qpayInvoiceId) return order;
-  // Expired orders are only re-checked when QPay calls back (a late payment).
-  if (order.status !== "PENDING" && !(force && order.status === "EXPIRED")) return order;
-
+  if (!order) return order;
   const now = Date.now();
+  const balanceOverdue =
+    order.status === "DEPOSIT_PAID" &&
+    order.balanceDueAt !== null &&
+    order.balanceDueAt.getTime() < now;
+
+  if (!order.qpayInvoiceId) {
+    // First part paid, balance invoice not asked for yet.
+    if (!balanceOverdue) return order;
+    await markBalanceUnpaid(order.id);
+    return prisma.order.findUnique({ where: { id: order.id } });
+  }
+  const open = order.status === "PENDING" || order.status === "DEPOSIT_PAID";
+  // Ended orders are only re-checked when QPay calls back (a late payment).
+  const late = force && (order.status === "EXPIRED" || order.status === "BALANCE_UNPAID");
+  if (!open && !late) return order;
+
   if (!force && order.checkedAt && now - order.checkedAt.getTime() < CHECK_INTERVAL_MS) {
     return order;
   }
@@ -293,10 +467,17 @@ export async function syncOrder(orderId: string, { force = false } = {}) {
 
   const payment = await checkInvoicePayment(order.qpayInvoiceId);
   if (payment.paid && payment.paidAmount >= (order.chargedMnt ?? order.amountMnt)) {
-    await confirmPaid(order, payment.paymentId);
+    if (order.depositMnt !== null && order.depositPaidAt === null) {
+      await confirmDepositPaid(order, payment.paymentId);
+    } else {
+      await confirmPaid(order, payment.paymentId);
+    }
   } else if (order.status === "PENDING" && order.expiresAt.getTime() < now) {
     await cancelInvoice(order.qpayInvoiceId);
     await releaseOrder(order.id, "EXPIRED");
+  } else if (balanceOverdue) {
+    await cancelInvoice(order.qpayInvoiceId);
+    await markBalanceUnpaid(order.id);
   }
   return prisma.order.findUnique({ where: { id: order.id } });
 }
@@ -343,4 +524,26 @@ export async function purgeExpiredOrders() {
     }
   }
   return { checked: stale.length, deleted, kept };
+}
+
+/**
+ * Installment orders whose balance deadline has passed: a last check with QPay,
+ * then their seats are released (BALANCE_UNPAID). These orders are kept.
+ */
+export async function expireOverdueBalances() {
+  const overdue = await prisma.order.findMany({
+    where: { status: "DEPOSIT_PAID", balanceDueAt: { lt: new Date() } },
+    select: { id: true },
+    take: PURGE_BATCH,
+  });
+  let failed = 0;
+  for (const order of overdue) {
+    try {
+      await syncOrder(order.id, { force: true });
+    } catch (error) {
+      console.error(`Could not expire balance of order ${order.id}`, error);
+      failed += 1;
+    }
+  }
+  return { checked: overdue.length, failed };
 }

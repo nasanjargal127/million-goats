@@ -4,14 +4,17 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { Suspense } from "react";
-import { HoldCountdown, OrderStatusPoller } from "@/components/order-live";
+import { HoldCountdown, OrderStatusPoller, PayBalanceButton } from "@/components/order-live";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSession } from "@/lib/auth";
-import { getOrderForUser } from "@/lib/booking";
+import { getOrderForUser, syncOrder } from "@/lib/booking";
 import { formatEventDate, formatMnt } from "@/lib/format";
+import { INSTALLMENT_DUE_TEXT } from "@/lib/lab/packages";
 import type { QPayBankLink } from "@/lib/qpay";
+import { invoicePartMnt } from "@/lib/sales";
 import { site } from "@/lib/site";
+import { payBalanceAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Төлбөр",
@@ -41,8 +44,19 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   const session = await getSession();
   if (!session) redirect(`/sign-in?next=${encodeURIComponent(`/orders/${id}`)}`);
 
-  const order = await getOrderForUser(id, session.user.id);
+  let order = await getOrderForUser(id, session.user.id);
   if (!order) notFound();
+  // An overdue balance releases the seat: bring the order up to date first.
+  if (order.status === "DEPOSIT_PAID" && order.balanceDueAt && order.balanceDueAt < new Date()) {
+    await syncOrder(order.id);
+    order = (await getOrderForUser(id, session.user.id)) ?? order;
+  }
+
+  const due = INSTALLMENT_DUE_TEXT.mn;
+  const deposit = order.depositMnt;
+  const balance = deposit === null ? 0 : order.amountMnt - deposit;
+  const balancePhase = order.depositPaidAt !== null;
+  const partPrice = invoicePartMnt(order);
 
   const merch = order.kind === "MERCH";
   const summary = (
@@ -76,7 +90,27 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         <span className="text-mg-body">Нийт дүн</span>
         <span className="font-bold text-2xl">{formatMnt(order.amountMnt)}</span>
       </div>
-      {order.chargedMnt !== null && order.chargedMnt < order.amountMnt && (
+      {deposit !== null && (
+        <ul className="m-0 flex list-none flex-col gap-2 p-0 text-sm">
+          {(
+            [
+              ["1-р төлөлт", deposit, balancePhase, due.first],
+              ["2-р төлөлт", balance, order.status === "PAID", due.balance],
+            ] as const
+          ).map(([label, amount, paid, when]) => (
+            <li key={label} className="flex items-baseline justify-between gap-3">
+              <span>
+                {label}{" "}
+                <span className={paid ? "font-semibold text-mg-mint-text" : "text-mg-muted"}>
+                  · {paid ? "төлсөн" : when}
+                </span>
+              </span>
+              <span className="font-semibold">{formatMnt(amount)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {order.chargedMnt !== null && order.chargedMnt < partPrice && (
         <p className="m-0 rounded-xl bg-[#FFF4DB] px-4 py-3 font-medium text-[#8A5A00] text-sm">
           Тест горим: QPay-ээр {formatMnt(order.chargedMnt)} төлнө.
         </p>
@@ -119,13 +153,40 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
     );
   }
 
-  if (order.status !== "PENDING") {
+  if (order.status === "DEPOSIT_PAID" && !order.qpayInvoiceId) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-start gap-4 rounded-[20px] bg-mg-navy p-8 text-white">
+          <h1 className="m-0 font-black text-[clamp(28px,4vw,44px)] uppercase leading-tight">
+            Эхний төлөлт орлоо
+          </h1>
+          <p className="m-0 text-white/80">
+            Суудал таны нэр дээр хадгалагдаж байна. Үлдэгдэл {formatMnt(balance)}-ийг {due.balance}{" "}
+            төлж баталгаажуулна уу. Хугацаандаа төлөөгүй бол суудал чөлөөлөгдөж, эхний төлбөр
+            буцаагдахгүй.
+          </p>
+          <PayBalanceButton
+            action={payBalanceAction.bind(null, order.id)}
+            label={`Үлдэгдэл ${formatMnt(balance)} төлөх`}
+          />
+        </div>
+        {summary}
+        <Link href="/account" className="self-start font-semibold text-mg-link hover:text-mg-navy">
+          Миний захиалгууд →
+        </Link>
+      </div>
+    );
+  }
+
+  if (order.status !== "PENDING" && order.status !== "DEPOSIT_PAID") {
     const message =
       order.status === "REFUND_REQUIRED"
         ? `Төлбөр орж ирсэн ч хугацаа дууссан тул суудал өөр хүнд шилжсэн байна. Буцаан олголтын талаар ${site.contact.email} хаягаар холбогдоно уу.`
-        : order.status === "EXPIRED"
-          ? `Төлбөрийн хугацаа дууссан тул ${merch ? "захиалга цуцлагдлаа" : "суудлууд чөлөөлөгдлөө"}.`
-          : "Захиалга цуцлагдсан.";
+        : order.status === "BALANCE_UNPAID"
+          ? `Үлдэгдэл хугацаандаа төлөгдөөгүй тул суудал чөлөөлөгдсөн. Асуух зүйл байвал ${site.contact.email} хаягаар холбогдоно уу.`
+          : order.status === "EXPIRED"
+            ? `Төлбөрийн хугацаа дууссан тул ${merch ? "захиалга цуцлагдлаа" : "суудлууд чөлөөлөгдлөө"}.`
+            : "Захиалга цуцлагдсан.";
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 rounded-[20px] border border-mg-line bg-white p-8">
@@ -150,12 +211,18 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
 
   return (
     <div className="flex flex-wrap gap-6">
-      <OrderStatusPoller orderId={order.id} />
+      <OrderStatusPoller orderId={order.id} status={order.status} />
       <section className="flex min-w-0 flex-[1_1_360px] flex-col items-center gap-5 rounded-[20px] bg-mg-navy p-6 text-white sm:p-8">
         <div className="flex w-full items-center justify-between gap-4">
-          <h1 className="m-0 font-black text-2xl uppercase">QPay-ээр төлөх</h1>
+          <h1 className="m-0 font-black text-2xl uppercase">
+            {deposit === null ? "QPay-ээр төлөх" : balancePhase ? "Үлдэгдэл төлөх" : "1-р төлөлт"}
+          </h1>
           <span className="rounded-full bg-white/10 px-3 py-1.5 font-semibold text-sm">
-            <HoldCountdown expiresAt={order.expiresAt.toISOString()} />
+            {balancePhase ? (
+              due.balance
+            ) : (
+              <HoldCountdown expiresAt={order.expiresAt.toISOString()} />
+            )}
           </span>
         </div>
         {src ? (
@@ -169,6 +236,9 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
           />
         ) : (
           <p className="m-0 text-mg-on-dark">QR код үүсгэж чадсангүй.</p>
+        )}
+        {deposit !== null && (
+          <p className="m-0 font-bold text-3xl text-mg-mint">{formatMnt(partPrice)}</p>
         )}
         <p className="m-0 text-center text-mg-on-dark text-sm leading-relaxed">
           Банкны апп эсвэл QPay-ээр QR кодыг уншуулна уу. Төлбөр орсны дараа энэ хуудас автоматаар

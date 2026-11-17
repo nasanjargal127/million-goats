@@ -8,7 +8,7 @@ import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { formatEventDate, formatMnt } from "@/lib/format";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
-import { QPAY_FEE_RATE, saleMoney, summarizeSales } from "@/lib/sales";
+import { MONEY_STATUSES, QPAY_FEE_RATE, saleMoney, summarizeSales } from "@/lib/sales";
 
 export const metadata: Metadata = {
   title: "Админ · Борлуулалт",
@@ -22,7 +22,7 @@ const KINDS = {
 } satisfies Record<string, { label: string; where: Prisma.OrderWhereInput }>;
 
 const SHOWS = {
-  paid: { label: "Төлөгдсөн", where: { status: { in: ["PAID", "REFUND_REQUIRED"] } } },
+  paid: { label: "Төлөгдсөн", where: { status: { in: [...MONEY_STATUSES] } } },
   all: { label: "Бүх захиалга", where: {} },
 } satisfies Record<string, { label: string; where: Prisma.OrderWhereInput }>;
 
@@ -96,13 +96,15 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
       where: {
         ...KINDS[kind].where,
         ...byStudent,
-        status: { in: ["PAID", "REFUND_REQUIRED"] },
+        status: { in: [...MONEY_STATUSES] },
       },
       select: {
         status: true,
         kind: true,
         amountMnt: true,
         chargedMnt: true,
+        depositMnt: true,
+        depositChargedMnt: true,
         labPackage: true,
         quantity: true,
       },
@@ -175,11 +177,18 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
           note={`Merch: ${totals.merchItems} ширхэг`}
         />
       </section>
-      {(totals.testOrders > 0 || totals.refundRequired > 0) && (
+      {(totals.testOrders > 0 ||
+        totals.refundRequired > 0 ||
+        totals.balanceDue > 0 ||
+        totals.balanceUnpaid > 0) && (
         <p className="m-0 text-mg-muted text-sm">
           {totals.testOrders > 0 && `Тест захиалга (${totals.testOrders}) нийт дүнд ороогүй. `}
           {totals.refundRequired > 0 &&
-            `${totals.refundRequired} захиалгад буцаан олголт хийх шаардлагатай.`}
+            `${totals.refundRequired} захиалгад буцаан олголт хийх шаардлагатай. `}
+          {totals.balanceDue > 0 &&
+            `${totals.balanceDue} захиалга хувааж төлж байгаа: эхний төлөлт орсон, үлдэгдэл хүлээгдэж байна. `}
+          {totals.balanceUnpaid > 0 &&
+            `${totals.balanceUnpaid} захиалгын үлдэгдэл хугацаандаа төлөгдөөгүй тул суудал чөлөөлөгдсөн (эхний төлөлт орлогод орсон).`}
         </p>
       )}
 
@@ -230,14 +239,22 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
               <tbody>
                 {orders.map((o) => {
                   const money = saleMoney(o);
-                  // Unpaid orders are only marked expired when someone looks at them.
-                  const lapsed = o.status === "PENDING" && o.expiresAt.getTime() < now;
-                  const status = ORDER_STATUS_LABEL[lapsed ? "EXPIRED" : o.status];
-                  const counted = o.status === "PAID" || o.status === "REFUND_REQUIRED";
+                  // Unpaid orders are only marked expired when someone looks at them
+                  // (or, for an overdue balance, by the daily cron).
+                  const lapsed = o.expiresAt.getTime() < now;
+                  const status =
+                    ORDER_STATUS_LABEL[
+                      lapsed && o.status === "PENDING"
+                        ? "EXPIRED"
+                        : lapsed && o.status === "DEPOSIT_PAID"
+                          ? "BALANCE_UNPAID"
+                          : o.status
+                    ];
+                  const counted = (MONEY_STATUSES as readonly string[]).includes(o.status);
                   return (
                     <tr key={o.id} className="border-mg-line border-t align-top">
                       <td className="whitespace-nowrap px-4 py-3 text-mg-body">
-                        {formatEventDate(o.paidAt ?? o.createdAt)}
+                        {formatEventDate(o.paidAt ?? o.depositPaidAt ?? o.createdAt)}
                       </td>
                       <td className="px-4 py-3">
                         <span className="block font-semibold text-mg-navy">
@@ -273,6 +290,11 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">
                         <span className="block font-semibold">{formatMnt(money.received)}</span>
+                        {o.depositMnt !== null && !money.test && money.received < o.amountMnt && (
+                          <span className="block text-mg-muted text-xs">
+                            нийт {formatMnt(o.amountMnt)}-өөс
+                          </span>
+                        )}
                         {money.test && (
                           <span className="block text-mg-muted text-xs">
                             үнэ {formatMnt(o.amountMnt)}

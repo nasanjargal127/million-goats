@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
-import { purgeExpiredOrders } from "@/lib/booking";
+import { expireOverdueBalances, purgeExpiredOrders } from "@/lib/booking";
 
 /** Vercel Cron sends `Authorization: Bearer $CRON_SECRET`; anything else is refused. */
 function authorized(request: NextRequest) {
@@ -11,12 +11,17 @@ function authorized(request: NextRequest) {
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
-/** Daily (see vercel.json): deletes unpaid orders that expired over an hour ago. */
+/**
+ * Daily (see vercel.json): deletes unpaid orders that expired over an hour ago,
+ * and releases the seats of installment orders whose balance is overdue.
+ */
 export async function GET(request: NextRequest) {
   if (!authorized(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const result = await purgeExpiredOrders();
-  console.log("Purged expired orders", result);
-  return NextResponse.json(result);
+  const purged = await purgeExpiredOrders();
+  console.log("Purged expired orders", purged);
+  const balances = await expireOverdueBalances();
+  console.log("Expired overdue balances", balances);
+  return NextResponse.json({ ...purged, balances });
 }
