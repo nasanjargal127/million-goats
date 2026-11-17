@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AdminNav, FilterLink } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import type { Prisma } from "@/generated/prisma/client";
@@ -42,22 +43,6 @@ function Stat({ label, value, note }: { label: string; value: string; note?: str
       <span className="font-black text-2xl text-mg-navy">{value}</span>
       {note && <span className="text-mg-muted text-xs">{note}</span>}
     </div>
-  );
-}
-
-function FilterLink({ href, active, label }: { href: string; active: boolean; label: string }) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={`inline-flex min-h-10 items-center rounded-lg border px-4 font-semibold text-sm transition ${
-        active
-          ? "border-mg-navy bg-mg-navy text-white"
-          : "border-mg-line bg-white text-mg-navy hover:border-mg-blue"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }
 
@@ -115,6 +100,7 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
 
   return (
     <div className="flex flex-col gap-8">
+      <AdminNav current="sales" />
       <div className="flex flex-col gap-2">
         <h1 className="m-0 font-black text-[clamp(28px,3.5vw,40px)] uppercase">Борлуулалт</h1>
         <p className="m-0 text-mg-body">
