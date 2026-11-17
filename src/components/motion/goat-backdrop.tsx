@@ -18,7 +18,7 @@ const HIDDEN_ON = new Set(["/lab"]);
 const EDGE = 8;
 
 /**
- * The Million Goats goat (line art from the brand book) stays in one place
+ * The Million Goats goat (line art from the brand book) stays centred
  * behind every page and draws itself in from the horns down as the visitor
  * scrolls: fully drawn by ~70% of the page. It is blended with `screen`, so it
  * glows on navy/blue sections and disappears on white ones, and it never
@@ -41,7 +41,7 @@ export function GoatBackdrop() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center overflow-hidden mix-blend-screen md:justify-end md:pr-[6vw]"
+      className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center overflow-hidden mix-blend-screen"
     >
       <motion.div
         className="opacity-25"
