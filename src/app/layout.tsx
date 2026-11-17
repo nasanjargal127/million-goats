@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
+import { Suspense } from "react";
+import { GoatBackdrop } from "@/components/motion/goat-backdrop";
+import { MotionProvider } from "@/components/motion/reveal";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -86,7 +89,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        {children}
+        <MotionProvider>
+          {children}
+          {/* Reads the pathname, which on dynamic routes is request data. */}
+          <Suspense fallback={null}>
+            <GoatBackdrop />
+          </Suspense>
+        </MotionProvider>
       </body>
     </html>
   );
