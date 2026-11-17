@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
+import { userIdsFromEnv } from "./admin";
 import { prisma } from "./db";
 import { type LabChoice, labChoiceLabel, labChoicePrice } from "./lab/packages";
 import { cancelInvoice, checkInvoicePayment, createInvoice, qpayConfigured } from "./qpay";
@@ -9,7 +10,7 @@ import { site } from "./site";
 /** How long selected seats stay reserved (and invoices stay open) while the visitor pays. */
 export const HOLD_MINUTES = 15;
 const MAX_SEATS_PER_ORDER = 6;
-/** What test accounts pay instead of the real price (see QPAY_TEST_EMAILS). */
+/** What test accounts pay instead of the real price (see QPAY_TEST_USER_IDS). */
 const TEST_CHARGE_MNT = 100;
 /** Don't ask QPay about the same order more often than this. */
 const CHECK_INTERVAL_MS = 4_000;
@@ -164,21 +165,10 @@ export function assertPaymentAvailable() {
 }
 
 /**
- * Comma-separated emails (QPAY_TEST_EMAILS) whose orders show the real price but
- * are invoiced TEST_CHARGE_MNT, so payments can be tested in production.
+ * Accounts (QPAY_TEST_USER_IDS) whose orders show the real price but are
+ * invoiced TEST_CHARGE_MNT, so payments can be tested in production.
  */
-const testEmails = new Set(
-  (process.env.QPAY_TEST_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean),
-);
-
-async function isTestUser(userId: string) {
-  if (testEmails.size === 0) return false;
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-  return user ? testEmails.has(user.email.toLowerCase()) : false;
-}
+const testUserIds = userIdsFromEnv("QPAY_TEST_USER_IDS");
 
 /**
  * Creates the QPay invoice for a freshly created PENDING order and stores it.
@@ -191,7 +181,7 @@ export async function attachInvoice(input: {
   amount: number;
 }) {
   try {
-    const test = await isTestUser(input.userId);
+    const test = testUserIds.has(input.userId);
     const charged = test ? Math.min(TEST_CHARGE_MNT, input.amount) : input.amount;
     const invoice = await createInvoice({
       senderInvoiceNo: input.orderId,

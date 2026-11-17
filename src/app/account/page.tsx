@@ -5,22 +5,15 @@ import { Suspense } from "react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import type { OrderStatus } from "@/generated/prisma/client";
+import { isAdmin } from "@/lib/admin";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatEventDate, formatMnt } from "@/lib/format";
+import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
 export const metadata: Metadata = {
   title: "Миний бүртгэл",
   robots: { index: false },
-};
-
-const statusLabel: Record<OrderStatus, { text: string; className: string }> = {
-  PAID: { text: "Баталгаажсан", className: "bg-[#DBFFF7] text-mg-mint-text" },
-  PENDING: { text: "Төлбөр хүлээгдэж буй", className: "bg-[#E3EEFF] text-[#0047B3]" },
-  EXPIRED: { text: "Хугацаа дууссан", className: "bg-mg-surface text-mg-muted" },
-  CANCELLED: { text: "Цуцлагдсан", className: "bg-mg-surface text-mg-muted" },
-  REFUND_REQUIRED: { text: "Буцаан олголт", className: "bg-[#FFE6DE] text-[#B32600]" },
 };
 
 async function AccountView() {
@@ -42,7 +35,17 @@ async function AccountView() {
           </h1>
           <span className="truncate text-mg-on-dark">{session.user.email}</span>
         </div>
-        <SignOutButton />
+        <div className="flex flex-wrap gap-3">
+          {isAdmin(session.user.id) && (
+            <Link
+              href="/admin"
+              className="inline-flex min-h-11 items-center rounded-[10px] bg-mg-orange px-5 font-semibold text-mg-navy transition hover:brightness-110"
+            >
+              Админ
+            </Link>
+          )}
+          <SignOutButton />
+        </div>
       </div>
 
       <section className="flex flex-col gap-4">
@@ -60,7 +63,7 @@ async function AccountView() {
         ) : (
           <ul className="m-0 flex list-none flex-col gap-3 p-0">
             {orders.map((o) => {
-              const s = statusLabel[o.status];
+              const s = ORDER_STATUS_LABEL[o.status];
               return (
                 <li key={o.id}>
                   <Link
