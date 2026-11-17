@@ -9,12 +9,15 @@ import { reserveLabSeatAction } from "@/app/lab/actions";
 import { formatMnt } from "@/lib/format";
 import { DICT } from "@/lib/lab/i18n";
 import {
+  INSTALLMENT_DUE_TEXT,
   LAB_PACKAGE_IDS,
   LAB_PACKAGES,
   type LabChoice,
   type LabPackageId,
   LOWEST_PACKAGE_PRICE_MNT,
+  labChoiceDueNow,
   labChoicePrice,
+  PREMIUM_INSTALLMENTS,
   PSYCHOLOGIST_ADDON_MNT,
   TEACHERS,
 } from "@/lib/lab/packages";
@@ -35,7 +38,12 @@ import { site } from "@/lib/site";
 import { HighlightTitle } from "../brand";
 
 /** Online booking details from the database; null until the Lab event is set up. */
-export type LabBooking = { holdMinutes: number; signedIn: boolean } | null;
+export type LabBooking = {
+  holdMinutes: number;
+  signedIn: boolean;
+  /** Premium can still be paid in two parts (see PREMIUM_INSTALLMENTS). */
+  installments: boolean;
+} | null;
 
 const LabScene = dynamic(() => import("./lab-scene"), {
   ssr: false,
@@ -173,6 +181,73 @@ function WarningIcon() {
   );
 }
 
+/** Premium only: pay everything now, or in two parts before the two deadlines. */
+function InstallmentPicker({
+  installments,
+  setInstallments,
+  total,
+}: {
+  installments: boolean;
+  setInstallments: (on: boolean) => void;
+  total: number;
+}) {
+  const lang = useLab((s) => s.lang);
+  const t = DICT[lang];
+  const due = INSTALLMENT_DUE_TEXT[lang];
+  const first = PREMIUM_INSTALLMENTS.firstMnt;
+  const parts = [
+    [t.firstPart, first, due.first],
+    [t.secondPart, total - first, due.balance],
+  ] as const;
+
+  return (
+    <div className="flex flex-col gap-2 border-white/10 border-t p-3.5">
+      <p className="m-0 font-semibold text-sm">{t.howToPay}</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {(
+          [
+            [false, t.payInFull],
+            [true, t.payInTwo],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => setInstallments(value)}
+            aria-pressed={installments === value}
+            className={`min-h-10 cursor-pointer rounded-lg border px-2 font-semibold text-sm transition ${
+              installments === value
+                ? "border-mg-orange bg-mg-orange text-mg-navy"
+                : "border-white/15 text-mg-on-dark hover:border-mg-sky"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {installments && (
+        <>
+          <ul className="m-0 flex list-none flex-col gap-1 p-0 text-sm">
+            {parts.map(([label, amount, when]) => (
+              <li key={label} className="flex items-baseline justify-between gap-3">
+                <span>
+                  {label}
+                  <span className="block text-mg-on-dark-muted text-xs">{when}</span>
+                </span>
+                <span className="font-semibold text-mg-mint">{formatMnt(amount)}</span>
+              </li>
+            ))}
+          </ul>
+          <span className="flex gap-2 rounded-lg border border-[#FFC24D]/40 bg-[#FFC24D]/10 px-2.5 py-2 font-medium text-[#FFD27A] text-xs">
+            <WarningIcon />
+            {t.installmentRule}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
 /** Pro / Premium cards; Pro also asks for a teacher and the optional psychologist. */
 function PackagePicker({
   pkg,
@@ -181,6 +256,9 @@ function PackagePicker({
   setTeacher,
   psychologist,
   setPsychologist,
+  installments,
+  setInstallments,
+  installmentsAvailable,
 }: {
   pkg: LabPackageId;
   setPkg: (id: LabPackageId) => void;
@@ -188,6 +266,9 @@ function PackagePicker({
   setTeacher: (name: string) => void;
   psychologist: boolean;
   setPsychologist: (on: boolean) => void;
+  installments: boolean;
+  setInstallments: (on: boolean) => void;
+  installmentsAvailable: boolean;
 }) {
   const lang = useLab((s) => s.lang);
   const t = DICT[lang];
@@ -226,7 +307,14 @@ function PackagePicker({
                     <span className="block text-mg-on-dark-muted text-xs">{text.tagline}</span>
                   </span>
                 </span>
-                <span className="font-bold text-base text-mg-mint">{formatMnt(info.priceMnt)}</span>
+                <span className="flex shrink-0 flex-col items-end">
+                  <span className="font-bold text-base text-mg-mint">
+                    {formatMnt(info.priceMnt)}
+                  </span>
+                  <span className="font-semibold text-mg-on-dark-muted text-xs">
+                    / {text.period}
+                  </span>
+                </span>
               </span>
               <ul className="m-0 flex list-none flex-col gap-1 p-0 pl-6.5 text-sm text-white/85">
                 {text.features.map((feature) => (
@@ -282,6 +370,14 @@ function PackagePicker({
                 </label>
               </div>
             )}
+
+            {id === "PREMIUM" && active && installmentsAvailable && (
+              <InstallmentPicker
+                installments={installments}
+                setInstallments={setInstallments}
+                total={info.priceMnt}
+              />
+            )}
           </div>
         );
       })}
@@ -296,6 +392,7 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
   const [pkg, setPkg] = useState<LabPackageId>("PRO");
   const [teacher, setTeacher] = useState<string | null>(null);
   const [psychologist, setPsychologist] = useState(false);
+  const [installments, setInstallments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -305,8 +402,13 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
 
   const choice: LabChoice =
     pkg === "PRO"
-      ? { labPackage: "PRO", teacher, withPsychologist: psychologist }
-      : { labPackage: "PREMIUM", teacher: null, withPsychologist: false };
+      ? { labPackage: "PRO", teacher, withPsychologist: psychologist, installments: false }
+      : {
+          labPackage: "PREMIUM",
+          teacher: null,
+          withPsychologist: false,
+          installments: installments && booking.installments,
+        };
   const needsTeacher = pkg === "PRO" && !teacher;
 
   function pay() {
@@ -330,11 +432,28 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
         setTeacher={setTeacher}
         psychologist={psychologist}
         setPsychologist={setPsychologist}
+        installments={installments}
+        setInstallments={setInstallments}
+        installmentsAvailable={booking.installments}
       />
       <div className="mt-4 flex items-baseline justify-between gap-3">
         <span className="text-mg-on-dark-muted text-sm">{t.total}</span>
-        <span className="font-bold text-2xl text-mg-mint">{formatMnt(labChoicePrice(choice))}</span>
+        <span
+          className={
+            choice.installments ? "font-semibold text-base" : "font-bold text-2xl text-mg-mint"
+          }
+        >
+          {formatMnt(labChoicePrice(choice))}
+        </span>
       </div>
+      {choice.installments && (
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-mg-on-dark-muted text-sm">{t.dueNow}</span>
+          <span className="font-bold text-2xl text-mg-mint">
+            {formatMnt(labChoiceDueNow(choice))}
+          </span>
+        </div>
+      )}
       {booking.signedIn ? (
         <>
           <button

@@ -7,4 +7,6 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, { text: string; className: 
   EXPIRED: { text: "Хугацаа дууссан", className: "bg-mg-surface text-mg-muted" },
   CANCELLED: { text: "Цуцлагдсан", className: "bg-mg-surface text-mg-muted" },
   REFUND_REQUIRED: { text: "Буцаан олголт", className: "bg-[#FFE6DE] text-[#B32600]" },
+  DEPOSIT_PAID: { text: "Үлдэгдэл төлөх", className: "bg-[#FFF4DB] text-[#8A5A00]" },
+  BALANCE_UNPAID: { text: "Үлдэгдэл төлөгдөөгүй", className: "bg-[#FFE6DE] text-[#B32600]" },
 };

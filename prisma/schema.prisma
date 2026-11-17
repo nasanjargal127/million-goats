@@ -131,6 +131,11 @@ enum OrderStatus {
   CANCELLED
   /// Paid after the hold expired and the seats went to someone else: refund manually.
   REFUND_REQUIRED
+  /// Installment order: the first part is paid and the seat is held until balanceDueAt.
+  DEPOSIT_PAID
+  /// Installment order whose balance was not paid by balanceDueAt: the seat was
+  /// released and the first part is kept.
+  BALANCE_UNPAID
 }
 
 enum OrderKind {
@@ -145,44 +150,58 @@ enum LabPackage {
 }
 
 model Order {
-  id               String          @id @default(cuid())
-  userId           String
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind             OrderKind       @default(SEAT)
+  id                   String          @id @default(cuid())
+  userId               String
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind                 OrderKind       @default(SEAT)
   /// Set for seat orders.
-  eventId          String?
-  event            Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  status           OrderStatus     @default(PENDING)
-  amountMnt        Int
+  eventId              String?
+  event                Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status               OrderStatus     @default(PENDING)
+  amountMnt            Int
   /// What the QPay invoice actually asks for. Equals amountMnt, except for
   /// test accounts (QPAY_TEST_USER_IDS), which are charged TEST_CHARGE_MNT.
-  chargedMnt       Int?
+  chargedMnt           Int?
   /// Snapshot of the seat labels, e.g. ["B-5", "B-6"].
-  seatLabels       String[]
+  seatLabels           String[]
   /// Merch orders: what was bought, e.g. "Traders Dept. футболк · L × 2".
-  itemLabel        String?
-  variantId        String?
-  variant          ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  quantity         Int?
-  contactPhone     String?
+  itemLabel            String?
+  variantId            String?
+  variant              ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  quantity             Int?
+  contactPhone         String?
   /// Trading Lab seat orders: the package, the Pro teacher and the Pro add-on.
   /// itemLabel holds the readable snapshot, e.g. "Pro багц · Багш 2 · Сэтгэлзүйч".
-  labPackage       LabPackage?
-  teacher          String?
-  withPsychologist Boolean         @default(false)
-  expiresAt        DateTime
-  qpayInvoiceId    String?         @unique
-  qpayQrText       String?
-  qpayQrImage      String?
-  qpayShortUrl     String?
+  labPackage           LabPackage?
+  teacher              String?
+  withPsychologist     Boolean         @default(false)
+  /// Installment orders (Premium in two parts) only: the price of the first part.
+  /// The balance is amountMnt - depositMnt and is due by balanceDueAt.
+  depositMnt           Int?
+  balanceDueAt         DateTime?
+  /// The paid first-part invoice. Once it is paid, the qpay* fields below are
+  /// cleared and later hold the balance invoice.
+  depositChargedMnt    Int?
+  depositInvoiceId     String?
+  depositPaymentId     String?
+  depositPaidAt        DateTime?
+  /// When the "first part received" email went out (see installment-emails.ts).
+  depositEmailSentAt   DateTime?
+  /// Balance reminder emails sent so far: 1 = a week before, 2 = the last day.
+  balanceRemindersSent Int             @default(0)
+  expiresAt            DateTime
+  qpayInvoiceId        String?         @unique
+  qpayQrText           String?
+  qpayQrImage          String?
+  qpayShortUrl         String?
   /// Bank app deep links returned by QPay: [{ name, description, logo, link }].
-  qpayUrls         Json?
-  qpayPaymentId    String?
-  checkedAt        DateTime?
-  paidAt           DateTime?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  seats            Seat[]
+  qpayUrls             Json?
+  qpayPaymentId        String?
+  checkedAt            DateTime?
+  paidAt               DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  seats                Seat[]
 
   @@index([userId])
   @@index([eventId])

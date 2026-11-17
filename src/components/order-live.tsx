@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import type { BalanceState } from "@/app/orders/[id]/actions";
 
 const POLL_MS = 5_000;
 
-/** Polls the order status while payment is pending and refreshes the page when it changes. */
-export function OrderStatusPoller({ orderId }: { orderId: string }) {
+/** Polls the order status while a payment is open and refreshes the page when it changes. */
+export function OrderStatusPoller({ orderId, status }: { orderId: string; status: string }) {
   const router = useRouter();
 
   useEffect(() => {
@@ -17,8 +18,8 @@ export function OrderStatusPoller({ orderId }: { orderId: string }) {
       try {
         const res = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
         if (res.ok) {
-          const { status } = (await res.json()) as { status: string };
-          if (status !== "PENDING") {
+          const next = (await res.json()) as { status: string };
+          if (next.status !== status) {
             router.refresh();
             return;
           }
@@ -34,7 +35,7 @@ export function OrderStatusPoller({ orderId }: { orderId: string }) {
       stopped = true;
       clearTimeout(timer);
     };
-  }, [orderId, router]);
+  }, [orderId, status, router]);
 
   return null;
 }
@@ -58,5 +59,30 @@ export function HoldCountdown({ expiresAt }: { expiresAt: string }) {
     <span className="tabular-nums">
       {String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
     </span>
+  );
+}
+
+/** Installment orders: asks for the balance invoice, then the page shows its QR code. */
+export function PayBalanceButton({
+  action,
+  label,
+}: {
+  action: (prev: BalanceState, form: FormData) => Promise<BalanceState>;
+  label: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, { error: null });
+  return (
+    <form action={formAction} className="flex flex-col items-start gap-2">
+      <button
+        type="submit"
+        disabled={pending}
+        className="inline-flex min-h-12 cursor-pointer items-center rounded-xl border-0 bg-mg-orange px-6 font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60"
+      >
+        {pending ? "Түр хүлээнэ үү…" : label}
+      </button>
+      <p role="alert" className="m-0 font-medium text-[#FF7A52] text-sm empty:hidden">
+        {state.error}
+      </p>
+    </form>
   );
 }
