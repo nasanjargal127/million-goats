@@ -3,7 +3,7 @@ import type { Lang } from "./store";
 const mn = {
   tagline: "Мэргэжлийн трейдерүүдийн танхим",
   stats: (rooms: number, seats: number, price: string | null) =>
-    `${rooms} танхим · ${seats} суудал${price ? ` · ${price} / суудал` : ""}`,
+    `${rooms} танхим · ${seats} суудал${price ? ` · ${price}-өөс` : ""}`,
   pickRoom: "Танхимаа сонгоно уу",
   seat: "Суудал",
   free: "сул",
@@ -12,7 +12,11 @@ const mn = {
   selected: "Сонгосон",
   back: "Бүх танхим",
   pickSeat: "Сул суудал дээр дарж сонгоно уу",
-  price: "Үнэ",
+  pickPackage: "Багцаа сонгоно уу",
+  pickTeacher: "Багшаа сонгоно уу",
+  addPsychologist: "Сэтгэлзүйч нэмэх",
+  merchNote: "Merch-ийн размераа Hub дээр ирэхдээ сонгоно.",
+  total: "Нийт",
   book: "QPay-ээр төлөх",
   booking: "Түр хүлээнэ үү…",
   signInToBook: "Захиалахын тулд нэвтрэх",
@@ -30,7 +34,7 @@ const mn = {
 const en: typeof mn = {
   tagline: "A room built for serious traders",
   stats: (rooms, seats, price) =>
-    `${rooms} rooms · ${seats} seats${price ? ` · ${price} per seat` : ""}`,
+    `${rooms} rooms · ${seats} seats${price ? ` · from ${price}` : ""}`,
   pickRoom: "Choose a room",
   seat: "Seat",
   free: "free",
@@ -39,7 +43,11 @@ const en: typeof mn = {
   selected: "Selected",
   back: "All rooms",
   pickSeat: "Tap an available seat to select it",
-  price: "Price",
+  pickPackage: "Choose a package",
+  pickTeacher: "Choose your teacher",
+  addPsychologist: "Add a psychologist",
+  merchNote: "Pick your merch size when you come to the Hub.",
+  total: "Total",
   book: "Pay with QPay",
   booking: "Please wait…",
   signInToBook: "Sign in to book",

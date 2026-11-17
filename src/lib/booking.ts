@@ -2,6 +2,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "./db";
+import { type LabChoice, labChoiceLabel, labChoicePrice } from "./lab/packages";
 import { cancelInvoice, checkInvoicePayment, createInvoice, qpayConfigured } from "./qpay";
 import { site } from "./site";
 
@@ -81,9 +82,15 @@ export function verifyOrderSignature(orderId: string, sig: string) {
 /**
  * Holds the seats for HOLD_MINUTES and creates a QPay invoice for them.
  * Seat holds are taken with a conditional update inside a transaction, so two
- * people can never hold the same seat.
+ * people can never hold the same seat. With a Trading Lab package, each seat is
+ * priced by the package instead of the event.
  */
-export async function reserveSeats(input: { userId: string; eventId: string; seatIds: string[] }) {
+export async function reserveSeats(input: {
+  userId: string;
+  eventId: string;
+  seatIds: string[];
+  lab?: LabChoice;
+}) {
   const seatIds = [...new Set(input.seatIds)];
   if (seatIds.length === 0 || seatIds.length > MAX_SEATS_PER_ORDER) {
     throw new BookingError("INVALID", `1–${MAX_SEATS_PER_ORDER} суудал сонгоно уу.`);
@@ -95,6 +102,8 @@ export async function reserveSeats(input: { userId: string; eventId: string; sea
 
   const now = new Date();
   const expiresAt = new Date(now.getTime() + HOLD_MINUTES * 60_000);
+  const seatPrice = input.lab ? labChoicePrice(input.lab) : event.priceMnt;
+  const itemLabel = input.lab ? labChoiceLabel(input.lab) : null;
 
   const order = await prisma.$transaction(async (tx) => {
     const seats = await tx.seat.findMany({
@@ -107,8 +116,14 @@ export async function reserveSeats(input: { userId: string; eventId: string; sea
       data: {
         userId: input.userId,
         eventId: event.id,
-        amountMnt: event.priceMnt * seats.length,
+        amountMnt: seatPrice * seats.length,
         seatLabels: seats.map((s) => seatLabel(s.row, s.number)),
+        itemLabel,
+        ...(input.lab && {
+          labPackage: input.lab.labPackage,
+          teacher: input.lab.teacher,
+          withPsychologist: input.lab.withPsychologist,
+        }),
         expiresAt,
       },
     });
@@ -129,7 +144,9 @@ export async function reserveSeats(input: { userId: string; eventId: string; sea
   await attachInvoice({
     orderId: order.id,
     userId: input.userId,
-    description: `${event.title}: ${order.seatLabels.join(", ")}`,
+    description: [`${event.title}: ${order.seatLabels.join(", ")}`, itemLabel]
+      .filter(Boolean)
+      .join(" · "),
     amount: order.amountMnt,
   });
   return order.id;
