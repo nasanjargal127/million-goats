@@ -3,6 +3,7 @@ import { Rubik } from "next/font/google";
 import { Suspense } from "react";
 import { GoatBackdrop } from "@/components/motion/goat-backdrop";
 import { MotionProvider } from "@/components/motion/reveal";
+import { socialLinks } from "@/lib/content";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -76,6 +77,9 @@ const organizationJsonLd = {
   name: site.name,
   url: site.url,
   logo: `${site.url}${site.logos.stackedOnLight}`,
+  telephone: site.contact.phoneHref.replace("tel:", ""),
+  email: site.contact.email,
+  sameAs: socialLinks.flatMap((s) => (s.href ? [s.href] : [])),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
