@@ -8,8 +8,8 @@ export const navLinks = [
 
 // TODO: add real profile URLs; entries without an href render as plain text.
 export const socialLinks: { label: string; href?: string }[] = [
-  { label: "Facebook" },
-  { label: "Instagram" },
+  { label: "Facebook", href: "https://www.facebook.com/milliongoats" },
+  { label: "Instagram", href: "https://www.instagram.com/milliongoats" },
   { label: "YouTube" },
   { label: "Discord" },
 ];

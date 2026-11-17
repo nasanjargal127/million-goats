@@ -29,12 +29,14 @@ export const site = {
     symbol: "/brand/symbol-blue.png",
     symbolOnDark: "/brand/symbol-white.png",
   },
-  // TODO: fill in real contact details.
   contact: {
     web: "www.milliongoats.mn",
     webUrl: "https://www.milliongoats.mn",
     email: "info@milliongoats.mn",
-    phone: "[УТАС]",
-    address: "[ХАЯГ], Улаанбаатар",
+    phone: "9978 3585",
+    phoneHref: "tel:+97699783585",
+    address: "Улаанбаатарын Их Сургууль, Улаанбаатар",
+    /** Google Maps pin for the address. */
+    mapUrl: "https://maps.app.goo.gl/wGmqxhpBwc4SY6nK6",
   },
 } as const;

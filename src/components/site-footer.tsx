@@ -42,7 +42,13 @@ export function SiteFooter() {
           <FooterHeading>Сошиал</FooterHeading>
           {socialLinks.map((s) =>
             s.href ? (
-              <a key={s.label} href={s.href} className="text-mg-on-dark hover:text-mg-mint">
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-mg-on-dark hover:text-mg-mint"
+              >
                 {s.label}
               </a>
             ) : (
@@ -59,8 +65,17 @@ export function SiteFooter() {
           <a href={`mailto:${site.contact.email}`} className="text-mg-on-dark hover:text-mg-mint">
             {site.contact.email}
           </a>
-          <span>{site.contact.phone}</span>
-          <span>{site.contact.address}</span>
+          <a href={site.contact.phoneHref} className="text-mg-on-dark hover:text-mg-mint">
+            {site.contact.phone}
+          </a>
+          <a
+            href={site.contact.mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-mg-on-dark hover:text-mg-mint"
+          >
+            {site.contact.address}
+          </a>
         </address>
       </div>
 
