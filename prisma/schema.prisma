@@ -155,7 +155,7 @@ model Order {
   status           OrderStatus     @default(PENDING)
   amountMnt        Int
   /// What the QPay invoice actually asks for. Equals amountMnt, except for
-  /// test accounts (QPAY_TEST_EMAILS), which are charged TEST_CHARGE_MNT.
+  /// test accounts (QPAY_TEST_USER_IDS), which are charged TEST_CHARGE_MNT.
   chargedMnt       Int?
   /// Snapshot of the seat labels, e.g. ["B-5", "B-6"].
   seatLabels       String[]
