@@ -154,6 +154,9 @@ model Order {
   event            Event?          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   status           OrderStatus     @default(PENDING)
   amountMnt        Int
+  /// What the QPay invoice actually asks for. Equals amountMnt, except for
+  /// test accounts (QPAY_TEST_EMAILS), which are charged TEST_CHARGE_MNT.
+  chargedMnt       Int?
   /// Snapshot of the seat labels, e.g. ["B-5", "B-6"].
   seatLabels       String[]
   /// Merch orders: what was bought, e.g. "Traders Dept. футболк · L × 2".

@@ -76,6 +76,11 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         <span className="text-mg-body">Нийт дүн</span>
         <span className="font-bold text-2xl">{formatMnt(order.amountMnt)}</span>
       </div>
+      {order.chargedMnt !== null && order.chargedMnt < order.amountMnt && (
+        <p className="m-0 rounded-xl bg-[#FFF4DB] px-4 py-3 font-medium text-[#8A5A00] text-sm">
+          Тест горим: QPay-ээр {formatMnt(order.chargedMnt)} төлнө.
+        </p>
+      )}
     </div>
   );
 
