@@ -7,6 +7,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { formatEventDate, formatMnt } from "@/lib/format";
+import { INSTALLMENT_DUE_TEXT } from "@/lib/lab/packages";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 import { MONEY_STATUSES, QPAY_FEE_RATE, saleMoney, summarizeSales } from "@/lib/sales";
 
@@ -293,6 +294,12 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
                         {o.depositMnt !== null && !money.test && money.received < o.amountMnt && (
                           <span className="block text-mg-muted text-xs">
                             нийт {formatMnt(o.amountMnt)}-өөс
+                          </span>
+                        )}
+                        {o.status === "DEPOSIT_PAID" && o.depositMnt !== null && (
+                          <span className="block font-semibold text-[#8A5A00] text-xs">
+                            үлдэгдэл {formatMnt(o.amountMnt - o.depositMnt)} ·{" "}
+                            {INSTALLMENT_DUE_TEXT.mn.balance}
                           </span>
                         )}
                         {money.test && (

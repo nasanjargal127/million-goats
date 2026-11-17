@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { userIdsFromEnv } from "./admin";
 import { prisma } from "./db";
+import { sendDepositEmail } from "./installment-emails";
 import {
   installmentsOpen,
   type LabChoice,
@@ -469,6 +470,7 @@ export async function syncOrder(orderId: string, { force = false } = {}) {
   if (payment.paid && payment.paidAmount >= (order.chargedMnt ?? order.amountMnt)) {
     if (order.depositMnt !== null && order.depositPaidAt === null) {
       await confirmDepositPaid(order, payment.paymentId);
+      await sendDepositEmail(order.id);
     } else {
       await confirmPaid(order, payment.paymentId);
     }
