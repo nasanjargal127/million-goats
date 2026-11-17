@@ -66,18 +66,38 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
   const now = Date.now();
   const kind = pick<Kind>(query.kind, KINDS, "all");
   const show = pick<Show>(query.show, SHOWS, "paid");
-  const href = (next: { kind?: Kind; show?: Show }) =>
-    `/admin?kind=${next.kind ?? kind}&show=${next.show ?? show}`;
+  const search = typeof query.q === "string" ? query.q.trim().slice(0, 100) : "";
+  const href = (next: { kind?: Kind; show?: Show; q?: string }) => {
+    const params = new URLSearchParams({ kind: next.kind ?? kind, show: next.show ?? show });
+    const q = next.q ?? search;
+    if (q) params.set("q", q);
+    return `/admin?${params}`;
+  };
+  // Student name or email contains the search text, ignoring case.
+  const byStudent: Prisma.OrderWhereInput = search
+    ? {
+        user: {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+          ],
+        },
+      }
+    : {};
 
   const [orders, paidForTotals] = await Promise.all([
     prisma.order.findMany({
-      where: { ...KINDS[kind].where, ...SHOWS[show].where },
+      where: { ...KINDS[kind].where, ...SHOWS[show].where, ...byStudent },
       include: { user: { select: { name: true, email: true } } },
       orderBy: { createdAt: "desc" },
       take: 500,
     }),
     prisma.order.findMany({
-      where: { ...KINDS[kind].where, status: { in: ["PAID", "REFUND_REQUIRED"] } },
+      where: {
+        ...KINDS[kind].where,
+        ...byStudent,
+        status: { in: ["PAID", "REFUND_REQUIRED"] },
+      },
       select: {
         status: true,
         kind: true,
@@ -99,6 +119,44 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
           хасч тооцсон.
         </p>
       </div>
+
+      <search>
+        <form action="/admin" className="flex flex-wrap gap-2">
+          <input type="hidden" name="kind" value={kind} />
+          <input type="hidden" name="show" value={show} />
+          <label htmlFor="admin-search" className="sr-only">
+            Сурагч хайх
+          </label>
+          <input
+            id="admin-search"
+            type="search"
+            name="q"
+            defaultValue={search}
+            placeholder="Сурагчийн нэр эсвэл email"
+            autoComplete="off"
+            className="min-h-12 min-w-0 flex-[1_1_280px] rounded-xl border border-mg-line bg-white px-4 text-base text-mg-navy focus:border-mg-blue"
+          />
+          <button
+            type="submit"
+            className="min-h-12 cursor-pointer rounded-xl border-0 bg-mg-blue px-6 font-semibold text-base text-white transition hover:brightness-110"
+          >
+            Хайх
+          </button>
+          {search && (
+            <Link
+              href={href({ q: "" })}
+              className="inline-flex min-h-12 items-center rounded-xl border border-mg-line bg-white px-5 font-semibold text-mg-navy hover:border-mg-blue"
+            >
+              Цэвэрлэх
+            </Link>
+          )}
+        </form>
+      </search>
+      {search && (
+        <p className="m-0 -mt-5 text-mg-body text-sm">
+          “{search}” хайлтын үр дүн: доорх нийт дүн зөвхөн эдгээр сурагчийнх.
+        </p>
+      )}
 
       <section
         aria-label="Нийт дүн"
@@ -151,7 +209,9 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
 
         {orders.length === 0 ? (
           <p className="m-0 rounded-2xl border border-mg-line bg-white p-8 text-mg-body">
-            Захиалга алга.
+            {search
+              ? `“${search}” нэртэй эсвэл email-тэй сурагчийн захиалга олдсонгүй.`
+              : "Захиалга алга."}
           </p>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-mg-line bg-white">
