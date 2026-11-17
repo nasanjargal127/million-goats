@@ -9,6 +9,8 @@ import { site } from "./site";
 /** How long selected seats stay reserved (and invoices stay open) while the visitor pays. */
 export const HOLD_MINUTES = 15;
 const MAX_SEATS_PER_ORDER = 6;
+/** What test accounts pay instead of the real price (see QPAY_TEST_EMAILS). */
+const TEST_CHARGE_MNT = 100;
 /** Don't ask QPay about the same order more often than this. */
 const CHECK_INTERVAL_MS = 4_000;
 
@@ -162,6 +164,23 @@ export function assertPaymentAvailable() {
 }
 
 /**
+ * Comma-separated emails (QPAY_TEST_EMAILS) whose orders show the real price but
+ * are invoiced TEST_CHARGE_MNT, so payments can be tested in production.
+ */
+const testEmails = new Set(
+  (process.env.QPAY_TEST_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+async function isTestUser(userId: string) {
+  if (testEmails.size === 0) return false;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  return user ? testEmails.has(user.email.toLowerCase()) : false;
+}
+
+/**
  * Creates the QPay invoice for a freshly created PENDING order and stores it.
  * If QPay fails, the order is cancelled (releasing any seats it holds).
  */
@@ -172,16 +191,19 @@ export async function attachInvoice(input: {
   amount: number;
 }) {
   try {
+    const test = await isTestUser(input.userId);
+    const charged = test ? Math.min(TEST_CHARGE_MNT, input.amount) : input.amount;
     const invoice = await createInvoice({
       senderInvoiceNo: input.orderId,
       receiverCode: input.userId,
-      description: input.description.slice(0, 255),
-      amount: input.amount,
+      description: `${test ? "[TEST] " : ""}${input.description}`.slice(0, 255),
+      amount: charged,
       callbackUrl: callbackUrl(input.orderId),
     });
     await prisma.order.update({
       where: { id: input.orderId },
       data: {
+        chargedMnt: charged,
         qpayInvoiceId: invoice.invoiceId,
         qpayQrText: invoice.qrText,
         qpayQrImage: invoice.qrImage,
@@ -284,7 +306,7 @@ export async function syncOrder(orderId: string, { force = false } = {}) {
   await prisma.order.update({ where: { id: order.id }, data: { checkedAt: new Date(now) } });
 
   const payment = await checkInvoicePayment(order.qpayInvoiceId);
-  if (payment.paid && payment.paidAmount >= order.amountMnt) {
+  if (payment.paid && payment.paidAmount >= (order.chargedMnt ?? order.amountMnt)) {
     await confirmPaid(order, payment.paymentId);
   } else if (order.status === "PENDING" && order.expiresAt.getTime() < now) {
     await cancelInvoice(order.qpayInvoiceId);
