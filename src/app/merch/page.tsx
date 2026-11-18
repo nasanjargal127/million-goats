@@ -14,7 +14,7 @@ import { getProduct, MAX_MERCH_QUANTITY, MERCH_SLUG } from "@/lib/merch";
 
 export const metadata: Metadata = {
   title: "Merch",
-  description: "Million Goats “Traders Dept.” футболк. Хэмжээгээ сонгоод QPay-ээр төлөөрэй.",
+  description: "Million Goats хар футболк. Хэмжээгээ сонгоод QPay-ээр төлөөрэй.",
   alternates: { canonical: "/merch" },
 };
 
@@ -102,8 +102,8 @@ export default function MerchPage() {
               as="h1"
               className="text-[clamp(34px,5vw,68px)]"
               lines={[
-                { text: "Traders", className: "bg-white text-mg-navy" },
-                { text: "Dept.", className: "bg-mg-blue text-white", indent: true },
+                { text: "Million", className: "bg-white text-mg-navy" },
+                { text: "Goats", className: "bg-mg-blue text-white", indent: true },
               ]}
             />
             <p className="m-0 max-w-105 text-[17px] text-white/80 leading-relaxed">
