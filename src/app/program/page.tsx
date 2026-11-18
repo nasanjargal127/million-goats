@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, HighlightTitle } from "@/components/brand";
+import { ClassSchedule } from "@/components/class-schedule";
 import { Reveal } from "@/components/motion/reveal";
 import { ProgramTabs } from "@/components/program/program-tabs";
 import { SyllabusPdf } from "@/components/program/syllabus-pdf";
@@ -128,6 +129,9 @@ export default function ProgramPage() {
 
         <div className="flex-1 bg-mg-surface px-4 py-12 sm:px-[clamp(16px,4vw,64px)]">
           <div className="mx-auto flex max-w-7xl flex-col gap-6">
+            <section id="schedule" aria-label="Хичээлийн хуваарь" className="mb-6 scroll-mt-24">
+              <ClassSchedule />
+            </section>
             <Reveal className="hidden lg:block">
               <ProgramTable />
             </Reveal>

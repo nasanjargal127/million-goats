@@ -1,7 +1,6 @@
 // Site copy and navigation.
 
 export const navLinks = [
-  { href: "/#about", label: "Бидний тухай" },
   { href: "/#team", label: "Манай баг" },
   { href: "/program", label: "Хөтөлбөр" },
   { href: "/lab", label: "Trading Lab" },

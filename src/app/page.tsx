@@ -1,6 +1,6 @@
 import { ChevronStrip } from "@/components/brand";
 import { Hero } from "@/components/home/hero";
-import { LabTeaser, Manifesto, Team } from "@/components/home/sections";
+import { LabTeaser, Manifesto, Schedule, Team } from "@/components/home/sections";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -15,6 +15,7 @@ export default function Home() {
         <Team />
         <LabTeaser />
         <ChevronStrip id="mg-chevron-lab" variant="mixed" />
+        <Schedule />
       </main>
       <SiteFooter />
     </>
