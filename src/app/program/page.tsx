@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, HighlightTitle } from "@/components/brand";
 import { Reveal } from "@/components/motion/reveal";
 import { ProgramTabs } from "@/components/program/program-tabs";
+import { SyllabusPdf } from "@/components/program/syllabus-pdf";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { team } from "@/lib/content";
@@ -151,6 +152,10 @@ export default function ProgramPage() {
                   <ArrowRight />
                 </Link>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <SyllabusPdf />
             </div>
           </div>
         </div>

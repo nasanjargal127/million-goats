@@ -58,3 +58,10 @@ export const PROGRAM_TOPICS: Record<string, readonly string[]> = {
 
 export const PROGRAM_NOTE =
   "Долоо хоног бүр 4 багш тус бүр 1 лекц орно. Арилжаа нь эрсдэлтэй — сургалт нь боловсролын зорилготой.";
+
+/** The full syllabus shown under the schedule. To update it, replace the file and its page count. */
+export const PROGRAM_PDF = {
+  href: "/program/million-goats-hutulbur.pdf",
+  fileName: "Million Goats хөтөлбөр.pdf",
+  pages: 29,
+};
