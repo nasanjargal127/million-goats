@@ -129,18 +129,28 @@ export function Team() {
                         </li>
                       ))}
                     </ul>
-                    {member.tags && (
-                      <ul className="m-0 mt-auto flex list-none flex-wrap gap-1.5 p-0">
-                        {member.tags.map((tag) => (
-                          <li
-                            key={tag}
-                            className="rounded-full border border-mg-line bg-mg-surface px-2.5 py-1 font-semibold text-mg-navy text-xs"
-                          >
-                            {tag}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <div className="mt-auto flex flex-col gap-4">
+                      {member.tags && (
+                        <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
+                          {member.tags.map((tag) => (
+                            <li
+                              key={tag}
+                              className="rounded-full border border-mg-line bg-mg-surface px-2.5 py-1 font-semibold text-mg-navy text-xs"
+                            >
+                              {tag}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <Link
+                        href={`/program#${member.id}`}
+                        className="inline-flex items-center gap-1.5 self-start border-mg-line border-t pt-3 font-semibold text-mg-link text-sm transition hover:gap-2.5"
+                        aria-label={`${member.name} — хөтөлбөр харах`}
+                      >
+                        Хөтөлбөр харах
+                        <ArrowRight className="size-4" />
+                      </Link>
+                    </div>
                   </div>
                 </article>
               </Reveal>
