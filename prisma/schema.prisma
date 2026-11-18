@@ -242,9 +242,10 @@ model ProductVariant {
 // ─── Telegram signals ──────────────────────────────────────────────────────
 
 enum SignalStatus {
-  /// Waiting for the admin to press Send or Cancel.
+  /// Recorded, not yet picked up for sending.
   DRAFT
-  /// Claimed by one Send press; guards against double posting.
+  /// Claimed by one sender (first delivery or a Retry press); guards against
+  /// double posting.
   SENDING
   SENT
   /// Telegram refused or was unreachable; the admin can retry.
@@ -252,15 +253,38 @@ enum SignalStatus {
   CANCELLED
 }
 
-/// A message an admin wrote to the bot, to be copied to the private channel
-/// as-is (text, formatting, photo + caption) once they confirm it.
+enum SignalKind {
+  /// The admin's own message, copied as-is.
+  COPY
+  /// The focus list from /focus.
+  FOCUS
+  /// A BUY/SELL press on a focus card.
+  TRADE
+}
+
+enum TradeSide {
+  BUY
+  SELL
+}
+
+/// One post to the private channel: an admin's message copied as-is (COPY),
+/// a /focus list (FOCUS) or a BUY/SELL press on a focus card (TRADE).
 model Signal {
   id               String       @id @default(cuid())
+  kind             SignalKind   @default(COPY)
   status           SignalStatus @default(DRAFT)
-  /// The admin's private chat with the bot and their message in it.
+  /// The admin's private chat with the bot, and (COPY, FOCUS) their message in it.
   sourceChatId     String
-  sourceMessageId  Int
-  /// The bot's "send this?" reply with the buttons.
+  sourceMessageId  Int?
+  /// FOCUS and TRADE: the text the bot posts. COPY copies the message instead.
+  text             String?
+  /// TRADE: the card pressed, the side, and the press itself (callback query
+  /// id), so a redelivered press posts once.
+  cardId           String?
+  card             FocusCard?   @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  side             TradeSide?
+  pressId          String?      @unique
+  /// The bot's reply reporting the outcome (link, or error + Retry).
   promptMessageId  Int?
   adminName        String?
   /// Start of the text or caption, for history.
@@ -274,5 +298,27 @@ model Signal {
 
   /// Telegram may deliver the same update twice: one message, one signal.
   @@unique([sourceChatId, sourceMessageId])
+  @@index([cardId])
   @@map("signal")
+}
+
+/// A pair from a /focus list, shown to the admin as a card with BUY / SELL
+/// buttons. A newer /focus from the same chat retires the older cards.
+model FocusCard {
+  id            String     @id @default(cuid())
+  pair          String
+  /// The admin's chat with the bot and the card message in it.
+  chatId        String
+  messageId     Int?
+  focusSignalId String?
+  active        Boolean    @default(true)
+  /// The last press, for the card text and the 30-second double-tap guard.
+  lastSide      TradeSide?
+  lastPressedAt DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  signals       Signal[]
+
+  @@index([chatId, active])
+  @@map("focus_card")
 }

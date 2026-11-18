@@ -58,11 +58,17 @@ Note: local, preview and production currently share one Neon database.
 
 ## Telegram signal bot
 
-Admins write a signal to the bot in a private chat (text, or one photo with a
-caption). The bot replies "send this to the channel?"; on **✅ Илгээх** it copies
-that exact message to the private channel and confirms with a link. Each signal
-is a row in the `signal` table: a double tap or a redelivered update never posts
-twice, and a failed send keeps a **🔁 Дахин илгээх** button.
+Admins write a signal to the bot in a private chat (text, or a photo with a
+caption). The bot copies that exact message to the private channel straight
+away and replies with a link to the post. Each signal is a row in the `signal`
+table: a redelivered update or a double tap never posts twice, and a failed send
+is reported with a **🔁 Дахин илгээх** button.
+
+**Focus list:** `/focus XAUUSD EURUSD GBPJPY` posts "🎯 Focusing" with the
+pairs to the channel, then leaves the admin one card per pair with **🟢 BUY /
+🔴 SELL** buttons. A press posts "🟢 BUY XAUUSD" to the channel at once and the
+card shows the last send. The same button again within 30 seconds is ignored as
+a double tap; a newer `/focus` retires the older cards.
 
 1. Create the bot with @BotFather and add it to the channel as an admin with
    "Post messages".
