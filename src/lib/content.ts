@@ -32,21 +32,8 @@ export type TeamMember = {
   tags?: string[];
 };
 
-/** In programme order: 1 Анхан шат … 4 Фундаментал шинжилгээ. */
+/** Display order everywhere: home cards and the /program columns and tabs (numbered 1–4). */
 export const team: TeamMember[] = [
-  {
-    id: "namuunzul",
-    name: "О. Намуунзул",
-    role: "Анхан шат",
-    photo: "/team/namuunzul.webp",
-    focus: "38%",
-    points: [
-      "2019 оноос хойш арилжаа хийж байгаа",
-      "Мэргэжлээрээ 4 жилийн турш брокерийн болон prop firm байгууллагад ажиллаж байсан",
-      "СЭЗИС — Мэдээллийн систем; одоо СЭЗИС-д UI/UX багш",
-    ],
-    tags: ["7+ жилийн туршлага"],
-  },
   {
     id: "temuujin",
     name: "Т. Тэмүүжин",
@@ -65,6 +52,19 @@ export const team: TeamMember[] = [
     focus: "30%",
     points: ["Сэтгэл судлалын докторант", "ШУТИС — Бизнесийн удирдлага", "МУБИС — Сэтгэл судлал"],
     tags: ["EMDR", "MBCT", "NLP Practitioner & Coach", "Hypnosis", "CTAA & CPD"],
+  },
+  {
+    id: "namuunzul",
+    name: "О. Намуунзул",
+    role: "Анхан шат",
+    photo: "/team/namuunzul.webp",
+    focus: "38%",
+    points: [
+      "2019 оноос хойш арилжаа хийж байгаа",
+      "Мэргэжлээрээ 4 жилийн турш брокерийн болон prop firm байгууллагад ажиллаж байсан",
+      "СЭЗИС — Мэдээллийн систем; одоо СЭЗИС-д UI/UX багш",
+    ],
+    tags: ["7+ жилийн туршлага"],
   },
   {
     id: "munkhsaikhan",
