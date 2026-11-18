@@ -25,10 +25,10 @@ import {
   availableIn,
   ROOM_IDS,
   ROOM_NAMES,
+  ROOM_SEAT_COUNT,
   ROOM_SIZE,
   type RoomId,
   SEAT_BY_ID,
-  SEATS_PER_ROOM,
   seatsOf,
   TELEGRAM_URL,
   TOTAL_SEATS,
@@ -506,7 +506,7 @@ function RoomPanel({ room, booking }: { room: RoomId; booking: LabBooking }) {
       <div className="flex items-baseline justify-between">
         <h2 className="m-0 font-black text-2xl uppercase">{ROOM_NAMES[room]}</h2>
         <span className="font-semibold text-mg-mint text-sm">
-          {availableIn(room, taken)}/{SEATS_PER_ROOM} {t.free}
+          {availableIn(room, taken)}/{ROOM_SEAT_COUNT[room]} {t.free}
         </span>
       </div>
 
@@ -599,7 +599,7 @@ function Overview({ booking }: { booking: LabBooking }) {
           >
             <span className="block font-bold text-base text-white">{ROOM_NAMES[id]}</span>
             <span className="block text-mg-mint text-xs">
-              {availableIn(id, taken)}/{SEATS_PER_ROOM} {t.free}
+              {availableIn(id, taken)}/{ROOM_SEAT_COUNT[id]} {t.free}
             </span>
           </button>
         ))}

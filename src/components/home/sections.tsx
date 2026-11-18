@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ROOM_IDS, ROOM_NAMES, ROOM_SEAT_COUNT, TOTAL_SEATS } from "@/lib/lab/seats";
 import { site } from "@/lib/site";
 import { ArrowRight, Eyebrow, HighlightTitle } from "../brand";
 import { Reveal } from "../motion/reveal";
@@ -52,8 +53,6 @@ export function Manifesto() {
   );
 }
 
-const labRooms = ["Tokyo", "London", "New York", "Sydney"];
-
 /** Short Trading Lab promo between the about and join sections. */
 export function LabTeaser() {
   return (
@@ -77,7 +76,8 @@ export function LabTeaser() {
             ]}
           />
           <p className="m-0 max-w-140 text-lg text-white/80 leading-relaxed">
-            4 танхим, 100 суудал. 3D танхимаас суудлаа сонгоод QPay-ээр төлж баталгаажуулаарай.
+            {ROOM_IDS.length} танхим, {TOTAL_SEATS} суудал. 3D танхимаас суудлаа сонгоод QPay-ээр
+            төлж баталгаажуулаарай.
           </p>
           <Link
             href="/lab"
@@ -88,15 +88,15 @@ export function LabTeaser() {
           </Link>
         </Reveal>
         <ul className="m-0 grid min-w-0 flex-[1_1_320px] list-none grid-cols-2 gap-3 p-0">
-          {labRooms.map((room, i) => (
+          {ROOM_IDS.map((room, i) => (
             <li key={room}>
               <Reveal delay={0.1 + i * 0.08}>
                 <Link
                   href="/lab"
                   className="flex min-h-28 flex-col justify-between rounded-2xl border border-white/15 bg-white/5 p-5 transition hover:border-mg-blue hover:bg-mg-blue/15"
                 >
-                  <span className="font-black text-xl uppercase">{room}</span>
-                  <span className="text-mg-mint text-sm">25 суудал</span>
+                  <span className="font-black text-xl uppercase">{ROOM_NAMES[room]}</span>
+                  <span className="text-mg-mint text-sm">{ROOM_SEAT_COUNT[room]} суудал</span>
                 </Link>
               </Reveal>
             </li>

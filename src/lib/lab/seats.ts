@@ -13,32 +13,50 @@ export const ROOM_NAMES: Record<RoomId, string> = {
 export const ROOM_SIZE = 13;
 
 /**
- * Нэг танхимын суудлын байрлал. x, z нь танхимын төвөөс ширээ хүртэлх зай
+ * Суудлын байрлал. x, z нь танхимын төвөөс ширээ хүртэлх зай
  * (-z тал нь том дэлгэцтэй урд хана), rot нь суугаа хүний харах чиг (Y тэнхлэгээр):
  * 0 = урд хана руу, PI = арын хана руу, PI/2 = зүүн, -PI/2 = баруун хана руу.
- * Байрлалыг өөрчлөх бол зөвхөн энэ хэсгийг засна.
+ * Байрлалыг өөрчлөх бол зөвхөн энэ хэсгийг (ROOM_LAYOUTS) засна.
  */
 type Spot = { x: number; z: number; rot: number };
 
 const WALL = 5.6;
-const SIDE_Z = [-5, -3.2, -1.4, 0.4, 2.2, 4];
-const BACK_X = [-3.6, -1.8, 0, 1.8, 3.6];
-const CENTER_X = [-2.85, -0.95, 0.95, 2.85];
-const CENTER_Z = -0.6;
+const SIDE_Z = [-5.4, -3.6, -1.8, 0, 1.8, 3.6];
+const ISLAND_Z = -0.6;
 
-const SEAT_LAYOUT: readonly Spot[] = [
-  // Зүүн хана руу харсан 6 суудал (1–6)
-  ...SIDE_Z.map((z) => ({ x: -WALL, z, rot: Math.PI / 2 })),
-  // Арын хана руу харсан 5 суудал (7–11)
-  ...BACK_X.map((x) => ({ x, z: WALL, rot: Math.PI })),
-  // Баруун хана руу харсан 6 суудал (12–17)
-  ...[...SIDE_Z].reverse().map((z) => ({ x: WALL, z, rot: -Math.PI / 2 })),
-  // Голын арал: нүүр тулж суух 4 + 4 суудал (18–25)
-  ...CENTER_X.map((x) => ({ x, z: CENTER_Z - 0.45, rot: Math.PI })),
-  ...CENTER_X.map((x) => ({ x, z: CENTER_Z + 0.45, rot: 0 })),
+/** n байрлал, хоорондоо `step` зайтай, 0 дээр төвлөрсөн. */
+function spread(n: number, step: number) {
+  return Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * step);
+}
+
+/** Зүүн хана руу харсан 6 суудал. */
+const leftWall: Spot[] = SIDE_Z.map((z) => ({ x: -WALL, z, rot: Math.PI / 2 }));
+/** Баруун хана руу харсан 6 суудал (арын хананаас урагш дугаарлана). */
+const rightWall: Spot[] = [...SIDE_Z].reverse().map((z) => ({ x: WALL, z, rot: -Math.PI / 2 }));
+/** Арын хана руу харсан n суудал (6 хүртэл). */
+const backWall = (n: number): Spot[] => spread(n, 1.8).map((x) => ({ x, z: WALL, rot: Math.PI }));
+/** Голын арал: нүүр тулж суух perSide + perSide суудал (5 хүртэл). */
+const island = (perSide: number): Spot[] => [
+  ...spread(perSide, 1.7).map((x) => ({ x, z: ISLAND_Z - 0.45, rot: Math.PI })),
+  ...spread(perSide, 1.7).map((x) => ({ x, z: ISLAND_Z + 0.45, rot: 0 })),
 ];
 
-export const SEATS_PER_ROOM = SEAT_LAYOUT.length;
+/** Танхим бүрийн суудал, дугаарын дарааллаар (1-ээс эхэлнэ). */
+const ROOM_LAYOUTS: Record<RoomId, readonly Spot[]> = {
+  // Tokyo — 27: зүүн 6 (1–6), ар 5 (7–11), баруун 6 (12–17), арал 5 + 5 (18–27)
+  A: [...leftWall, ...backWall(5), ...rightWall, ...island(5)],
+  // London — 28: зүүн 6 (1–6), ар 6 (7–12), баруун 6 (13–18), арал 5 + 5 (19–28)
+  B: [...leftWall, ...backWall(6), ...rightWall, ...island(5)],
+  // New York — 18: зүүн 6 (1–6), ар 6 (7–12), баруун 6 (13–18)
+  C: [...leftWall, ...backWall(6), ...rightWall],
+  // Sydney — 10: арал 5 + 5 (1–10)
+  D: island(5),
+};
+
+/** Танхим бүрийн суудлын тоо. */
+export const ROOM_SEAT_COUNT = Object.fromEntries(
+  ROOM_IDS.map((room) => [room, ROOM_LAYOUTS[room].length]),
+) as Record<RoomId, number>;
 export const TELEGRAM_URL = "https://t.me/+97695286878";
 
 /** Slug of the database event that holds the Lab's seats (see prisma/seed.ts). */
@@ -71,7 +89,7 @@ export type Seat = {
 };
 
 export const SEATS: readonly Seat[] = ROOM_IDS.flatMap((room) =>
-  SEAT_LAYOUT.map((spot, i) => ({ id: `${room}-${i + 1}`, room, number: i + 1, ...spot })),
+  ROOM_LAYOUTS[room].map((spot, i) => ({ id: `${room}-${i + 1}`, room, number: i + 1, ...spot })),
 );
 
 export const SEAT_BY_ID = new Map(SEATS.map((s) => [s.id, s]));

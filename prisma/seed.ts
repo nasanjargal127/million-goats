@@ -1,10 +1,19 @@
-// Seeds the Trading Lab (4 rooms × 25 seats) that /lab books through QPay and
+// Seeds the Trading Lab (4 rooms: 27 + 28 + 18 + 10 = 83 seats, see
+// src/lib/lab/seats.ts) that /lab books through QPay and
 // the merch shop's T-shirt with its sizes (/merch).
-// Run: pnpm db:seed (idempotent — re-running keeps existing seats and orders).
+// Run: pnpm db:seed (idempotent — re-running keeps existing seats and orders;
+// it only adds seats, never removes ones a room no longer has).
 import "dotenv/config";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { LAB_EVENT_SLUG, ROOM_IDS, ROOM_NAMES, SEATS_PER_ROOM } from "../src/lib/lab/seats";
+import {
+  LAB_EVENT_SLUG,
+  ROOM_IDS,
+  ROOM_NAMES,
+  ROOM_SEAT_COUNT,
+  SEATS,
+  TOTAL_SEATS,
+} from "../src/lib/lab/seats";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is not set");
@@ -16,12 +25,13 @@ const LAB_PRICE_MNT = 5_400_000;
 const lab = {
   slug: LAB_EVENT_SLUG,
   title: "Trading Lab",
-  description: "Мэргэжлийн трейдерүүдийн танхим — 4 танхим, 100 суудал.",
+  description: `Мэргэжлийн трейдерүүдийн танхим — ${ROOM_IDS.length} танхим, ${TOTAL_SEATS} суудал.`,
   venue: "[ХАЯГ], Улаанбаатар",
   startsAt: null,
   priceMnt: LAB_PRICE_MNT,
   rowCount: ROOM_IDS.length,
-  seatsPerRow: SEATS_PER_ROOM,
+  // Rooms differ in size; the Lab draws its own map, so this is only the largest room.
+  seatsPerRow: Math.max(...Object.values(ROOM_SEAT_COUNT)),
   listed: false, // booked from /lab, not listed on /events
 };
 
@@ -33,13 +43,11 @@ async function seedLab() {
     create: lab,
   });
   // Lab seats use the room name as the row: "Tokyo" 7 is shown as "Tokyo-7".
-  const seats = ROOM_IDS.flatMap((room) =>
-    Array.from({ length: SEATS_PER_ROOM }, (_, i) => ({
-      eventId: event.id,
-      row: ROOM_NAMES[room],
-      number: i + 1,
-    })),
-  );
+  const seats = SEATS.map((seat) => ({
+    eventId: event.id,
+    row: ROOM_NAMES[seat.room],
+    number: seat.number,
+  }));
   const { count } = await prisma.seat.createMany({ data: seats, skipDuplicates: true });
   console.log(`Event "${event.title}" ready (${count} new seats).`);
 }
