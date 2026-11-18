@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "biome check .",
     "brand": "node scripts/brand-assets.mjs",
+    "telegram:setup": "node scripts/telegram-setup.mjs",
     "format": "biome check --write .",
     "typecheck": "next typegen && tsc --noEmit",
     "knip": "knip",

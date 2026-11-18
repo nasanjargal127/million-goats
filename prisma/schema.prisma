@@ -238,3 +238,41 @@ model ProductVariant {
   @@unique([productId, size])
   @@map("product_variant")
 }
+
+// ─── Telegram signals ──────────────────────────────────────────────────────
+
+enum SignalStatus {
+  /// Waiting for the admin to press Send or Cancel.
+  DRAFT
+  /// Claimed by one Send press; guards against double posting.
+  SENDING
+  SENT
+  /// Telegram refused or was unreachable; the admin can retry.
+  FAILED
+  CANCELLED
+}
+
+/// A message an admin wrote to the bot, to be copied to the private channel
+/// as-is (text, formatting, photo + caption) once they confirm it.
+model Signal {
+  id               String       @id @default(cuid())
+  status           SignalStatus @default(DRAFT)
+  /// The admin's private chat with the bot and their message in it.
+  sourceChatId     String
+  sourceMessageId  Int
+  /// The bot's "send this?" reply with the buttons.
+  promptMessageId  Int?
+  adminName        String?
+  /// Start of the text or caption, for history.
+  preview          String?
+  channelMessageId Int?
+  attempts         Int          @default(0)
+  error            String?
+  sentAt           DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  /// Telegram may deliver the same update twice: one message, one signal.
+  @@unique([sourceChatId, sourceMessageId])
+  @@map("signal")
+}

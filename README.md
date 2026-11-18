@@ -56,6 +56,22 @@ Copy `.env.example` to `.env` and fill it in. The app connects through the poole
 
 Note: local, preview and production currently share one Neon database.
 
+## Telegram signal bot
+
+Admins write a signal to the bot in a private chat (text, or one photo with a
+caption). The bot replies "send this to the channel?"; on **✅ Илгээх** it copies
+that exact message to the private channel and confirms with a link. Each signal
+is a row in the `signal` table: a double tap or a redelivered update never posts
+twice, and a failed send keeps a **🔁 Дахин илгээх** button.
+
+1. Create the bot with @BotFather and add it to the channel as an admin with
+   "Post messages".
+2. Set the `TELEGRAM_*` variables from `.env.example` in `.env` and on Vercel
+   (Production). Send `/start` to the bot to see your Telegram id for
+   `TELEGRAM_ADMIN_IDS`.
+3. Deploy, then run `pnpm telegram:setup` — it checks the bot can post to the
+   channel and registers the webhook (`/api/telegram/webhook`).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
