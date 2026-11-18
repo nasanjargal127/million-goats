@@ -5,10 +5,9 @@ import { LabExperience } from "@/components/lab/lab-experience";
 import { getSession } from "@/lib/auth";
 import { getEventWithSeats, HOLD_MINUTES } from "@/lib/booking";
 import { installmentsOpen } from "@/lib/lab/packages";
-import { fromDbSeat, LAB_EVENT_SLUG } from "@/lib/lab/seats";
+import { fromDbSeat, LAB_EVENT_SLUG, ROOM_IDS, TOTAL_SEATS } from "@/lib/lab/seats";
 
-const description =
-  "Million Goats Trading Lab — 4 танхим, 100 суудал. 3D танхимаас суудлаа сонгоод Pro эсвэл Premium багцаа QPay-ээр төлж баталгаажуулаарай.";
+const description = `Million Goats Trading Lab — ${ROOM_IDS.length} танхим, ${TOTAL_SEATS} суудал. 3D танхимаас суудлаа сонгоод Pro эсвэл Premium багцаа QPay-ээр төлж баталгаажуулаарай.`;
 
 export const metadata: Metadata = {
   title: "Trading Lab",

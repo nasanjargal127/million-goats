@@ -9,10 +9,10 @@ import {
   availableIn,
   ROOM_IDS,
   ROOM_NAMES,
+  ROOM_SEAT_COUNT,
   ROOM_SIZE,
   type RoomId,
   SEATS,
-  SEATS_PER_ROOM,
 } from "@/lib/lab/seats";
 import { useLab } from "@/lib/lab/store";
 
@@ -278,7 +278,7 @@ function Room({ id, chart }: { id: RoomId; chart: THREE.Texture }) {
   const [cx, cz] = ROOM_CENTER[id];
   const lit = active || hover;
   const labelText = ROOM_NAMES[id];
-  const labelSub = `${availableIn(id, taken)}/${SEATS_PER_ROOM} ${t.free}`;
+  const labelSub = `${availableIn(id, taken)}/${ROOM_SEAT_COUNT[id]} ${t.free}`;
   const label = useMemo(() => makeLabelTexture(labelText, labelSub), [labelText, labelSub]);
   useEffect(() => () => label.dispose(), [label]);
 

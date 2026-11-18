@@ -51,7 +51,7 @@ Copy `.env.example` to `.env` and fill it in. The app connects through the poole
   Preview and local builds skip this step.
 - Migrations run while the old deployment still serves traffic, so keep them
   backward-compatible: add columns/tables first, remove old ones in a later release.
-- `pnpm db:seed` adds the Trading Lab (100 seats) and the merch T-shirt with sizes S–XXL (run it by hand).
+- `pnpm db:seed` adds the Trading Lab (83 seats: Tokyo 27, London 28, New York 18, Sydney 10) and the merch T-shirt with sizes S–XXL (run it by hand).
 - `pnpm db:studio` opens a table editor.
 
 Note: local, preview and production currently share one Neon database.

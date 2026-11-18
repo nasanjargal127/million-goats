@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ROOM_IDS, TOTAL_SEATS } from "@/lib/lab/seats";
 import { site } from "@/lib/site";
 import { ArrowRight, HighlightTitle, LiveDot } from "../brand";
 import { CandleChart } from "../charts";
@@ -7,7 +8,7 @@ import { Reveal } from "../motion/reveal";
 
 const highlights = [
   { label: "Trading Lab", dot: "bg-mg-mint" },
-  { label: "4 танхим · 100 суудал", dot: "bg-mg-sky" },
+  { label: `${ROOM_IDS.length} танхим · ${TOTAL_SEATS} суудал`, dot: "bg-mg-sky" },
   { label: "QPay-ээр захиалга", dot: "bg-mg-orange" },
 ];
 

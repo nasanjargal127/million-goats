@@ -1,6 +1,8 @@
 // Single source of truth for brand + SEO settings.
 // TODO: set NEXT_PUBLIC_SITE_URL to the production domain (https://www.milliongoats.mn).
 
+import { ROOM_IDS, TOTAL_SEATS } from "./lab/seats";
+
 function resolveSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
@@ -12,8 +14,7 @@ export const site = {
   name: "Million Goats",
   shortName: "Million Goats",
   tagline: "One community. A million goals.",
-  description:
-    "Million Goats — шинэ үеийн трейдерүүдийн хамт олон. Trading Lab: 4 танхим, 100 суудал, QPay-ээр захиалга.",
+  description: `Million Goats — шинэ үеийн трейдерүүдийн хамт олон. Trading Lab: ${ROOM_IDS.length} танхим, ${TOTAL_SEATS} суудал, QPay-ээр захиалга.`,
   keywords: ["Million Goats", "трейдинг", "Trading Lab", "Forex", "трейдерүүдийн хамт олон"],
   url: resolveSiteUrl().replace(/\/$/, ""),
   locale: "mn_MN",
