@@ -72,13 +72,15 @@ function Shirt() {
   return (
     <group>
       <mesh geometry={body}>
-        <meshStandardMaterial color="#151515" roughness={0.95} />
+        {/* Matches the fabric colour in the mockup. Where the outline overshoots a shirt,
+            the mockup is transparent and alphaTest lets this body show through. */}
+        <meshStandardMaterial color="#222222" roughness={0.95} />
       </mesh>
       <mesh geometry={front} position={[0, 0, FACE_Z]}>
-        <meshStandardMaterial map={texture} roughness={0.9} />
+        <meshStandardMaterial map={texture} roughness={0.9} alphaTest={0.5} />
       </mesh>
       <mesh geometry={back} position={[0, 0, -FACE_Z]}>
-        <meshStandardMaterial map={texture} roughness={0.9} side={THREE.BackSide} />
+        <meshStandardMaterial map={texture} roughness={0.9} alphaTest={0.5} side={THREE.BackSide} />
       </mesh>
     </group>
   );

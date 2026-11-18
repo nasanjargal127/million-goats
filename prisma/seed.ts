@@ -59,7 +59,7 @@ const MERCH = {
   description:
     "Million Goats-ын “Traders Dept.” хар футболк. Урд талд лого, ар талд Traders Dept. бичиг болон ямааны дүрс.",
   priceMnt: 99_000,
-  imagePath: "/merch/traders-dept-tee.jpg",
+  imagePath: "/merch/million-goats-tee.webp",
 };
 const MERCH_SIZES = ["S", "M", "L", "XL", "XXL"];
 
