@@ -4,6 +4,7 @@ import { team } from "@/lib/content";
 import { ROOM_IDS, ROOM_NAMES, ROOM_SEAT_COUNT, TOTAL_SEATS } from "@/lib/lab/seats";
 import { site } from "@/lib/site";
 import { ArrowRight, Eyebrow, HighlightTitle } from "../brand";
+import { ClassSchedule } from "../class-schedule";
 import { Reveal } from "../motion/reveal";
 
 const sectionPad = "px-4 py-20 sm:px-[clamp(16px,4vw,64px)] lg:py-30";
@@ -73,10 +74,7 @@ export function Team() {
             </Eyebrow>
             <HighlightTitle
               className="text-[clamp(34px,4.6vw,64px)]"
-              lines={[
-                { text: "Туршлагатай", className: "bg-mg-navy text-white" },
-                { text: "багш нар", className: "bg-mg-blue text-white", indent: true },
-              ]}
+              lines={[{ text: "Багш нар", className: "bg-mg-navy text-white" }]}
             />
           </Reveal>
           <Reveal from="right" delay={0.1} className="min-w-0 flex-[1_1_420px]">
@@ -212,6 +210,17 @@ export function LabTeaser() {
           ))}
         </ul>
       </div>
+    </section>
+  );
+}
+
+/** Weekly class times, at the very bottom of the home page. */
+export function Schedule() {
+  return (
+    <section id="schedule" className={`scroll-mt-20 bg-mg-surface ${sectionPad}`}>
+      <Reveal className="mx-auto max-w-5xl">
+        <ClassSchedule />
+      </Reveal>
     </section>
   );
 }
