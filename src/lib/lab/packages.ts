@@ -3,7 +3,7 @@
 
 import type { Lang } from "./store";
 
-export const LAB_PACKAGE_IDS = ["PRO", "PREMIUM"] as const;
+export const LAB_PACKAGE_IDS = ["PRO", "PREMIUM_2M", "PREMIUM"] as const;
 export type LabPackageId = (typeof LAB_PACKAGE_IDS)[number];
 
 /** Pro's optional add-on. */
@@ -11,6 +11,26 @@ export const PSYCHOLOGIST_ADDON_MNT = 75_000;
 
 /** Pro members pick one teacher whose classes they join. Rename here. */
 export const TEACHERS = ["Багш 1", "Багш 2", "Багш 3", "Багш 4"] as const;
+
+/** What both Premium packages include; they differ only in length and price. */
+const PREMIUM_FEATURES: Record<Lang, string[]> = {
+  mn: [
+    "Хамт олон",
+    "Million Goats Hub-д ширээ",
+    "Заал",
+    "Merch",
+    "Бүх багшийн хичээл",
+    "Сэтгэлзүйч",
+  ],
+  en: [
+    "Community",
+    "A desk at the Million Goats Hub",
+    "Gym",
+    "Merch",
+    "Classes with every teacher",
+    "Psychologist",
+  ],
+};
 
 type PackageText = {
   tagline: string;
@@ -56,42 +76,28 @@ export const LAB_PACKAGES: Record<
       },
     },
   },
+  PREMIUM_2M: {
+    name: "Premium",
+    priceMnt: 1_480_000,
+    text: {
+      mn: { tagline: "Бүгдийг нэг дороос", period: "2 сар", features: PREMIUM_FEATURES.mn },
+      en: { tagline: "Everything in one place", period: "2 months", features: PREMIUM_FEATURES.en },
+    },
+  },
   PREMIUM: {
     name: "Premium",
     priceMnt: 5_550_000,
     text: {
-      mn: {
-        tagline: "Бүгдийг нэг дороос",
-        period: "6 сар",
-        features: [
-          "Хамт олон",
-          "Million Goats Hub-д ширээ",
-          "Заал",
-          "Merch",
-          "Бүх багшийн хичээл",
-          "Сэтгэлзүйч",
-        ],
-      },
-      en: {
-        tagline: "Everything in one place",
-        period: "6 months",
-        features: [
-          "Community",
-          "A desk at the Million Goats Hub",
-          "Gym",
-          "Merch",
-          "Classes with every teacher",
-          "Psychologist",
-        ],
-      },
+      mn: { tagline: "Бүгдийг нэг дороос", period: "6 сар", features: PREMIUM_FEATURES.mn },
+      en: { tagline: "Everything in one place", period: "6 months", features: PREMIUM_FEATURES.en },
     },
   },
 };
 
 /**
- * Premium can be paid in two parts: the first by firstDueAt, the rest by
+ * The 6-month Premium can be paid in two parts: the first by firstDueAt, the rest by
  * balanceDueAt (midnight in Ulaanbaatar). The total stays the Premium price.
- * Until the balance is paid the seat is held; after balanceDueAt it is released
+ * The 2-month Premium is always paid in full. Until the balance is paid the seat is held; after balanceDueAt it is released
  * and the first part is not refunded.
  */
 export const PREMIUM_INSTALLMENTS = {
@@ -117,7 +123,7 @@ export const LOWEST_PACKAGE_PRICE_MNT = Math.min(
 
 /**
  * What the visitor picked with their seat. Teacher and add-on apply to Pro only;
- * paying in two parts (installments) to Premium only.
+ * paying in two parts (installments) to the 6-month Premium only.
  */
 export type LabChoice = {
   labPackage: LabPackageId;
@@ -137,6 +143,9 @@ export function parseLabChoice(input: unknown): LabChoice | null {
       withPsychologist: false,
       installments: installments === true,
     };
+  }
+  if (labPackage === "PREMIUM_2M") {
+    return { labPackage, teacher: null, withPsychologist: false, installments: false };
   }
   if (labPackage === "PRO") {
     if (!TEACHERS.some((name) => name === teacher)) return null;
@@ -160,10 +169,12 @@ export function labChoiceDueNow(choice: LabChoice) {
   return choice.installments ? PREMIUM_INSTALLMENTS.firstMnt : labChoicePrice(choice);
 }
 
-/** Snapshot stored on the order, e.g. "Pro багц · Багш 2 · Сэтгэлзүйч". */
+/** Snapshot stored on the order, e.g. "Pro багц · 1 сар · Багш 2 · Сэтгэлзүйч". */
 export function labChoiceLabel(choice: LabChoice) {
+  const info = LAB_PACKAGES[choice.labPackage];
   return [
-    `${LAB_PACKAGES[choice.labPackage].name} багц`,
+    `${info.name} багц`,
+    info.text.mn.period,
     choice.teacher,
     choice.withPsychologist ? "Сэтгэлзүйч" : null,
     choice.installments ? "2 хувааж төлөх" : null,

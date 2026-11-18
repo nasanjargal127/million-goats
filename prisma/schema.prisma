@@ -147,6 +147,8 @@ enum OrderKind {
 enum LabPackage {
   PRO
   PREMIUM
+  /// Premium for 2 months instead of 6.
+  PREMIUM_2M
 }
 
 model Order {
