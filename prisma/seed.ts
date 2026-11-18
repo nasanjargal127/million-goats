@@ -55,9 +55,9 @@ async function seedLab() {
 /** Merch: the T-shirt, priced in MNT (₮). */
 const MERCH = {
   slug: "traders-dept-tee",
-  name: "Traders Dept. футболк",
+  name: "Million Goats футболк",
   description:
-    "Million Goats-ын “Traders Dept.” хар футболк. Урд талд лого, ар талд Traders Dept. бичиг болон ямааны дүрс.",
+    "Million Goats-ын хар футболк. Урд талд лого, ар талд MILLION GOATS бичиг болон ямааны дүрс.",
   priceMnt: 99_000,
   imagePath: "/merch/million-goats-tee.webp",
 };
