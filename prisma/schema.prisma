@@ -242,9 +242,10 @@ model ProductVariant {
 // ─── Telegram signals ──────────────────────────────────────────────────────
 
 enum SignalStatus {
-  /// Waiting for the admin to press Send or Cancel.
+  /// Recorded, not yet picked up for sending.
   DRAFT
-  /// Claimed by one Send press; guards against double posting.
+  /// Claimed by one sender (first delivery or a Retry press); guards against
+  /// double posting.
   SENDING
   SENT
   /// Telegram refused or was unreachable; the admin can retry.
@@ -252,15 +253,15 @@ enum SignalStatus {
   CANCELLED
 }
 
-/// A message an admin wrote to the bot, to be copied to the private channel
-/// as-is (text, formatting, photo + caption) once they confirm it.
+/// A message an admin wrote to the bot, copied to the private channel as-is
+/// (text, formatting, photo + caption) straight away.
 model Signal {
   id               String       @id @default(cuid())
   status           SignalStatus @default(DRAFT)
   /// The admin's private chat with the bot and their message in it.
   sourceChatId     String
   sourceMessageId  Int
-  /// The bot's "send this?" reply with the buttons.
+  /// The bot's reply reporting the outcome (link, or error + Retry).
   promptMessageId  Int?
   adminName        String?
   /// Start of the text or caption, for history.
