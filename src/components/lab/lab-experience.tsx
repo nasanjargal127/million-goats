@@ -181,7 +181,7 @@ function WarningIcon() {
   );
 }
 
-/** Premium only: pay everything now, or in two parts before the two deadlines. */
+/** 6-month Premium only: pay everything now, or in two parts before the two deadlines. */
 function InstallmentPicker({
   installments,
   setInstallments,
@@ -404,10 +404,10 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
     pkg === "PRO"
       ? { labPackage: "PRO", teacher, withPsychologist: psychologist, installments: false }
       : {
-          labPackage: "PREMIUM",
+          labPackage: pkg,
           teacher: null,
           withPsychologist: false,
-          installments: installments && booking.installments,
+          installments: pkg === "PREMIUM" && installments && booking.installments,
         };
   const needsTeacher = pkg === "PRO" && !teacher;
 

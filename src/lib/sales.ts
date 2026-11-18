@@ -99,7 +99,7 @@ export function summarizeSales(orders: SaleInput[]) {
     // Packages count while the seat is theirs, so not after an unpaid balance.
     if (order.status === "BALANCE_UNPAID") continue;
     if (order.labPackage === "PRO") totals.pro += 1;
-    if (order.labPackage === "PREMIUM") totals.premium += 1;
+    if (order.labPackage === "PREMIUM" || order.labPackage === "PREMIUM_2M") totals.premium += 1;
     if (order.kind === "MERCH") totals.merchItems += order.quantity ?? 1;
   }
   return totals;
