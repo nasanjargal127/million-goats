@@ -14,10 +14,10 @@ import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
 /**
- * Pages that draw the goat themselves (the home page puts it behind its navy
- * sections) or already fill the screen with their own scene.
+ * Pages that draw the goat themselves (home and programme put it behind their
+ * navy sections) or already fill the screen with their own scene.
  */
-const HIDDEN_ON = new Set(["/", "/lab"]);
+const HIDDEN_ON = new Set(["/", "/program", "/lab"]);
 
 /** Softness of the drawing edge, in % of the goat's height. */
 const EDGE = 8;

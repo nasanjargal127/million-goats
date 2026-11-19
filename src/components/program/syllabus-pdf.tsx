@@ -39,19 +39,18 @@ function OpenIcon() {
 /**
  * The full syllabus PDF. Desktop gets the browser's PDF viewer inline; phones
  * (where inline PDFs barely work) get a card that opens or downloads it.
- * Sits above the site-wide goat backdrop (z-10) so the document reads clean.
  */
 export function SyllabusPdf() {
   return (
-    <section id="syllabus" aria-labelledby="syllabus-title" className="relative z-20 scroll-mt-24">
-      <div className="overflow-hidden rounded-2xl border border-mg-line bg-white">
-        <div className="relative flex flex-wrap items-center justify-between gap-6 overflow-hidden bg-mg-navy p-6 text-white sm:p-8">
+    <section id="syllabus" aria-labelledby="syllabus-title" className="scroll-mt-24">
+      <div className="overflow-hidden rounded-2xl bg-mg-card ring-1 ring-white/5">
+        <div className="relative flex flex-wrap items-center justify-between gap-6 overflow-hidden p-6 text-white sm:p-8">
           <Image
             src={site.logos.symbolOnDark}
             alt=""
             width={512}
             height={308}
-            className="pointer-events-none absolute top-1/2 -right-10 w-72 -translate-y-1/2 opacity-10"
+            className="pointer-events-none absolute top-1/2 -right-10 w-72 -translate-y-1/2 opacity-[0.06]"
           />
           <div className="relative min-w-0">
             <p className="m-0 font-semibold text-mg-sky text-xs uppercase tracking-[0.12em]">
@@ -59,7 +58,7 @@ export function SyllabusPdf() {
             </p>
             <h2
               id="syllabus-title"
-              className="m-0 mt-2 max-w-160 font-bold text-[clamp(22px,2.6vw,32px)] uppercase leading-tight"
+              className="m-0 mt-2 max-w-160 font-bold text-[clamp(22px,2.6vw,32px)] uppercase leading-tight tracking-[-0.01em]"
             >
               Мэргэжлийн трейдерийн 2 сарын сургалтын хөтөлбөр
             </h2>
@@ -72,7 +71,7 @@ export function SyllabusPdf() {
               href={PROGRAM_PDF.href}
               target="_blank"
               rel="noopener"
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-white/25 px-5 font-semibold text-white transition hover:border-white"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-white/5 px-5 font-semibold text-sm text-white transition hover:bg-white/10"
             >
               <OpenIcon />
               Шинэ цонхонд нээх
@@ -80,7 +79,7 @@ export function SyllabusPdf() {
             <a
               href={PROGRAM_PDF.href}
               download={PROGRAM_PDF.fileName}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-mg-blue px-5 font-semibold text-white transition hover:brightness-110"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-mg-blue px-5 font-semibold text-sm text-white transition hover:brightness-110"
             >
               <DownloadIcon />
               PDF татах
@@ -91,7 +90,7 @@ export function SyllabusPdf() {
           src={`${PROGRAM_PDF.href}#view=FitH&navpanes=0`}
           title="Million Goats — хичээлийн хөтөлбөр (PDF)"
           loading="lazy"
-          className="hidden h-[min(85vh,960px)] w-full border-0 bg-mg-surface md:block"
+          className="hidden h-[min(85vh,960px)] w-full border-0 border-white/10 border-t bg-mg-surface md:block"
         />
       </div>
     </section>
