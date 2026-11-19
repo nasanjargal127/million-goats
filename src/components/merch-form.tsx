@@ -9,7 +9,7 @@ import { Select } from "./ui/select";
 type Size = { id: string; size: string };
 
 const field =
-  "min-h-12 w-full rounded-lg border border-mg-line bg-white px-4 text-base text-mg-navy placeholder:text-[#7D89A3] focus:border-mg-blue";
+  "min-h-12 w-full rounded-lg border border-white/10 bg-mg-card px-4 text-base text-white placeholder:text-white/35 focus:border-mg-blue";
 
 export function MerchForm({
   sizes,
@@ -53,7 +53,7 @@ export function MerchForm({
       className="flex flex-col gap-6"
     >
       <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-        <legend className="mb-3 font-semibold text-sm">Хэмжээ</legend>
+        <legend className="mb-3 font-semibold text-sm text-white/85">Хэмжээ</legend>
         <div className="flex flex-wrap gap-2">
           {sizes.map((s) => (
             <label key={s.id} className="cursor-pointer">
@@ -66,7 +66,7 @@ export function MerchForm({
                 required
                 className="peer sr-only"
               />
-              <span className="flex min-h-12 min-w-14 flex-col items-center justify-center rounded-lg border border-mg-line bg-white px-3 font-bold text-mg-navy transition peer-checked:border-mg-blue peer-checked:bg-mg-blue peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-mg-sky">
+              <span className="flex min-h-12 min-w-14 flex-col items-center justify-center rounded-lg border border-white/10 bg-mg-card px-3 font-bold text-white transition hover:border-mg-blue/60 peer-checked:border-mg-blue peer-checked:bg-mg-blue peer-checked:text-white peer-checked:shadow-[0_8px_24px_rgba(0,104,255,0.35)] peer-focus-visible:outline-2 peer-focus-visible:outline-mg-sky">
                 {s.size}
               </span>
             </label>
@@ -75,7 +75,7 @@ export function MerchForm({
       </fieldset>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="merch-qty" className="font-semibold text-sm">
+        <label htmlFor="merch-qty" className="font-semibold text-sm text-white/85">
           Тоо ширхэг
         </label>
         <Select
@@ -94,7 +94,7 @@ export function MerchForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="merch-phone" className="font-semibold text-sm">
+        <label htmlFor="merch-phone" className="font-semibold text-sm text-white/85">
           Утасны дугаар
         </label>
         <input
@@ -109,7 +109,7 @@ export function MerchForm({
         />
       </div>
 
-      <div className="relative flex flex-col gap-3 overflow-hidden rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_80%_100%_at_100%_100%,rgba(0,104,255,0.3),transparent_70%)] p-5 text-white">
+      <div className="relative flex flex-col gap-3 overflow-hidden rounded-xl bg-mg-card bg-[radial-gradient(ellipse_80%_100%_at_100%_100%,rgba(0,104,255,0.3),transparent_70%)] p-5 text-white ring-1 ring-white/5">
         <div className="flex items-baseline justify-between gap-4">
           <span className="text-mg-on-dark">Нийт дүн</span>
           <span className="font-bold text-2xl" aria-live="polite">
@@ -128,7 +128,7 @@ export function MerchForm({
         </p>
       </div>
 
-      <p role="alert" className="m-0 font-medium text-[#B32600] empty:hidden">
+      <p role="alert" className="m-0 font-medium text-[#ff7a59] empty:hidden">
         {state.error}
       </p>
     </form>

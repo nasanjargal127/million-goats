@@ -14,7 +14,7 @@ function StaticShirt({ alt }: { alt: string }) {
       height={SHIRT_IMAGE.height}
       priority
       sizes="(min-width: 1024px) 50vw, 100vw"
-      className="h-auto w-full"
+      className="h-auto w-full bg-[radial-gradient(ellipse_70%_60%_at_50%_55%,rgba(0,104,255,0.45),transparent_70%)] p-6"
     />
   );
 }
@@ -45,7 +45,7 @@ function LoadingShirt() {
         sizes="(min-width: 1024px) 50vw, 100vw"
         className="h-auto w-full opacity-80"
       />
-      <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-mg-muted text-xs">
+      <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-mg-navy/80 px-3 py-1 text-white/70 text-xs">
         3D ачаалж байна…
       </span>
     </div>
@@ -71,12 +71,12 @@ export function ShirtViewer({ alt }: { alt: string }) {
       <div
         role="img"
         aria-label={`${alt} — 3D, чирж эргүүлнэ`}
-        className="relative aspect-square w-full cursor-grab touch-none bg-linear-to-b from-[#F4F7FC] to-[#E3E9F3] active:cursor-grabbing"
+        className="relative aspect-square w-full cursor-grab touch-none bg-[radial-gradient(ellipse_65%_60%_at_50%_55%,rgba(0,104,255,0.5),rgba(1,31,82,0.6)_55%,transparent_80%)] active:cursor-grabbing"
       >
         <ShirtScene face={face} auto={auto} onInteract={() => setAuto(false)} />
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-mg-line border-t px-4 py-3">
-        <span className="text-mg-muted text-sm">Чирж эргүүлнэ үү</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-white/10 border-t px-4 py-3">
+        <span className="text-sm text-white/55">Чирж эргүүлнэ үү</span>
         <fieldset className="m-0 flex gap-1.5 border-0 p-0">
           <legend className="sr-only">Футболкны тал</legend>
           {(
@@ -95,8 +95,8 @@ export function ShirtViewer({ alt }: { alt: string }) {
               }}
               className={`min-h-11 cursor-pointer rounded-lg border px-4 font-semibold text-sm transition ${
                 face === value
-                  ? "border-mg-navy bg-mg-navy text-white"
-                  : "border-mg-line bg-white text-mg-navy hover:border-mg-blue"
+                  ? "border-mg-blue bg-mg-blue text-white"
+                  : "border-white/10 bg-white/5 text-white hover:border-mg-blue/60"
               }`}
             >
               {label}

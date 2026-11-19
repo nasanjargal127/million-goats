@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { SectionTitle } from "@/components/brand";
 import { ShirtViewer } from "@/components/merch/shirt-viewer";
 import { MerchForm } from "@/components/merch-form";
+import { SectionGoat } from "@/components/motion/goat-backdrop";
 import { Reveal } from "@/components/motion/reveal";
-import { PageHero } from "@/components/page-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSession } from "@/lib/auth";
@@ -42,7 +43,7 @@ async function Shop() {
 
   if (!product) {
     return (
-      <p className="m-0 rounded-[20px] border border-mg-line bg-white p-8 text-mg-body">
+      <p className="m-0 rounded-2xl bg-mg-card p-8 text-center text-white/70 ring-1 ring-white/5">
         Merch удахгүй худалдаанд гарна.
       </p>
     );
@@ -52,25 +53,25 @@ async function Shop() {
     <div className="flex flex-wrap items-start gap-10">
       <Reveal
         from="left"
-        className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-3xl border border-mg-line bg-white"
+        className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-2xl bg-mg-card ring-1 ring-white/5"
       >
         <ShirtViewer alt={`${product.name} — урд болон ар тал`} />
       </Reveal>
       <Reveal from="right" delay={0.1} className="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
         <div className="flex flex-col gap-3">
-          <h2 className="m-0 font-bold text-[clamp(28px,3vw,40px)] uppercase leading-tight">
+          <h2 className="m-0 font-bold text-[clamp(28px,3vw,40px)] uppercase leading-tight tracking-[-0.01em]">
             {product.name}
           </h2>
-          <p className="m-0 font-bold text-3xl text-mg-link">{formatMnt(product.priceMnt)}</p>
-          <p className="m-0 text-mg-body leading-relaxed">{product.description}</p>
+          <p className="m-0 font-bold text-3xl text-mg-sky">{formatMnt(product.priceMnt)}</p>
+          <p className="m-0 text-white/75 leading-relaxed">{product.description}</p>
         </div>
-        <div className="flex items-start gap-3 rounded-xl border border-mg-blue/30 bg-mg-blue/5 p-4">
+        <div className="flex items-start gap-3 rounded-xl border border-mg-blue/50 bg-mg-blue/10 p-4 shadow-[0_0_32px_rgba(0,104,255,0.18)]">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-mg-blue text-white">
             <GiftIcon />
           </span>
-          <p className="m-0 text-mg-navy leading-snug">
+          <p className="m-0 leading-snug">
             <span className="block font-bold">Бонус: Амралтын өдрийн лекц</span>
-            <span className="text-mg-body text-sm">
+            <span className="text-sm text-white/70">
               Манай merch-ийг худалдаж авбал амралтын өдрийн лекцэнд суух эрх нэмэгдэнэ.
             </span>
           </p>
@@ -91,22 +92,35 @@ export default function MerchPage() {
   return (
     <>
       <SiteHeader current="/merch" />
-      <main className="flex flex-1 flex-col">
-        <PageHero
-          title={["Million", "Goats"]}
-          aside={
-            <p className="m-0 max-w-105 text-[17px] text-white/80 leading-relaxed">
+      {/* One navy run with the goat drawn behind it, like the home page */}
+      <main className="relative isolate flex flex-1 flex-col bg-mg-navy text-white">
+        <SectionGoat align="center" />
+
+        <section className="px-4 pt-20 pb-14 sm:px-[clamp(16px,4vw,64px)] lg:pt-28">
+          <Reveal className="mx-auto flex max-w-4xl flex-col items-center text-center">
+            <span className="rounded-full bg-mg-blue px-3 py-1 font-semibold text-white text-xs">
+              Merch
+            </span>
+            <SectionTitle
+              as="h1"
+              lines={["Million Goats"]}
+              dot={false}
+              size="text-[clamp(34px,5vw,68px)]"
+              className="mt-5"
+            />
+            <p className="m-0 mt-8 max-w-140 text-[15px] text-white/85 leading-relaxed">
               Million Goats-ын албан ёсны merch. Хэмжээгээ сонгоод QPay-ээр төлөөрэй.
             </p>
-          }
-        />
-        <div className="flex-1 bg-mg-surface px-4 py-12 sm:px-[clamp(16px,4vw,64px)]">
-          <div className="mx-auto max-w-7xl">
-            <Suspense fallback={<div className="h-120 animate-pulse rounded-3xl bg-white" />}>
+          </Reveal>
+        </section>
+
+        <section className="flex-1 px-4 pb-24 sm:px-[clamp(16px,4vw,64px)]">
+          <div className="mx-auto max-w-6xl">
+            <Suspense fallback={<div className="h-120 animate-pulse rounded-2xl bg-mg-card" />}>
               <Shop />
             </Suspense>
           </div>
-        </div>
+        </section>
       </main>
       <SiteFooter />
     </>

@@ -14,13 +14,13 @@ export function Select({
     <div className={`relative ${wrapperClassName}`}>
       <select
         {...props}
-        className={`min-h-12 w-full cursor-pointer appearance-none rounded-lg border border-mg-line bg-white py-0 pr-11 pl-4 text-base text-mg-navy focus:border-mg-blue disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        className={`min-h-12 w-full cursor-pointer appearance-none rounded-lg border border-white/10 bg-mg-card py-0 pr-11 pl-4 text-base text-white focus:border-mg-blue disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       >
         {children}
       </select>
       <svg
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-mg-muted"
+        className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-white/55"
         viewBox="0 0 16 16"
         fill="none"
         stroke="currentColor"
