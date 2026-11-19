@@ -18,7 +18,7 @@ export function SignOutButton() {
         router.push("/");
         router.refresh();
       }}
-      className="min-h-11 cursor-pointer rounded-[10px] border border-mg-line bg-white px-4 font-semibold text-mg-navy hover:border-mg-blue disabled:opacity-60"
+      className="min-h-11 cursor-pointer rounded-md border border-mg-line bg-white px-4 font-semibold text-mg-navy hover:border-mg-blue disabled:opacity-60"
     >
       Гарах
     </button>

@@ -76,7 +76,7 @@ export function PayBalanceButton({
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex min-h-12 cursor-pointer items-center rounded-xl border-0 bg-mg-orange px-6 font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60"
+        className="inline-flex min-h-12 cursor-pointer items-center rounded-md border-0 bg-mg-blue px-6 font-bold text-base text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60"
       >
         {pending ? "Түр хүлээнэ үү…" : label}
       </button>

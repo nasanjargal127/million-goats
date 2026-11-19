@@ -60,7 +60,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
 
   const merch = order.kind === "MERCH";
   const summary = (
-    <div className="flex flex-col gap-4 rounded-[20px] border border-mg-line bg-white p-6">
+    <div className="flex flex-col gap-4 rounded-xl border border-mg-line bg-white p-6">
       {merch ? (
         <div className="flex flex-col gap-3">
           <h2 className="m-0 font-bold text-xl">{order.itemLabel}</h2>
@@ -78,7 +78,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
             <h2 className="m-0 font-bold text-xl">{order.event?.title}</h2>
             <span className="text-mg-muted text-sm">{order.event?.venue}</span>
             {order.itemLabel && (
-              <span className="mt-1 self-start rounded-full bg-mg-orange/15 px-3 py-1 font-semibold text-mg-navy text-sm">
+              <span className="mt-1 self-start rounded-full bg-mg-blue/10 px-3 py-1 font-semibold text-mg-link text-sm">
                 {order.itemLabel}
               </span>
             )}
@@ -121,7 +121,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   if (order.status === "PAID") {
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-start gap-4 rounded-[20px] bg-mg-navy p-8 text-white">
+        <div className="flex flex-col items-start gap-4 rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_70%_90%_at_100%_100%,rgba(0,104,255,0.32),transparent_70%)] p-8 text-white">
           <span className="flex size-14 items-center justify-center rounded-2xl bg-mg-mint">
             <svg
               aria-hidden="true"
@@ -136,7 +136,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
               <path d="M5 12l5 5L20 7" />
             </svg>
           </span>
-          <h1 className="m-0 font-black text-[clamp(28px,4vw,44px)] uppercase leading-tight">
+          <h1 className="m-0 font-bold text-[clamp(28px,4vw,44px)] uppercase leading-tight tracking-[-0.01em]">
             {merch ? "Захиалга баталгаажлаа" : "Суудал баталгаажлаа"}
           </h1>
           <p className="m-0 text-white/80">
@@ -156,8 +156,8 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   if (order.status === "DEPOSIT_PAID" && !order.qpayInvoiceId) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-start gap-4 rounded-[20px] bg-mg-navy p-8 text-white">
-          <h1 className="m-0 font-black text-[clamp(28px,4vw,44px)] uppercase leading-tight">
+        <div className="flex flex-col items-start gap-4 rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_70%_90%_at_100%_100%,rgba(0,104,255,0.32),transparent_70%)] p-8 text-white">
+          <h1 className="m-0 font-bold text-[clamp(28px,4vw,44px)] uppercase leading-tight tracking-[-0.01em]">
             Эхний төлөлт орлоо
           </h1>
           <p className="m-0 text-white/80">
@@ -189,8 +189,8 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
             : "Захиалга цуцлагдсан.";
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3 rounded-[20px] border border-mg-line bg-white p-8">
-          <h1 className="m-0 font-black text-3xl uppercase">
+        <div className="flex flex-col gap-3 rounded-xl border border-mg-line bg-white p-8">
+          <h1 className="m-0 font-bold text-3xl uppercase">
             {order.status === "REFUND_REQUIRED" ? "Анхааруулга" : "Захиалга идэвхгүй"}
           </h1>
           <p className="m-0 text-mg-body">{message}</p>
@@ -198,7 +198,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         {summary}
         <Link
           href={merch ? "/merch" : "/lab"}
-          className="inline-flex min-h-12 items-center self-start rounded-[10px] bg-mg-blue px-5 font-semibold text-white"
+          className="inline-flex min-h-12 items-center self-start rounded-md bg-mg-blue px-5 font-semibold text-white transition hover:brightness-110"
         >
           {merch ? "Дахин захиалах" : "Дахин суудал сонгох"}
         </Link>
@@ -212,9 +212,9 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   return (
     <div className="flex flex-wrap gap-6">
       <OrderStatusPoller orderId={order.id} status={order.status} />
-      <section className="flex min-w-0 flex-[1_1_360px] flex-col items-center gap-5 rounded-[20px] bg-mg-navy p-6 text-white sm:p-8">
+      <section className="flex min-w-0 flex-[1_1_360px] flex-col items-center gap-5 rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_70%_90%_at_100%_100%,rgba(0,104,255,0.32),transparent_70%)] p-6 text-white sm:p-8">
         <div className="flex w-full items-center justify-between gap-4">
-          <h1 className="m-0 font-black text-2xl uppercase">
+          <h1 className="m-0 font-bold text-2xl uppercase">
             {deposit === null ? "QPay-ээр төлөх" : balancePhase ? "Үлдэгдэл төлөх" : "1-р төлөлт"}
           </h1>
           <span className="rounded-full bg-white/10 px-3 py-1.5 font-semibold text-sm">
@@ -238,7 +238,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
           <p className="m-0 text-mg-on-dark">QR код үүсгэж чадсангүй.</p>
         )}
         {deposit !== null && (
-          <p className="m-0 font-bold text-3xl text-mg-mint">{formatMnt(partPrice)}</p>
+          <p className="m-0 font-bold text-3xl text-white">{formatMnt(partPrice)}</p>
         )}
         <p className="m-0 text-center text-mg-on-dark text-sm leading-relaxed">
           Банкны апп эсвэл QPay-ээр QR кодыг уншуулна уу. Төлбөр орсны дараа энэ хуудас автоматаар
@@ -247,7 +247,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         {order.qpayShortUrl && (
           <a
             href={order.qpayShortUrl}
-            className="inline-flex min-h-12 items-center rounded-xl bg-mg-blue px-6 font-semibold text-white"
+            className="inline-flex min-h-12 items-center rounded-md bg-mg-blue px-6 font-semibold text-white transition hover:brightness-110"
           >
             QPay холбоос нээх
           </a>
@@ -257,14 +257,14 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
       <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-6">
         {summary}
         {banks.length > 0 && (
-          <section className="flex flex-col gap-3 rounded-[20px] border border-mg-line bg-white p-6 md:hidden">
+          <section className="flex flex-col gap-3 rounded-xl border border-mg-line bg-white p-6 md:hidden">
             <h2 className="m-0 font-bold text-lg">Банкны аппаар төлөх</h2>
             <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0">
               {banks.map((b) => (
                 <li key={b.link}>
                   <a
                     href={b.link}
-                    className="flex min-h-12 items-center justify-center rounded-xl border border-mg-line px-3 text-center font-medium text-sm hover:border-mg-blue"
+                    className="flex min-h-12 items-center justify-center rounded-md border border-mg-line px-3 text-center font-medium text-sm hover:border-mg-blue"
                   >
                     {b.description || b.name}
                   </a>
@@ -284,7 +284,7 @@ export default function OrderPage({ params }: PageProps<"/orders/[id]">) {
       <SiteHeader />
       <main className="flex-1 bg-mg-surface px-4 py-12 sm:px-[clamp(16px,4vw,64px)]">
         <div className="mx-auto max-w-5xl">
-          <Suspense fallback={<div className="h-96 animate-pulse rounded-[20px] bg-white" />}>
+          <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-white" />}>
             <OrderView params={params} />
           </Suspense>
         </div>

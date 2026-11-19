@@ -55,7 +55,7 @@ export function MobileMenu({ current }: { current?: string }) {
                 href={l.href}
                 onClick={() => setOpen(false)}
                 aria-current={current === l.href ? "page" : undefined}
-                className={`block py-4 font-medium text-lg ${current === l.href ? "text-mg-mint" : "text-white"}`}
+                className={`block py-4 font-medium text-lg ${current === l.href ? "text-mg-sky" : "text-white"}`}
               >
                 {l.label}
               </Link>

@@ -64,8 +64,8 @@ export function ProgramTabs({ teachers }: { teachers: TeamMember[] }) {
               }`}
             >
               <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full font-black text-xs ${
-                  selected ? "bg-mg-orange text-mg-navy" : "bg-mg-surface text-mg-navy"
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full font-bold text-xs ${
+                  selected ? "bg-mg-blue text-white" : "bg-mg-surface text-mg-navy"
                 }`}
               >
                 {i + 1}
@@ -96,10 +96,10 @@ export function ProgramTabs({ teachers }: { teachers: TeamMember[] }) {
             />
           </div>
           <div className="min-w-0">
-            <p className="m-0 font-semibold text-mg-mint text-xs uppercase tracking-[0.12em]">
+            <p className="m-0 font-semibold text-mg-sky text-xs uppercase tracking-[0.12em]">
               {active + 1} · {teacher.role}
             </p>
-            <p className="m-0 font-black text-xl uppercase leading-tight">
+            <p className="m-0 font-bold text-xl uppercase leading-tight">
               {teacher.name}
               {teacher.nickname && ` · ${teacher.nickname}`}
             </p>
@@ -112,7 +112,7 @@ export function ProgramTabs({ teachers }: { teachers: TeamMember[] }) {
               className="flex gap-4 border-mg-line border-t px-4 py-3.5 first:border-t-0 even:bg-mg-surface/60"
             >
               <span className="flex w-16 shrink-0 flex-col">
-                <span className="font-black text-2xl text-mg-navy leading-none">{w + 1}</span>
+                <span className="font-bold text-2xl text-mg-navy leading-none">{w + 1}</span>
                 <span className="mt-1 text-[11px] text-mg-muted">{dates}</span>
               </span>
               <span className="self-center font-semibold text-[15px] text-mg-navy leading-snug">

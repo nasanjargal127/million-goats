@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, HighlightTitle } from "@/components/brand";
+import { ArrowRight } from "@/components/brand";
 import { ClassSchedule } from "@/components/class-schedule";
 import { Reveal } from "@/components/motion/reveal";
+import { PageHero } from "@/components/page-hero";
 import { ProgramTabs } from "@/components/program/program-tabs";
 import { SyllabusPdf } from "@/components/program/syllabus-pdf";
 import { SiteFooter } from "@/components/site-footer";
@@ -51,13 +52,13 @@ function ProgramTable() {
                 scope="col"
                 className="scroll-mt-24 border-white/10 border-l px-5 py-5 align-bottom"
               >
-                <span className="flex items-center gap-2 font-semibold text-[11px] text-mg-mint uppercase tracking-[0.1em]">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-mg-orange font-black text-[11px] text-mg-navy">
+                <span className="flex items-center gap-2 font-semibold text-[11px] text-mg-sky uppercase tracking-[0.1em]">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-mg-blue font-bold text-[11px] text-white">
                     {i + 1}
                   </span>
                   {t.role}
                 </span>
-                <span className="mt-1.5 block font-black text-base uppercase leading-tight xl:text-xl">
+                <span className="mt-1.5 block font-bold text-base uppercase leading-tight xl:text-xl">
                   {t.name}
                   {t.nickname && (
                     <>
@@ -74,7 +75,7 @@ function ProgramTable() {
           {PROGRAM_WEEKS.map((dates, w) => (
             <tr key={dates} className="border-mg-line border-t even:bg-mg-surface/70">
               <th scope="row" className="px-5 py-4 align-middle font-normal">
-                <span className="block font-black text-3xl text-mg-navy leading-none">{w + 1}</span>
+                <span className="block font-bold text-3xl text-mg-navy leading-none">{w + 1}</span>
                 <span className="mt-1 block text-mg-muted text-xs">{dates}</span>
               </th>
               {team.map((t) => (
@@ -98,34 +99,23 @@ export default function ProgramPage() {
     <>
       <SiteHeader current="/program" />
       <main className="flex flex-1 flex-col">
-        <section className="relative overflow-hidden bg-mg-navy px-4 py-14 text-white sm:px-[clamp(16px,4vw,64px)]">
-          <div
-            aria-hidden="true"
-            className="absolute top-0 -right-25 h-full w-160 bg-linear-to-r from-mg-blue/0 to-mg-blue/60 [clip-path:polygon(50%_0,100%_0,50%_100%,0_100%)]"
-          />
-          <div className="relative mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-6">
-            <HighlightTitle
-              as="h1"
-              className="text-[clamp(34px,5vw,68px)]"
-              lines={[
-                { text: "Хичээлийн", className: "bg-white text-mg-navy" },
-                { text: "хөтөлбөр", className: "bg-mg-blue text-white", indent: true },
-              ]}
-            />
-            <dl className="m-0 flex flex-wrap gap-x-8 gap-y-3">
+        <PageHero
+          title={["Хичээлийн", "хөтөлбөр"]}
+          aside={
+            <dl className="m-0 flex flex-wrap gap-x-10 gap-y-3">
               {[
                 [`${PROGRAM_WEEKS.length}`, "долоо хоног"],
                 [`${team.length}`, "багш"],
                 [`${first}–${last}`, "хугацаа"],
               ].map(([value, label]) => (
                 <div key={label} className="flex flex-col-reverse">
-                  <dt className="text-sm text-white/70">{label}</dt>
-                  <dd className="m-0 font-black text-3xl text-mg-mint">{value}</dd>
+                  <dt className="text-sm text-white/60">{label}</dt>
+                  <dd className="m-0 font-bold text-3xl text-white">{value}</dd>
                 </div>
               ))}
             </dl>
-          </div>
-        </section>
+          }
+        />
 
         <div className="flex-1 bg-mg-surface px-4 py-12 sm:px-[clamp(16px,4vw,64px)]">
           <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -144,16 +134,16 @@ export default function ProgramPage() {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/#team"
-                  className="inline-flex items-center rounded-xl border border-mg-line bg-white px-5 py-3.5 font-semibold text-mg-navy transition hover:border-mg-blue"
+                  className="inline-flex min-h-11 items-center rounded-md border border-mg-line bg-white px-5 font-semibold text-mg-navy transition hover:border-mg-blue"
                 >
                   Багш нартай танилцах
                 </Link>
                 <Link
                   href="/lab"
-                  className="inline-flex items-center gap-2.5 rounded-xl bg-mg-blue px-6 py-3.5 font-semibold text-white transition hover:brightness-110"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-md bg-mg-blue px-5 font-semibold text-white transition hover:brightness-110"
                 >
                   Суудал сонгох
-                  <ArrowRight />
+                  <ArrowRight className="size-4" />
                 </Link>
               </div>
             </div>

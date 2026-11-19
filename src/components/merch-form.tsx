@@ -9,7 +9,7 @@ import { Select } from "./ui/select";
 type Size = { id: string; size: string };
 
 const field =
-  "min-h-12 w-full rounded-xl border border-mg-line bg-white px-4 text-base text-mg-navy placeholder:text-[#7D89A3] focus:border-mg-blue";
+  "min-h-12 w-full rounded-lg border border-mg-line bg-white px-4 text-base text-mg-navy placeholder:text-[#7D89A3] focus:border-mg-blue";
 
 export function MerchForm({
   sizes,
@@ -34,7 +34,7 @@ export function MerchForm({
     return (
       <Link
         href="/sign-in?next=/merch"
-        className="inline-flex min-h-13 items-center justify-center rounded-xl bg-mg-blue px-7 font-semibold text-white transition hover:brightness-110"
+        className="inline-flex min-h-12 items-center justify-center rounded-md bg-mg-blue px-6 font-semibold text-white transition hover:brightness-110"
       >
         Захиалахын тулд нэвтрэх
       </Link>
@@ -66,7 +66,7 @@ export function MerchForm({
                 required
                 className="peer sr-only"
               />
-              <span className="flex min-h-12 min-w-14 flex-col items-center justify-center rounded-xl border border-mg-line bg-white px-3 font-bold text-mg-navy transition peer-checked:border-mg-navy peer-checked:bg-mg-navy peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-mg-sky">
+              <span className="flex min-h-12 min-w-14 flex-col items-center justify-center rounded-lg border border-mg-line bg-white px-3 font-bold text-mg-navy transition peer-checked:border-mg-blue peer-checked:bg-mg-blue peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-mg-sky">
                 {s.size}
               </span>
             </label>
@@ -109,7 +109,7 @@ export function MerchForm({
         />
       </div>
 
-      <div className="flex flex-col gap-3 rounded-2xl bg-mg-navy p-5 text-white">
+      <div className="relative flex flex-col gap-3 overflow-hidden rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_80%_100%_at_100%_100%,rgba(0,104,255,0.3),transparent_70%)] p-5 text-white">
         <div className="flex items-baseline justify-between gap-4">
           <span className="text-mg-on-dark">Нийт дүн</span>
           <span className="font-bold text-2xl" aria-live="polite">
@@ -119,7 +119,7 @@ export function MerchForm({
         <button
           type="submit"
           disabled={pending}
-          className="min-h-13 cursor-pointer rounded-xl border-0 bg-mg-orange font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-12 cursor-pointer rounded-md border-0 bg-mg-blue font-bold text-base text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? "Түр хүлээнэ үү…" : "QPay-ээр төлөх"}
         </button>

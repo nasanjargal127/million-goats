@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 
 const pill =
-  "inline-flex min-h-11 items-center gap-2 rounded-[10px] px-4 font-semibold text-sm text-white transition lg:text-[15px]";
+  "inline-flex min-h-11 items-center gap-2 rounded-md px-4 font-semibold text-sm text-white transition lg:min-h-9";
 
 /** Header account control. Reads the session cookie, so render it inside <Suspense>. */
 export async function UserNav() {
@@ -10,7 +10,10 @@ export async function UserNav() {
 
   if (!session) {
     return (
-      <Link href="/sign-in" className={`${pill} bg-mg-blue hover:brightness-110`}>
+      <Link
+        href="/sign-in"
+        className={`${pill} border border-mg-blue bg-linear-to-b from-[#0b2a6e] to-[#051540] hover:from-[#0f3588] hover:to-[#071c55]`}
+      >
         Нэвтрэх
       </Link>
     );
@@ -25,7 +28,7 @@ export async function UserNav() {
     >
       <span
         aria-hidden="true"
-        className="flex size-8 items-center justify-center rounded-lg bg-mg-blue font-bold text-sm uppercase"
+        className="flex size-8 items-center justify-center rounded-md bg-mg-blue lg:size-7 font-bold text-sm uppercase"
       >
         {name.slice(0, 1)}
       </span>
@@ -35,5 +38,7 @@ export async function UserNav() {
 }
 
 export function UserNavFallback() {
-  return <span aria-hidden="true" className="inline-block h-11 w-24 rounded-[10px] bg-white/10" />;
+  return (
+    <span aria-hidden="true" className="inline-block h-11 w-24 rounded-md bg-white/10 lg:h-9" />
+  );
 }

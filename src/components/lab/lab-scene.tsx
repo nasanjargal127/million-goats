@@ -39,8 +39,8 @@ const BRAND = {
 
 const COLOR = {
   available: new THREE.Color(BRAND.blue),
-  hover: new THREE.Color(BRAND.mint),
-  selected: new THREE.Color(BRAND.orange),
+  hover: new THREE.Color(BRAND.sky),
+  selected: new THREE.Color("#FFFFFF"),
   sold: new THREE.Color("#2A3550"),
 };
 
@@ -106,6 +106,7 @@ function makeChartTexture() {
     const high = Math.min(open, close) - rand() * 14;
     const low = Math.max(open, close) + rand() * 14;
     const up = close < open; // canvas y grows downward
+    // Up/down candles keep the trading green/red convention.
     ctx.strokeStyle = up ? BRAND.mint : BRAND.orange;
     ctx.fillStyle = ctx.strokeStyle;
     const x = i * step + step / 2;
@@ -148,7 +149,7 @@ function makeLabelTexture(title: string, sub: string) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillText(title, x, h / 2 + 2);
   x += ctx.measureText(title).width + gap;
-  ctx.fillStyle = BRAND.mint;
+  ctx.fillStyle = BRAND.sky;
   ctx.fillText(sub, x, h / 2 + 2);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;

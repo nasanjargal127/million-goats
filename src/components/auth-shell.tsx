@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
 import { site } from "@/lib/site";
-import { HighlightTitle } from "./brand";
+import { BrandDot } from "./brand";
+import { HeroBackdrop } from "./home/hero-backdrop";
 
 export function AuthShell({
   title,
@@ -15,15 +16,8 @@ export function AuthShell({
 }) {
   return (
     <main className="flex min-h-screen flex-1 flex-wrap bg-white">
-      <section className="relative hidden min-w-0 flex-[1_1_480px] flex-col justify-between overflow-hidden bg-mg-navy p-12 text-white lg:flex">
-        <div
-          aria-hidden="true"
-          className="absolute -top-10 -right-40 h-95 w-190 bg-linear-to-r from-mg-blue/0 to-mg-blue [clip-path:polygon(50%_0,100%_0,50%_100%,0_100%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -right-40 bottom-0 h-60 w-130 bg-linear-to-r from-mg-orange/0 to-mg-orange [clip-path:polygon(0_0,50%_0,100%_100%,50%_100%)]"
-        />
+      <section className="relative isolate hidden min-w-0 flex-[1_1_480px] flex-col justify-between overflow-hidden bg-mg-navy p-12 text-white lg:flex">
+        <HeroBackdrop />
         <Link href="/" aria-label={`${site.name} нүүр`} className="relative self-start">
           <Image
             src={site.logos.horizontalOnDark}
@@ -34,15 +28,17 @@ export function AuthShell({
             className="h-10 w-auto"
           />
         </Link>
-        <HighlightTitle
-          as="p"
-          className="relative text-[clamp(40px,4vw,64px)]"
-          lines={[
-            { text: "One community.", className: "bg-white text-mg-navy" },
-            { text: "A million goals.", className: "bg-mg-orange text-mg-navy", indent: true },
-          ]}
-        />
-        <p className="relative m-0 max-w-sm text-white/75">
+        <p className="relative m-0 font-bold text-[clamp(40px,4vw,64px)] uppercase leading-[0.92] tracking-[-0.02em] [text-shadow:0_8px_40px_rgba(1,13,38,0.55)]">
+          <span className="block">
+            One community
+            <BrandDot />
+          </span>
+          <span className="block">
+            A million goals
+            <BrandDot />
+          </span>
+        </p>
+        <p className="relative m-0 max-w-sm text-white/85">
           Суудлаа захиалж, QPay-ээр төлөөд баталгаажуулаарай.
         </p>
       </section>
@@ -60,7 +56,10 @@ export function AuthShell({
             />
           </Link>
           <div className="flex flex-col gap-2">
-            <h1 className="m-0 font-black text-[32px] uppercase leading-tight">{title}</h1>
+            <h1 className="m-0 font-bold text-[32px] uppercase leading-tight tracking-[-0.01em]">
+              {title}
+              <BrandDot />
+            </h1>
             <p className="m-0 text-mg-body">{subtitle}</p>
           </div>
           {/* The form reads ?next= from the URL, which needs a Suspense boundary. */}

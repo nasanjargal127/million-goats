@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { navLinks, socialLinks } from "@/lib/content";
 import { site } from "@/lib/site";
-import { ColorBar } from "./brand";
 
 function FooterHeading({ children }: { children: string }) {
   return (
@@ -14,7 +13,11 @@ function FooterHeading({ children }: { children: string }) {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-mg-navy text-[15px] text-mg-on-dark">
+    <footer className="relative bg-mg-navy text-[15px] text-mg-on-dark">
+      <div
+        aria-hidden="true"
+        className="h-px bg-linear-to-r from-mg-blue/0 via-mg-blue to-mg-blue/0 shadow-[0_0_24px_rgba(0,104,255,0.8)]"
+      />
       <div className="mx-auto flex max-w-7xl flex-wrap gap-12 px-4 pt-20 pb-14 sm:px-[clamp(16px,4vw,64px)] xl:px-0">
         <div className="flex min-w-0 flex-[2_1_320px] flex-col gap-5">
           <Image
@@ -32,7 +35,7 @@ export function SiteFooter() {
         <nav aria-label="Хамт олон" className="flex flex-[1_1_160px] flex-col gap-3">
           <FooterHeading>Хамт олон</FooterHeading>
           {navLinks.slice(0, 4).map((l) => (
-            <Link key={l.href} href={l.href} className="text-mg-on-dark hover:text-mg-mint">
+            <Link key={l.href} href={l.href} className="text-mg-on-dark hover:text-mg-sky">
               {l.label}
             </Link>
           ))}
@@ -47,7 +50,7 @@ export function SiteFooter() {
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-mg-on-dark hover:text-mg-mint"
+                className="text-mg-on-dark hover:text-mg-sky"
               >
                 {s.label}
               </a>
@@ -59,20 +62,20 @@ export function SiteFooter() {
 
         <address className="flex flex-[1_1_220px] flex-col gap-3 not-italic">
           <FooterHeading>Холбоо барих</FooterHeading>
-          <a href={site.contact.webUrl} className="text-mg-on-dark hover:text-mg-mint">
+          <a href={site.contact.webUrl} className="text-mg-on-dark hover:text-mg-sky">
             {site.contact.web}
           </a>
-          <a href={`mailto:${site.contact.email}`} className="text-mg-on-dark hover:text-mg-mint">
+          <a href={`mailto:${site.contact.email}`} className="text-mg-on-dark hover:text-mg-sky">
             {site.contact.email}
           </a>
-          <a href={site.contact.phoneHref} className="text-mg-on-dark hover:text-mg-mint">
+          <a href={site.contact.phoneHref} className="text-mg-on-dark hover:text-mg-sky">
             {site.contact.phone}
           </a>
           <a
             href={site.contact.mapUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-mg-on-dark hover:text-mg-mint"
+            className="text-mg-on-dark hover:text-mg-sky"
           >
             {site.contact.address}
           </a>
@@ -83,7 +86,6 @@ export function SiteFooter() {
         <span>© {site.name}. Бүх эрх хуулиар хамгаалагдсан.</span>
         <span>Арилжаа нь эрсдэлтэй. Контент нь боловсролын зорилготой.</span>
       </div>
-      <ColorBar />
     </footer>
   );
 }
