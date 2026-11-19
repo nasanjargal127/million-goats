@@ -6,16 +6,16 @@ import { getSession } from "@/lib/auth";
 import { getEventWithSeats, HOLD_MINUTES } from "@/lib/booking";
 import { installmentsOpen } from "@/lib/lab/packages";
 import { fromDbSeat, LAB_EVENT_SLUG, ROOM_IDS, TOTAL_SEATS } from "@/lib/lab/seats";
+import { pageMetadata } from "@/lib/seo";
 
 const description = `Million Goats Trading Lab — ${ROOM_IDS.length} танхим, ${TOTAL_SEATS} суудал. 3D танхимаас суудлаа сонгоод Pro эсвэл Premium багцаа QPay-ээр төлж баталгаажуулаарай.`;
 
-export const metadata: Metadata = {
-  title: "Trading Lab",
+export const metadata: Metadata = pageMetadata({
+  path: "/lab",
+  title: "Trading Lab — суудал захиалга",
+  socialTitle: "Million Goats Trading Lab",
   description,
-  alternates: { canonical: "/lab" },
-  openGraph: { title: "Million Goats Trading Lab", description },
-  twitter: { title: "Million Goats Trading Lab", description },
-};
+});
 
 /** Loads live seat status and the visitor's session; both are per request. */
 async function LabWithBooking() {

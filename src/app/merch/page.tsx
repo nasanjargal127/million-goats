@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { SectionTitle } from "@/components/brand";
+import { JsonLd } from "@/components/json-ld";
 import { ShirtViewer } from "@/components/merch/shirt-viewer";
 import { MerchForm } from "@/components/merch-form";
 import { SectionGoat } from "@/components/motion/goat-backdrop";
@@ -12,12 +13,17 @@ import { getSession } from "@/lib/auth";
 import { HOLD_MINUTES } from "@/lib/booking";
 import { formatMnt } from "@/lib/format";
 import { getProduct, MAX_MERCH_QUANTITY, MERCH_SLUG } from "@/lib/merch";
+import { SHIRT_IMAGE } from "@/lib/merch-shirt";
+import { ORGANIZATION_ID, pageMetadata } from "@/lib/seo";
+import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Merch",
-  description: "Million Goats хар футболк. Хэмжээгээ сонгоод QPay-ээр төлөөрэй.",
-  alternates: { canonical: "/merch" },
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/merch",
+  title: "Merch — албан ёсны футболк",
+  socialTitle: "Million Goats Merch",
+  description:
+    "Million Goats-ын албан ёсны хар футболк. Хэмжээгээ сонгоод QPay-ээр төлөөрэй — худалдан авалт бүрд амралтын өдрийн лекцийн эрх.",
+});
 
 function GiftIcon() {
   return (
@@ -49,8 +55,28 @@ async function Shop() {
     );
   }
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: `${site.url}${product.imagePath ?? SHIRT_IMAGE.src}`,
+    brand: { "@type": "Brand", name: site.name },
+    sku: product.slug,
+    offers: {
+      "@type": "Offer",
+      url: `${site.url}/merch`,
+      price: product.priceMnt,
+      priceCurrency: "MNT",
+      availability: "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@id": ORGANIZATION_ID },
+    },
+  };
+
   return (
     <div className="flex flex-wrap items-start gap-10">
+      <JsonLd data={productJsonLd} />
       <Reveal
         from="left"
         className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-2xl bg-mg-card ring-1 ring-white/5"

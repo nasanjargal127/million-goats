@@ -12,6 +12,21 @@ export const PROGRAM_WEEKS = [
   "01.19–01.25",
 ] as const;
 
+/** Year the first of PROGRAM_WEEKS falls in; weeks after December roll into the next year. */
+const PROGRAM_START_YEAR = 2026;
+
+/** First and last day of the programme as ISO dates, for structured data. */
+export function programDates() {
+  const [startMonth, startDay] = PROGRAM_WEEKS[0].split("–")[0].split(".");
+  const [endMonth, endDay] = PROGRAM_WEEKS[PROGRAM_WEEKS.length - 1].split("–")[1].split(".");
+  const endYear =
+    Number(endMonth) < Number(startMonth) ? PROGRAM_START_YEAR + 1 : PROGRAM_START_YEAR;
+  return {
+    start: `${PROGRAM_START_YEAR}-${startMonth}-${startDay}`,
+    end: `${endYear}-${endMonth}-${endDay}`,
+  };
+}
+
 /** One topic per week, keyed by team member id. */
 export const PROGRAM_TOPICS: Record<string, readonly string[]> = {
   namuunzul: [
