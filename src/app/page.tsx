@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/hero";
 import { LabTeaser, Manifesto, Schedule, Team } from "@/components/home/sections";
+import { SectionGoat } from "@/components/motion/goat-backdrop";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -10,9 +11,13 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <Manifesto />
-        <Team />
-        <LabTeaser />
-        <Schedule />
+        {/* One navy run with the goat drawn behind it */}
+        <div className="relative isolate bg-mg-navy">
+          <SectionGoat />
+          <Team />
+          <LabTeaser />
+          <Schedule />
+        </div>
       </main>
       <SiteFooter />
     </>

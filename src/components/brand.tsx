@@ -30,12 +30,15 @@ export function SectionTitle({
   as: Tag = "h2",
   lines,
   size = "text-[clamp(34px,4.6vw,64px)]",
+  dot = true,
   className = "",
 }: {
   as?: "h1" | "h2";
   lines: string[];
   /** Font-size class; kept separate so it never competes with a default. */
   size?: string;
+  /** End with the blue square dot (off for the plain centred section titles). */
+  dot?: boolean;
   className?: string;
 }) {
   return (
@@ -45,7 +48,7 @@ export function SectionTitle({
       {lines.map((line, i) => (
         <span key={line} className="block">
           {line}
-          {i === lines.length - 1 && <BrandDot />}
+          {dot && i === lines.length - 1 && <BrandDot />}
         </span>
       ))}
     </Tag>

@@ -48,85 +48,66 @@ export function Manifesto() {
   );
 }
 
-/** The traders and psychologist behind Million Goats. */
+/** The traders and psychologist behind Million Goats. Sits on the page's navy. */
 export function Team() {
   return (
-    <section
-      id="team"
-      className={`relative overflow-hidden bg-mg-surface text-mg-navy ${sectionPad}`}
-    >
-      <div className="relative mx-auto max-w-7xl">
-        <div className="flex flex-wrap items-end justify-between gap-x-20 gap-y-8">
-          <Reveal from="left" className="min-w-0 flex-[1_1_420px]">
-            <Eyebrow className="text-mg-link">Манай баг</Eyebrow>
-            <SectionTitle lines={["Багш нар"]} />
-          </Reveal>
-          <Reveal from="right" delay={0.1} className="min-w-0 flex-[1_1_420px]">
-            <p className="m-0 max-w-140 text-lg text-mg-body leading-relaxed">
-              Олон улсын prop firm-ийн шалгалт давсан трейдерүүд, санхүүгийн боловсролтой багш нар,
-              трейдерийн сэтгэлзүйд зориулсан сэтгэл засалч — бүгд нэг дор.
-            </p>
-          </Reveal>
-        </div>
+    <section id="team" className={`relative text-white ${sectionPad}`}>
+      <div className="relative mx-auto max-w-6xl">
+        <Reveal className="flex flex-col items-center text-center">
+          <span className="rounded-full bg-mg-blue px-3 py-1 font-semibold text-white text-xs">
+            Манай баг
+          </span>
+          <SectionTitle lines={["Багш нар"]} dot={false} className="mt-5" />
+          <p className="m-0 mt-8 max-w-140 text-[15px] text-white/85 leading-relaxed">
+            Олон улсын prop firm-ийн шалгалт давсан трейдерүүд, санхүүгийн боловсролтой багш нар,
+            трейдерийн сэтгэлзүйд зориулсан сэтгэл засалч — бүгд нэг дор.
+          </p>
+        </Reveal>
 
-        <ul className="m-0 mt-14 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="m-0 mx-auto mt-14 grid max-w-sm list-none grid-cols-1 gap-6 p-0 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
           {team.map((member, i) => (
             <li key={member.name} className="min-w-0">
               <Reveal delay={0.1 + i * 0.08} className="h-full">
-                <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-mg-line bg-white">
-                  <div className="relative aspect-[4/5] overflow-hidden bg-mg-navy">
+                <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-mg-card ring-1 ring-white/5 transition hover:ring-mg-blue/60">
+                  <div className="relative aspect-[3/4] overflow-hidden bg-mg-navy">
                     <Image
                       src={member.photo}
                       alt={member.name}
                       fill
-                      sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
+                      sizes="(min-width: 1024px) 280px, (min-width: 640px) 50vw, 100vw"
                       className="object-cover transition duration-500 group-hover:scale-105"
                       style={{ objectPosition: `50% ${member.focus}` }}
                     />
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-mg-navy/80 to-mg-navy/0"
+                    {/* Brand chevron peeking in from the bottom-right corner */}
+                    <Image
+                      src={site.logos.symbol}
+                      alt=""
+                      width={512}
+                      height={308}
+                      className="absolute -right-[16%] -bottom-[2%] w-[62%]"
                     />
-                    <span className="absolute bottom-4 left-4 rounded-md bg-mg-blue px-2.5 pt-1 pb-0.5 font-bold text-white text-xs uppercase tracking-wide lg:left-3 lg:px-2 lg:text-[11px] lg:tracking-normal xl:left-4 xl:px-2.5 xl:text-xs xl:tracking-wide">
-                      {member.role}
-                    </span>
                   </div>
-                  <div className="flex flex-1 flex-col gap-4 p-5">
-                    <h3 className="m-0 flex flex-wrap items-center gap-2 font-bold text-xl uppercase leading-tight">
+                  <div className="flex flex-1 flex-col gap-3 p-5">
+                    <h3 className="m-0 font-bold text-lg uppercase leading-tight">
                       {member.name}
                       {member.nickname && (
-                        <span className="rounded-md bg-mg-navy px-2 py-0.5 font-bold text-white text-xs tracking-wide">
+                        <span className="ml-1 align-super font-semibold text-[10px] text-mg-sky tracking-wide">
                           {member.nickname}
                         </span>
                       )}
                     </h3>
-                    <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[15px] text-mg-body leading-snug">
-                      {member.points.map((point) => (
-                        <li key={point} className="flex gap-2">
-                          <span
-                            aria-hidden="true"
-                            className="mt-[0.45em] size-1.5 shrink-0 rotate-45 bg-mg-blue"
-                          />
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-auto flex flex-col gap-4">
+                    <p className="m-0 text-sm text-white/85 leading-snug">
+                      {member.points.join(", ")}
+                    </p>
+                    <div className="mt-auto flex flex-col gap-4 pt-2">
                       {member.tags && (
-                        <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
-                          {member.tags.map((tag) => (
-                            <li
-                              key={tag}
-                              className="rounded-full border border-mg-line bg-mg-surface px-2.5 py-1 font-semibold text-mg-navy text-xs"
-                            >
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
+                        <p className="m-0 self-start border-mg-blue border-b-2 pb-2 font-medium text-white/85 text-xs leading-relaxed">
+                          {member.tags.join(" · ")}
+                        </p>
                       )}
                       <Link
                         href={`/program#${member.id}`}
-                        className="inline-flex items-center gap-1.5 self-start border-mg-line border-t pt-3 font-semibold text-mg-link text-sm transition hover:gap-2.5"
+                        className="inline-flex items-center gap-1.5 self-start font-semibold text-sm text-white transition hover:gap-2.5 hover:text-mg-sky"
                         aria-label={`${member.name} — хөтөлбөр харах`}
                       >
                         Хөтөлбөр харах
@@ -144,58 +125,60 @@ export function Team() {
   );
 }
 
-/** Short Trading Lab promo between the about and join sections. */
+/** Short Trading Lab promo between the team and schedule sections. */
 export function LabTeaser() {
   return (
-    <section id="lab" className={`relative overflow-hidden bg-mg-navy text-white ${sectionPad}`}>
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(ellipse_55%_70%_at_85%_50%,rgba(0,104,255,0.32),transparent_70%)]"
-      />
-      <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-12">
-        <Reveal from="left" className="flex min-w-0 flex-[1_1_480px] flex-col gap-6">
-          <div>
-            <Eyebrow className="text-mg-sky">Trading Lab</Eyebrow>
-            <SectionTitle lines={["Мэргэжлийн", "трейдерүүдийн танхим"]} />
-          </div>
-          <p className="m-0 max-w-140 text-lg text-white/80 leading-relaxed">
+    <section id="lab" className={`relative text-white ${sectionPad}`}>
+      <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center">
+        <Reveal>
+          <SectionTitle
+            lines={["Мэргэжлийн трейдерүүдийн танхим"]}
+            dot={false}
+            size="text-[clamp(28px,3.6vw,48px)]"
+          />
+          <p className="m-0 mt-8 text-[15px] text-white/55 leading-relaxed">
             {ROOM_IDS.length} танхим, {TOTAL_SEATS} суудал. 3D танхимаас суудлаа сонгоод QPay-ээр
             төлж баталгаажуулаарай.
           </p>
-          <Link
-            href="/lab"
-            className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-md bg-mg-blue px-5 font-semibold text-base text-white transition hover:brightness-110"
-          >
-            Суудал сонгох
-            <ArrowRight className="size-4" />
-          </Link>
         </Reveal>
-        <ul className="m-0 grid min-w-0 flex-[1_1_320px] list-none grid-cols-2 gap-3 p-0">
+        <ul className="m-0 mt-8 grid w-full list-none grid-cols-2 gap-4 p-0 lg:grid-cols-4 lg:gap-5">
           {ROOM_IDS.map((room, i) => (
             <li key={room}>
               <Reveal delay={0.1 + i * 0.08}>
                 <Link
                   href="/lab"
-                  className="flex min-h-28 flex-col justify-between rounded-xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-sm transition hover:border-mg-blue hover:bg-mg-blue/10 hover:shadow-[0_0_32px_rgba(0,104,255,0.35)]"
+                  className="group flex min-h-24 flex-col items-start justify-between gap-2 rounded-lg bg-mg-card p-4 text-left transition hover:-translate-y-0.5 hover:bg-mg-blue hover:shadow-[0_12px_32px_rgba(0,104,255,0.35)] lg:min-h-28"
                 >
-                  <span className="font-bold text-xl uppercase">{ROOM_NAMES[room]}</span>
-                  <span className="text-mg-sky text-sm">{ROOM_SEAT_COUNT[room]} суудал</span>
+                  <span className="font-semibold text-[clamp(22px,2.4vw,30px)] leading-tight">
+                    {ROOM_NAMES[room]}
+                  </span>
+                  <span className="text-mg-sky text-sm transition group-hover:text-white/75">
+                    {ROOM_SEAT_COUNT[room]} суудал
+                  </span>
                 </Link>
               </Reveal>
             </li>
           ))}
         </ul>
+        <Reveal delay={0.2}>
+          <Link
+            href="/lab"
+            className="mt-16 inline-flex min-h-10 items-center justify-center rounded-md bg-mg-blue px-6 font-semibold text-sm text-white transition hover:brightness-110"
+          >
+            Суудал Сонгох
+          </Link>
+        </Reveal>
       </div>
     </section>
   );
 }
 
-/** Weekly class times, at the very bottom of the home page. */
+/** Weekly class times, at the very bottom of the home page. Sits on the page's navy. */
 export function Schedule() {
   return (
-    <section id="schedule" className={`scroll-mt-20 bg-mg-surface ${sectionPad}`}>
-      <Reveal className="mx-auto max-w-5xl">
-        <ClassSchedule />
+    <section id="schedule" className={`scroll-mt-20 ${sectionPad}`}>
+      <Reveal className="mx-auto max-w-4xl">
+        <ClassSchedule bare />
       </Reveal>
     </section>
   );
