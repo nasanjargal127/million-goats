@@ -2,20 +2,20 @@ import Image from "next/image";
 import { team } from "@/lib/content";
 import { CLASS_LOCATION, CLASS_SCHEDULE } from "@/lib/program";
 import { site } from "@/lib/site";
-import { BrandDot } from "./brand";
 
+/** Module chips: filled blue, except М4 which is outlined. */
 const MODULE_BADGE: Record<string, string> = {
   М1: "bg-mg-blue text-white",
-  М2: "bg-[#3d8bff] text-white",
-  М3: "bg-[#9cc4ff] text-mg-navy",
-  М4: "bg-[#dce8ff] text-mg-navy",
+  М2: "bg-mg-blue text-white",
+  М3: "bg-mg-blue text-white",
+  М4: "border border-mg-blue text-white",
 };
 
 function PinIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="size-6"
+      className="size-4"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -29,87 +29,72 @@ function PinIcon() {
   );
 }
 
-/** The weekly class timetable (Mon–Fri), as on the printed «Хичээлийн хуваарь». */
-export function ClassSchedule({ headingLevel = "h2" }: { headingLevel?: "h2" | "h3" }) {
+/**
+ * The weekly class timetable (Mon–Fri): one row per day, divided by thin rules,
+ * with the community meeting lit in orange. `bare` drops the navy card for
+ * pages whose section is already navy.
+ */
+export function ClassSchedule({
+  headingLevel = "h2",
+  bare = false,
+}: {
+  headingLevel?: "h2" | "h3";
+  bare?: boolean;
+}) {
   const Heading = headingLevel;
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-mg-navy p-5 text-white sm:p-8 lg:p-10">
-      <div
-        aria-hidden="true"
-        className="absolute top-0 -right-24 h-56 w-96 bg-linear-to-l from-mg-blue/50 to-mg-blue/0 [clip-path:polygon(40%_0,100%_0,100%_100%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute -right-16 -bottom-10 h-48 w-72 bg-linear-to-l from-mg-blue/40 to-mg-blue/0 [clip-path:polygon(100%_0,100%_100%,0_100%)]"
-      />
+    <div className={`text-white ${bare ? "" : "rounded-3xl bg-mg-navy p-5 sm:p-8 lg:p-10"}`}>
+      <Heading className="m-0 font-bold text-[clamp(28px,3.4vw,44px)] uppercase leading-none tracking-[-0.02em]">
+        Хичээлийн хуваарь
+      </Heading>
 
-      <div className="relative flex items-end justify-between gap-6">
-        <div>
-          <p className="m-0 flex items-center gap-3 font-semibold text-mg-sky text-sm">
-            <Image src={site.logos.symbol} alt="" width={512} height={308} className="h-6 w-auto" />
-            Million Goats Trading Lab
-          </p>
-          <Heading className="m-0 mt-3 font-bold text-[clamp(30px,4vw,48px)] uppercase leading-none tracking-[-0.02em]">
-            Хичээлийн хуваарь
-            <BrandDot />
-          </Heading>
-        </div>
-        <span
-          aria-hidden="true"
-          className="mb-3 hidden h-1 w-14 rounded-full bg-mg-blue shadow-[0_0_16px_rgba(0,104,255,0.8)] sm:block"
-        />
-      </div>
-
-      <ol className="relative m-0 mt-8 flex list-none flex-col gap-3 p-0">
+      <ol className="m-0 mt-8 flex list-none flex-col p-0 sm:px-6">
         {CLASS_SCHEDULE.map((c) => {
           const teacher = team.find((t) => t.id === c.teacher);
           return (
             <li
               key={c.day}
-              className={`grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 md:grid-cols-[10rem_13rem_minmax(0,1fr)] md:py-5 ${
+              className={`grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-4 gap-y-3 py-5 md:grid-cols-[8rem_10rem_2.75rem_minmax(0,1fr)] md:py-6 ${
                 c.highlight
-                  ? "border-mg-blue bg-mg-blue/15 shadow-[0_0_32px_rgba(0,104,255,0.3)]"
-                  : "border-white/10 bg-white/[0.03]"
+                  ? "my-2 rounded-3xl border border-mg-orange/70 bg-linear-to-b from-[#3a0c08] to-mg-navy px-5 shadow-[0_0_32px_rgba(255,54,0,0.25)] sm:-mx-6 sm:px-6 md:rounded-full md:px-6"
+                  : "border-white/10 border-b"
               }`}
             >
+              <span className="font-medium text-lg leading-snug">{c.day}</span>
               <span className="flex flex-col">
+                <span className="whitespace-nowrap font-medium text-lg leading-snug">{c.time}</span>
                 <span
-                  className={`font-semibold text-xs ${c.highlight ? "text-white" : "text-mg-sky"}`}
+                  className={`font-medium text-xs ${c.highlight ? "text-mg-orange" : "text-mg-sky"}`}
                 >
-                  {c.ordinal}
+                  {c.duration}
                 </span>
-                <span className="font-bold text-2xl leading-tight">{c.day}</span>
               </span>
-              <span className="flex flex-col">
-                <span className="whitespace-nowrap font-bold text-[clamp(20px,2.4vw,26px)] leading-tight">
-                  {c.time}
-                </span>
-                <span className="text-white/60 text-xs">{c.duration}</span>
-              </span>
-              <span className="col-span-2 flex min-w-0 items-center gap-3 border-white/10 border-t pt-3 md:col-span-1 md:border-t-0 md:pt-0">
+              <span className="col-span-2 flex min-w-0 items-start gap-3 md:contents">
                 {c.module ? (
                   <span
-                    className={`flex h-7 w-10 shrink-0 items-center justify-center rounded-md font-bold text-sm ${MODULE_BADGE[c.module] ?? "bg-white/15 text-white"}`}
+                    className={`mt-1 flex h-5 w-8 shrink-0 items-center justify-center rounded-sm font-bold text-[10px] ${MODULE_BADGE[c.module] ?? "bg-white/15"}`}
                   >
                     {c.module}
                   </span>
                 ) : (
-                  <span className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md bg-mg-blue">
+                  <span
+                    className={`mt-1 flex h-5 w-8 shrink-0 items-center justify-center rounded-sm ${c.highlight ? "bg-mg-orange" : "bg-mg-blue"}`}
+                  >
                     <Image
                       src={site.logos.symbolOnDark}
                       alt=""
                       width={512}
                       height={308}
-                      className="h-3.5 w-auto"
+                      className="h-2.5 w-auto"
                     />
                   </span>
                 )}
                 <span className="min-w-0">
-                  <span className="block font-bold text-lg leading-snug">{c.title}</span>
+                  <span className="block font-medium text-lg leading-snug">{c.title}</span>
                   {teacher && (
-                    <span className="block text-sm text-white/70">
+                    <span className="block text-white/60 text-xs">
                       Багш:{" "}
-                      <span className="font-semibold text-white">
+                      <span className="text-white/85">
                         {teacher.name}
                         {teacher.nickname && ` (${teacher.nickname})`}
                       </span>
@@ -126,15 +111,10 @@ export function ClassSchedule({ headingLevel = "h2" }: { headingLevel?: "h2" | "
         href={site.contact.mapUrl}
         target="_blank"
         rel="noopener"
-        className="relative mt-8 inline-flex items-center gap-4 rounded-xl transition hover:opacity-90"
+        className="mt-6 inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-mg-sky sm:ml-6"
       >
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-mg-blue">
-          <PinIcon />
-        </span>
-        <span className="flex flex-col">
-          <span className="font-semibold text-mg-sky text-xs">Байршил</span>
-          <span className="font-bold text-lg leading-snug">{CLASS_LOCATION}</span>
-        </span>
+        <PinIcon />
+        {CLASS_LOCATION}
       </a>
     </div>
   );
