@@ -94,7 +94,7 @@ export default function MerchPage() {
       <SiteHeader current="/merch" />
       {/* One navy run with the goat drawn behind it, like the home page */}
       <main className="relative isolate flex flex-1 flex-col bg-mg-navy text-white">
-        <SectionGoat />
+        <SectionGoat align="center" />
 
         <section className="px-4 pt-20 pb-14 sm:px-[clamp(16px,4vw,64px)] lg:pt-28">
           <Reveal className="mx-auto flex max-w-4xl flex-col items-center text-center">

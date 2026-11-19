@@ -101,7 +101,7 @@ export default function ProgramPage() {
       <SiteHeader current="/program" />
       {/* One navy run with the goat drawn behind it, like the home page */}
       <main className="relative isolate flex flex-1 flex-col bg-mg-navy text-white">
-        <SectionGoat />
+        <SectionGoat align="center" />
 
         <section className={`${sectionPad} pt-20 pb-16 lg:pt-28`}>
           <Reveal className="mx-auto flex max-w-4xl flex-col items-center text-center">

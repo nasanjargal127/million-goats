@@ -87,22 +87,26 @@ export function GoatBackdrop() {
 }
 
 /**
- * The goat behind a run of navy sections, offset to the right and kept in view
- * while they scroll past. Its parent must be `relative isolate` with the navy
- * background, and the sections in it transparent.
+ * The goat behind a run of navy sections, kept in view while they scroll past:
+ * offset to the right (home) or centred (programme, merch). Its parent must be
+ * `relative isolate` with the navy background, and the sections in it
+ * transparent.
  */
-export function SectionGoat() {
+export function SectionGoat({ align = "right" }: { align?: "right" | "center" }) {
+  const centred = align === "center";
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
 
   return (
     <div ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-      <div className="sticky top-0 flex h-svh items-center justify-end overflow-hidden">
+      <div
+        className={`sticky top-0 flex h-svh items-center overflow-hidden ${centred ? "justify-center" : "justify-end"}`}
+      >
         <GoatArt
           progress={scrollYProgress}
           sizes="(min-width: 768px) 900px, 110vw"
           opacity="opacity-15"
-          className="h-auto w-[min(110vw,900px)] max-w-none translate-x-[22%]"
+          className={`h-auto w-[min(110vw,900px)] max-w-none ${centred ? "" : "translate-x-[22%]"}`}
         />
       </div>
     </div>
