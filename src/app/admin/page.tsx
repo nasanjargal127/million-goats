@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminNav, FilterLink } from "@/components/admin-nav";
+import { BrandDot } from "@/components/brand";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import type { Prisma } from "@/generated/prisma/client";
@@ -38,9 +39,9 @@ const feePercent = `${QPAY_FEE_RATE * 100}%`;
 
 function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-mg-line bg-white p-5">
+    <div className="flex flex-col gap-1 rounded-xl border border-mg-line bg-white p-5">
       <span className="text-mg-muted text-sm">{label}</span>
-      <span className="font-black text-2xl text-mg-navy">{value}</span>
+      <span className="font-bold text-2xl text-mg-navy">{value}</span>
       {note && <span className="text-mg-muted text-xs">{note}</span>}
     </div>
   );
@@ -102,7 +103,10 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
     <div className="flex flex-col gap-8">
       <AdminNav current="sales" />
       <div className="flex flex-col gap-2">
-        <h1 className="m-0 font-black text-[clamp(28px,3.5vw,40px)] uppercase">Борлуулалт</h1>
+        <h1 className="m-0 font-bold text-[clamp(28px,3.5vw,40px)] uppercase tracking-[-0.01em]">
+          Борлуулалт
+          <BrandDot />
+        </h1>
         <p className="m-0 text-mg-body">
           Сурагчид ямар багц, merch авсан болон орлого. Дүнгээс QPay-ийн {feePercent} шимтгэлийг
           хасч тооцсон.
@@ -255,7 +259,7 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
                             className={`rounded-md px-2 py-0.5 font-bold text-xs ${
                               o.kind === "MERCH"
                                 ? "bg-mg-blue/10 text-mg-link"
-                                : "bg-mg-orange/15 text-mg-navy"
+                                : "bg-mg-navy text-white"
                             }`}
                           >
                             {o.kind === "MERCH" ? "Merch" : "Lab"}

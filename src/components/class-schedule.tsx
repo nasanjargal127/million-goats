@@ -2,6 +2,7 @@ import Image from "next/image";
 import { team } from "@/lib/content";
 import { CLASS_LOCATION, CLASS_SCHEDULE } from "@/lib/program";
 import { site } from "@/lib/site";
+import { BrandDot } from "./brand";
 
 const MODULE_BADGE: Record<string, string> = {
   М1: "bg-mg-blue text-white",
@@ -48,11 +49,15 @@ export function ClassSchedule({ headingLevel = "h2" }: { headingLevel?: "h2" | "
             <Image src={site.logos.symbol} alt="" width={512} height={308} className="h-6 w-auto" />
             Million Goats Trading Lab
           </p>
-          <Heading className="m-0 mt-3 font-black text-[clamp(30px,4vw,48px)] leading-none tracking-tight">
+          <Heading className="m-0 mt-3 font-bold text-[clamp(30px,4vw,48px)] uppercase leading-none tracking-[-0.02em]">
             Хичээлийн хуваарь
+            <BrandDot />
           </Heading>
         </div>
-        <span aria-hidden="true" className="mb-3 hidden h-1 w-14 bg-mg-orange sm:block" />
+        <span
+          aria-hidden="true"
+          className="mb-3 hidden h-1 w-14 rounded-full bg-mg-blue shadow-[0_0_16px_rgba(0,104,255,0.8)] sm:block"
+        />
       </div>
 
       <ol className="relative m-0 mt-8 flex list-none flex-col gap-3 p-0">
@@ -62,19 +67,21 @@ export function ClassSchedule({ headingLevel = "h2" }: { headingLevel?: "h2" | "
             <li
               key={c.day}
               className={`grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-4 rounded-2xl border px-5 py-4 sm:px-6 md:grid-cols-[10rem_13rem_minmax(0,1fr)] md:py-5 ${
-                c.highlight ? "border-mg-orange bg-mg-orange/10" : "border-white/10 bg-white/[0.03]"
+                c.highlight
+                  ? "border-mg-blue bg-mg-blue/15 shadow-[0_0_32px_rgba(0,104,255,0.3)]"
+                  : "border-white/10 bg-white/[0.03]"
               }`}
             >
               <span className="flex flex-col">
                 <span
-                  className={`font-semibold text-xs ${c.highlight ? "text-mg-orange" : "text-mg-sky"}`}
+                  className={`font-semibold text-xs ${c.highlight ? "text-white" : "text-mg-sky"}`}
                 >
                   {c.ordinal}
                 </span>
-                <span className="font-black text-2xl leading-tight">{c.day}</span>
+                <span className="font-bold text-2xl leading-tight">{c.day}</span>
               </span>
               <span className="flex flex-col">
-                <span className="whitespace-nowrap font-black text-[clamp(20px,2.4vw,26px)] leading-tight">
+                <span className="whitespace-nowrap font-bold text-[clamp(20px,2.4vw,26px)] leading-tight">
                   {c.time}
                 </span>
                 <span className="text-white/60 text-xs">{c.duration}</span>
@@ -82,12 +89,12 @@ export function ClassSchedule({ headingLevel = "h2" }: { headingLevel?: "h2" | "
               <span className="col-span-2 flex min-w-0 items-center gap-3 border-white/10 border-t pt-3 md:col-span-1 md:border-t-0 md:pt-0">
                 {c.module ? (
                   <span
-                    className={`flex h-7 w-10 shrink-0 items-center justify-center rounded-md font-black text-sm ${MODULE_BADGE[c.module] ?? "bg-white/15 text-white"}`}
+                    className={`flex h-7 w-10 shrink-0 items-center justify-center rounded-md font-bold text-sm ${MODULE_BADGE[c.module] ?? "bg-white/15 text-white"}`}
                   >
                     {c.module}
                   </span>
                 ) : (
-                  <span className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md bg-mg-orange">
+                  <span className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md bg-mg-blue">
                     <Image
                       src={site.logos.symbolOnDark}
                       alt=""

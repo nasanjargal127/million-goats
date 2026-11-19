@@ -3,7 +3,8 @@
 export const navLinks = [
   { href: "/#team", label: "Манай баг" },
   { href: "/program", label: "Хөтөлбөр" },
-  { href: "/lab", label: "Trading Lab" },
+  // `featured` links get the outlined pill in the header.
+  { href: "/lab", label: "Trading Lab", featured: true },
   { href: "/merch", label: "Merch" },
 ] as const;
 

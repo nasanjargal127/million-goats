@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminNav, FilterLink } from "@/components/admin-nav";
+import { BrandDot } from "@/components/brand";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import type { Prisma } from "@/generated/prisma/client";
@@ -29,9 +30,9 @@ type Show = keyof typeof SHOWS;
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-mg-line bg-white p-5">
+    <div className="flex flex-col gap-1 rounded-xl border border-mg-line bg-white p-5">
       <span className="text-mg-muted text-sm">{label}</span>
-      <span className="font-black text-2xl text-mg-navy">{value}</span>
+      <span className="font-bold text-2xl text-mg-navy">{value}</span>
     </div>
   );
 }
@@ -84,7 +85,10 @@ async function UsersView({
     <div className="flex flex-col gap-8">
       <AdminNav current="users" />
       <div className="flex flex-col gap-2">
-        <h1 className="m-0 font-black text-[clamp(28px,3.5vw,40px)] uppercase">Хэрэглэгчид</h1>
+        <h1 className="m-0 font-bold text-[clamp(28px,3.5vw,40px)] uppercase tracking-[-0.01em]">
+          Хэрэглэгчид
+          <BrandDot />
+        </h1>
         <p className="m-0 text-mg-body">
           Сайтад бүртгүүлсэн бүх хүн, худалдан авалт хийсэн эсэхээс үл хамааран.
         </p>

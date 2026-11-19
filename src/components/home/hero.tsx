@@ -1,126 +1,73 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ROOM_IDS, TOTAL_SEATS } from "@/lib/lab/seats";
-import { site } from "@/lib/site";
-import { ArrowRight, HighlightTitle, LiveDot } from "../brand";
-import { CandleChart } from "../charts";
+import { BrandDot } from "../brand";
 import { Reveal } from "../motion/reveal";
+import { HeroBackdrop } from "./hero-backdrop";
 
 const highlights = [
-  { label: "Trading Lab", dot: "bg-mg-mint" },
-  { label: `${ROOM_IDS.length} танхим · ${TOTAL_SEATS} суудал`, dot: "bg-mg-sky" },
-  { label: "QPay-ээр захиалга", dot: "bg-mg-orange" },
+  "Trading Lab",
+  `${ROOM_IDS.length} танхим • ${TOTAL_SEATS} суудал`,
+  "QPay-ээр захиалга",
 ];
 
 export function Hero() {
   return (
     <section
       id="top"
-      className="relative overflow-hidden bg-mg-navy px-4 pt-10 pb-14 text-white sm:px-[clamp(16px,4vw,64px)] lg:pt-18 lg:pb-30"
+      className="relative isolate flex min-h-[calc(100svh-4rem)] items-start overflow-hidden bg-mg-navy px-4 pt-[clamp(56px,15svh,180px)] pb-28 text-white sm:px-[clamp(16px,4vw,64px)]"
     >
-      {/* Brand shards */}
+      <HeroBackdrop />
+      {/* Melt into the navy "about" section below */}
       <div
         aria-hidden="true"
-        className="absolute -top-10 -right-30 h-95 w-190 bg-linear-to-r from-mg-blue/0 via-mg-blue/55 to-mg-blue [clip-path:polygon(50%_0,100%_0,50%_100%,0_100%)] max-lg:-right-80 max-lg:h-52 max-lg:w-105"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute top-85 -right-65 hidden h-95 w-190 bg-linear-to-r from-mg-orange/0 via-mg-orange/45 to-mg-orange [clip-path:polygon(0_0,50%_0,100%_100%,50%_100%)] lg:block"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute -bottom-2.5 -left-30 h-50 w-155 bg-linear-to-r from-white/15 via-mg-sky/10 to-mg-sky/0 [clip-path:polygon(30%_0,100%_0,70%_100%,0_100%)]"
+        className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-linear-to-b from-mg-navy/0 to-mg-navy"
       />
 
-      <div className="relative mx-auto flex max-w-7xl flex-wrap items-center gap-10 lg:gap-14">
-        <div className="@container flex min-w-0 flex-[1_1_540px] flex-col gap-6 lg:gap-8">
-          <Reveal>
-            <p className="m-0 inline-flex items-center gap-2.5 font-semibold text-mg-mint text-sm uppercase tracking-[0.12em]">
-              <LiveDot className="bg-mg-mint" />
-              Traders Dept.
-            </p>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <HighlightTitle
-              as="h1"
-              // Sized to the column so the longest line (~10.4em incl. indent) never wraps.
-              className="text-[clamp(28px,9.2cqw,80px)]"
-              lines={[
-                { text: "One community.", className: "bg-white text-mg-navy" },
-                { text: "A million goals.", className: "bg-mg-orange text-mg-navy", indent: true },
-              ]}
-            />
-          </Reveal>
-          <Reveal delay={0.16}>
-            <p className="m-0 max-w-140 text-base text-white/80 leading-relaxed lg:text-[19px]">
-              Million Goats бол хүсэл тэмүүлэл, мэдлэг, өсөх хүсэл дээр суурилсан шинэ үеийн
-              трейдерүүдийн хамт олон. Бид зах зээлийг судалж, ялалт ялагдал бүрийг туршлага
-              болгодог.
-            </p>
-          </Reveal>
-          <Reveal delay={0.24}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/lab"
-                className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-mg-blue px-7 py-4 font-semibold text-[17px] text-white transition hover:brightness-110"
-              >
-                Хамт олонд нэгдэх
-                <ArrowRight />
-              </Link>
-              <Link
-                href="/#about"
-                className="inline-flex items-center justify-center rounded-xl border border-white/40 px-6.5 py-4 font-semibold text-[17px] text-white transition hover:border-white"
-              >
-                Бидний тухай
-              </Link>
-            </div>
-          </Reveal>
-          <Reveal delay={0.32}>
-            <ul className="m-0 flex list-none flex-wrap gap-x-7 gap-y-3 p-0 text-[15px] text-white/80">
-              {highlights.map((h) => (
-                <li key={h.label} className="flex items-center gap-2">
-                  <span aria-hidden="true" className={`size-1.5 rotate-45 ${h.dot}`} />
-                  {h.label}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </div>
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center text-center">
+        <Reveal>
+          <h1 className="m-0 font-bold text-[clamp(34px,6.6vw,128px)] uppercase leading-[0.92] tracking-[-0.02em] [text-shadow:0_8px_40px_rgba(1,13,38,0.55)]">
+            <span className="block whitespace-nowrap">
+              One community
+              <BrandDot />
+            </span>
+            <span className="block whitespace-nowrap">
+              A million goals
+              <BrandDot />
+            </span>
+          </h1>
+        </Reveal>
 
-        <div className="relative min-w-0 flex-[1_1_440px]">
-          <Reveal from="right" delay={0.2}>
-            <article className="relative overflow-hidden rounded-3xl bg-linear-160 from-[#0B3FA8] to-mg-blue p-5 shadow-[0_40px_80px_rgba(0,0,0,0.35)] sm:p-7">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="m-0 font-medium text-[22px] sm:text-[26px]">daily chart</p>
-                  <p className="m-0 mt-1 text-[#A9CCFF] text-[13px]">“analysis” · H4</p>
-                </div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-mg-navy px-3 py-2 font-semibold text-xs tracking-[0.08em]">
-                  <LiveDot />
-                  LIVE
-                </span>
-              </div>
-              <div className="mt-5 mb-2">
-                <CandleChart label="GBPJPY лааны графикийн жишээ" />
-              </div>
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <p className="m-0 font-medium text-[clamp(40px,5vw,64px)] leading-none tracking-tight">
-                  GBPJPY
-                </p>
-                <div className="flex items-center gap-2.5 text-[#DCE9FF] text-[13px]">
-                  <Image
-                    src={site.logos.symbolOnDark}
-                    alt=""
-                    width={512}
-                    height={308}
-                    className="h-4 w-auto"
-                  />
-                  {site.contact.web}
-                </div>
-              </div>
-            </article>
-          </Reveal>
-        </div>
+        <Reveal delay={0.1}>
+          <p className="m-0 mt-10 max-w-220 text-[15px] text-white/90 leading-relaxed sm:text-base lg:mt-24">
+            Million Goats бол хүсэл тэмүүлэл, мэдлэг, өсөх хүсэл дээр суурилсан шинэ үеийн
+            трейдерүүдийн хамт олон. Бид зах зээлийг судалж, ялалт ялагдал бүрийг туршлага болгодог.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.18}>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-8 lg:mt-20">
+            <Link
+              href="/lab"
+              className="inline-flex min-h-10 items-center justify-center rounded-md bg-mg-blue px-4 font-semibold text-base text-white transition hover:brightness-110"
+            >
+              Хамт Олонд Нэгдэх
+            </Link>
+            <Link
+              href="/#about"
+              className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#0b1631]/90 px-8 font-semibold text-base text-white transition hover:bg-[#13214a]"
+            >
+              Бидний тухай
+            </Link>
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.26} className="w-full">
+          <ul className="m-0 mx-auto mt-10 grid max-w-200 list-none grid-cols-1 gap-3 p-0 text-lg text-white/85 sm:grid-cols-3 lg:mt-12 lg:text-xl">
+            {highlights.map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
+        </Reveal>
       </div>
     </section>
   );

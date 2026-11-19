@@ -54,12 +54,12 @@ export function SyllabusPdf() {
             className="pointer-events-none absolute top-1/2 -right-10 w-72 -translate-y-1/2 opacity-10"
           />
           <div className="relative min-w-0">
-            <p className="m-0 font-semibold text-mg-mint text-xs uppercase tracking-[0.12em]">
+            <p className="m-0 font-semibold text-mg-sky text-xs uppercase tracking-[0.12em]">
               Дэлгэрэнгүй хөтөлбөр · PDF · {PROGRAM_PDF.pages} хуудас
             </p>
             <h2
               id="syllabus-title"
-              className="m-0 mt-2 max-w-160 font-black text-[clamp(22px,2.6vw,32px)] uppercase leading-tight"
+              className="m-0 mt-2 max-w-160 font-bold text-[clamp(22px,2.6vw,32px)] uppercase leading-tight"
             >
               Мэргэжлийн трейдерийн 2 сарын сургалтын хөтөлбөр
             </h2>
@@ -72,7 +72,7 @@ export function SyllabusPdf() {
               href={PROGRAM_PDF.href}
               target="_blank"
               rel="noopener"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-5 py-3.5 font-semibold text-white transition hover:border-white"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-white/25 px-5 font-semibold text-white transition hover:border-white"
             >
               <OpenIcon />
               Шинэ цонхонд нээх
@@ -80,7 +80,7 @@ export function SyllabusPdf() {
             <a
               href={PROGRAM_PDF.href}
               download={PROGRAM_PDF.fileName}
-              className="inline-flex items-center gap-2 rounded-xl bg-mg-blue px-5 py-3.5 font-semibold text-white transition hover:brightness-110"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-mg-blue px-5 font-semibold text-white transition hover:brightness-110"
             >
               <DownloadIcon />
               PDF татах

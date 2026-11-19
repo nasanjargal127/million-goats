@@ -19,7 +19,7 @@ const errorMessages: Record<string, string> = {
 };
 
 const inputClass =
-  "min-h-13 w-full rounded-xl border border-mg-line bg-white px-4 text-base text-mg-navy placeholder:text-[#7D89A3] focus:border-mg-blue";
+  "min-h-12 w-full rounded-lg border border-mg-line bg-white px-4 text-base text-mg-navy placeholder:text-[#7D89A3] focus:border-mg-blue";
 
 export function AuthForm({
   mode,
@@ -70,7 +70,7 @@ export function AuthForm({
             type="button"
             onClick={onGoogle}
             disabled={pending}
-            className="flex min-h-13 cursor-pointer items-center justify-center gap-3 rounded-xl border border-mg-line bg-white font-semibold text-base text-mg-navy transition hover:border-mg-blue disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-12 cursor-pointer items-center justify-center gap-3 rounded-md border border-mg-line bg-white font-semibold text-base text-mg-navy transition hover:border-mg-blue disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg aria-hidden="true" className="size-5" viewBox="0 0 24 24">
               <path
@@ -151,7 +151,7 @@ export function AuthForm({
         <button
           type="submit"
           disabled={pending}
-          className="min-h-13 cursor-pointer rounded-xl border-0 bg-mg-blue font-semibold text-base text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-12 cursor-pointer rounded-md border-0 bg-mg-blue font-semibold text-base text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? "Түр хүлээнэ үү…" : signUp ? "Бүртгүүлэх" : "Нэвтрэх"}
         </button>

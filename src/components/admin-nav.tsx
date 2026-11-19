@@ -13,9 +13,9 @@ export function FilterLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex min-h-10 items-center rounded-lg border px-4 font-semibold text-sm transition ${
+      className={`inline-flex min-h-10 items-center rounded-md border px-4 font-semibold text-sm transition ${
         active
-          ? "border-mg-navy bg-mg-navy text-white"
+          ? "border-mg-blue bg-mg-blue text-white"
           : "border-mg-line bg-white text-mg-navy hover:border-mg-blue"
       }`}
     >

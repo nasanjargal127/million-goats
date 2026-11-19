@@ -35,7 +35,7 @@ import {
 } from "@/lib/lab/seats";
 import { useLab } from "@/lib/lab/store";
 import { site } from "@/lib/site";
-import { HighlightTitle } from "../brand";
+import { SectionTitle } from "../brand";
 
 /** Online booking details from the database; null until the Lab event is set up. */
 export type LabBooking = {
@@ -84,7 +84,7 @@ function SeatMap({ room }: { room: RoomId }) {
   return (
     <div className="relative mx-auto aspect-square w-full max-w-76 rounded-xl border border-white/10 bg-white/3">
       {/* Big screen on the front wall */}
-      <div className="absolute top-1.5 left-1/2 h-1 w-3/5 -translate-x-1/2 rounded-full bg-mg-mint/70" />
+      <div className="absolute top-1.5 left-1/2 h-1 w-3/5 -translate-x-1/2 rounded-full bg-mg-sky/80 shadow-[0_0_10px_rgba(85,162,255,0.8)]" />
       {seatsOf(room).map((seat) => {
         // Place the marker at the chair (0.8 units behind the desk).
         const left = ((seat.x + Math.sin(seat.rot) * 0.8) / ROOM_SIZE + 0.5) * 100;
@@ -94,9 +94,9 @@ function SeatMap({ room }: { room: RoomId }) {
         const state = isTaken
           ? "cursor-not-allowed border-[#2A3550] bg-[#2A3550] text-[#7D89A3] line-through"
           : isSelected
-            ? "border-mg-orange bg-mg-orange text-mg-navy"
+            ? "border-white bg-white text-mg-navy shadow-[0_0_12px_rgba(255,255,255,0.6)]"
             : seat.id === hovered
-              ? "border-mg-mint bg-mg-mint/25 text-white"
+              ? "border-mg-sky bg-mg-sky/40 text-white"
               : "border-mg-sky/60 bg-mg-blue/20 text-[#CFE2FF] hover:bg-mg-blue/50";
         return (
           <button
@@ -123,7 +123,7 @@ function Legend() {
   const t = DICT[useLab((s) => s.lang)];
   const items = [
     ["bg-mg-blue", t.available],
-    ["bg-mg-orange", t.selected],
+    ["bg-white", t.selected],
     ["bg-[#2A3550]", t.sold],
   ] as const;
   return (
@@ -150,7 +150,7 @@ function CheckIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="mt-0.5 size-3.5 shrink-0 text-mg-mint"
+      className="mt-0.5 size-3.5 shrink-0 text-mg-sky"
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
@@ -217,7 +217,7 @@ function InstallmentPicker({
             aria-pressed={installments === value}
             className={`min-h-10 cursor-pointer rounded-lg border px-2 font-semibold text-sm transition ${
               installments === value
-                ? "border-mg-orange bg-mg-orange text-mg-navy"
+                ? "border-mg-blue bg-mg-blue text-white"
                 : "border-white/15 text-mg-on-dark hover:border-mg-sky"
             }`}
           >
@@ -234,7 +234,7 @@ function InstallmentPicker({
                   {label}
                   <span className="block text-mg-on-dark-muted text-xs">{when}</span>
                 </span>
-                <span className="font-semibold text-mg-mint">{formatMnt(amount)}</span>
+                <span className="font-semibold text-white">{formatMnt(amount)}</span>
               </li>
             ))}
           </ul>
@@ -285,8 +285,10 @@ function PackagePicker({
         return (
           <div
             key={id}
-            className={`rounded-2xl border transition ${
-              active ? "border-mg-orange bg-mg-orange/10" : "border-white/15 hover:border-mg-sky"
+            className={`rounded-xl border transition ${
+              active
+                ? "border-mg-blue bg-mg-blue/15 shadow-[0_0_28px_rgba(0,104,255,0.3)]"
+                : "border-white/15 hover:border-mg-sky"
             }`}
           >
             <label className="flex cursor-pointer flex-col gap-2 p-3.5">
@@ -298,19 +300,17 @@ function PackagePicker({
                     value={id}
                     checked={active}
                     onChange={() => setPkg(id)}
-                    className="size-4 accent-mg-orange"
+                    className="size-4 accent-mg-blue"
                   />
                   <span>
-                    <span className="block font-black text-base uppercase leading-tight">
+                    <span className="block font-bold text-base uppercase leading-tight">
                       {info.name}
                     </span>
                     <span className="block text-mg-on-dark-muted text-xs">{text.tagline}</span>
                   </span>
                 </span>
                 <span className="flex shrink-0 flex-col items-end">
-                  <span className="font-bold text-base text-mg-mint">
-                    {formatMnt(info.priceMnt)}
-                  </span>
+                  <span className="font-bold text-base text-white">{formatMnt(info.priceMnt)}</span>
                   <span className="font-semibold text-mg-on-dark-muted text-xs">
                     / {text.period}
                   </span>
@@ -345,7 +345,7 @@ function PackagePicker({
                         aria-pressed={teacher === name}
                         className={`min-h-10 cursor-pointer rounded-lg border px-2 font-semibold text-sm transition ${
                           teacher === name
-                            ? "border-mg-orange bg-mg-orange text-mg-navy"
+                            ? "border-mg-blue bg-mg-blue text-white"
                             : "border-white/15 text-mg-on-dark hover:border-mg-sky"
                         }`}
                       >
@@ -360,11 +360,11 @@ function PackagePicker({
                       type="checkbox"
                       checked={psychologist}
                       onChange={(e) => setPsychologist(e.target.checked)}
-                      className="size-4 accent-mg-orange"
+                      className="size-4 accent-mg-blue"
                     />
                     {t.addPsychologist}
                   </span>
-                  <span className="font-semibold text-mg-mint">
+                  <span className="font-semibold text-mg-sky">
                     +{formatMnt(PSYCHOLOGIST_ADDON_MNT)}
                   </span>
                 </label>
@@ -440,7 +440,7 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
         <span className="text-mg-on-dark-muted text-sm">{t.total}</span>
         <span
           className={
-            choice.installments ? "font-semibold text-base" : "font-bold text-2xl text-mg-mint"
+            choice.installments ? "font-semibold text-base" : "font-bold text-2xl text-white"
           }
         >
           {formatMnt(labChoicePrice(choice))}
@@ -449,7 +449,7 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
       {choice.installments && (
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-mg-on-dark-muted text-sm">{t.dueNow}</span>
-          <span className="font-bold text-2xl text-mg-mint">
+          <span className="font-bold text-2xl text-white">
             {formatMnt(labChoiceDueNow(choice))}
           </span>
         </div>
@@ -460,7 +460,7 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
             type="button"
             onClick={pay}
             disabled={pending || needsTeacher}
-            className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl border-0 bg-mg-orange px-6 font-bold text-base text-mg-navy transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-md border-0 bg-mg-blue px-6 font-bold text-base text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {pending ? t.booking : needsTeacher ? t.pickTeacher : t.book}
           </button>
@@ -504,8 +504,8 @@ function RoomPanel({ room, booking }: { room: RoomId; booking: LabBooking }) {
         ← {t.back}
       </button>
       <div className="flex items-baseline justify-between">
-        <h2 className="m-0 font-black text-2xl uppercase">{ROOM_NAMES[room]}</h2>
-        <span className="font-semibold text-mg-mint text-sm">
+        <h2 className="m-0 font-bold text-2xl uppercase">{ROOM_NAMES[room]}</h2>
+        <span className="font-semibold text-mg-sky text-sm">
           {availableIn(room, taken)}/{ROOM_SEAT_COUNT[room]} {t.free}
         </span>
       </div>
@@ -552,7 +552,7 @@ function RoomPanel({ room, booking }: { room: RoomId; booking: LabBooking }) {
           href={askHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex min-h-11 items-center gap-2 text-mg-sky text-sm hover:text-mg-mint"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 text-mg-sky text-sm hover:text-white"
         >
           <TelegramIcon />
           {t.ask}
@@ -570,16 +570,9 @@ function Overview({ booking }: { booking: LabBooking }) {
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-mg-navy via-mg-navy/85 to-transparent px-5 pt-20 pb-6 text-white sm:px-8 sm:pb-8">
-      <HighlightTitle
-        as="h1"
-        className="text-[clamp(36px,6vw,72px)]"
-        lines={[
-          { text: "Trading", className: "bg-white text-mg-navy" },
-          { text: "Lab", className: "bg-mg-orange text-mg-navy", indent: true },
-        ]}
-      />
+      <SectionTitle as="h1" lines={["Trading Lab"]} size="text-[clamp(36px,6vw,72px)]" />
       <p className="m-0 mt-4 text-base text-white/80 sm:text-lg">{t.tagline}</p>
-      <p className="m-0 mt-1 font-semibold text-mg-mint text-sm sm:text-base">
+      <p className="m-0 mt-1 font-semibold text-mg-sky text-sm sm:text-base">
         {t.stats(
           ROOM_IDS.length,
           TOTAL_SEATS,
@@ -595,10 +588,10 @@ function Overview({ booking }: { booking: LabBooking }) {
             key={id}
             type="button"
             onClick={() => setRoom(id)}
-            className="cursor-pointer rounded-xl border border-white/15 bg-mg-navy/70 px-4 py-3 text-left backdrop-blur transition hover:border-mg-blue hover:bg-mg-blue/20"
+            className="cursor-pointer rounded-lg border border-white/15 bg-mg-navy/70 px-4 py-3 text-left backdrop-blur transition hover:border-mg-blue hover:bg-mg-blue/20"
           >
             <span className="block font-bold text-base text-white">{ROOM_NAMES[id]}</span>
-            <span className="block text-mg-mint text-xs">
+            <span className="block text-mg-sky text-xs">
               {availableIn(id, taken)}/{ROOM_SEAT_COUNT[id]} {t.free}
             </span>
           </button>
@@ -657,7 +650,7 @@ export function LabExperience({
             priority
             className="h-8 w-auto sm:h-9"
           />
-          <span className="rounded-md bg-mg-orange px-2 py-1 font-black text-mg-navy text-xs uppercase tracking-widest">
+          <span className="rounded-md border border-mg-blue bg-linear-to-b from-[#0b2a6e] to-[#051540] px-2 py-1 font-bold text-white text-xs uppercase tracking-widest">
             Lab
           </span>
         </Link>

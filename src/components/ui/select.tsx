@@ -14,7 +14,7 @@ export function Select({
     <div className={`relative ${wrapperClassName}`}>
       <select
         {...props}
-        className={`min-h-12 w-full cursor-pointer appearance-none rounded-xl border border-mg-line bg-white py-0 pr-11 pl-4 text-base text-mg-navy focus:border-mg-blue disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        className={`min-h-12 w-full cursor-pointer appearance-none rounded-lg border border-mg-line bg-white py-0 pr-11 pl-4 text-base text-mg-navy focus:border-mg-blue disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       >
         {children}
       </select>
