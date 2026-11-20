@@ -30,6 +30,11 @@ export type TeamMember = {
   points: string[];
   /** Certifications, shown as chips. */
   tags?: string[];
+  /**
+   * The psychologist. Picking her as the Pro teacher already brings her
+   * sessions, so the paid psychologist add-on is not offered on top.
+   */
+  psychologist?: boolean;
 };
 
 /** Display order everywhere: home cards and the /program columns and tabs (numbered 1–4). */
@@ -48,6 +53,7 @@ export const team: TeamMember[] = [
     id: "altangerel",
     name: "З. Алтангэрэл",
     role: "Трейдингийн сэтгэл зүй",
+    psychologist: true,
     photo: "/team/altangerel.webp",
     focus: "30%",
     points: ["Сэтгэл судлалын докторант", "ШУТИС — Бизнесийн удирдлага", "МУБИС — Сэтгэл судлал"],

@@ -1,6 +1,7 @@
 // Trading Lab packages offered when a seat is booked. Prices live here (not in
 // the database) and are applied on the server when the order is created.
 
+import { team } from "../content";
 import type { Lang } from "./store";
 
 export const LAB_PACKAGE_IDS = ["PRO", "PREMIUM_2M", "PREMIUM"] as const;
@@ -9,8 +10,20 @@ export type LabPackageId = (typeof LAB_PACKAGE_IDS)[number];
 /** Pro's optional add-on. */
 export const PSYCHOLOGIST_ADDON_MNT = 75_000;
 
-/** Pro members pick one teacher whose classes they join. Rename here. */
-export const TEACHERS = ["Багш 1", "Багш 2", "Багш 3", "Багш 4"] as const;
+/**
+ * Pro members pick one teacher whose classes they join: the team from
+ * content.ts, in its display order. The name is what the order stores.
+ */
+export const TEACHERS = team.map(({ name, role, psychologist }) => ({
+  name,
+  role,
+  psychologist: psychologist === true,
+}));
+
+/** True when the chosen Pro teacher is the psychologist, so the add-on is not offered. */
+export function teacherIsPsychologist(name: string | null) {
+  return TEACHERS.some((t) => t.name === name && t.psychologist);
+}
 
 /** What both Premium packages include; they differ only in length and price. */
 const PREMIUM_FEATURES: Record<Lang, string[]> = {
@@ -148,11 +161,12 @@ export function parseLabChoice(input: unknown): LabChoice | null {
     return { labPackage, teacher: null, withPsychologist: false, installments: false };
   }
   if (labPackage === "PRO") {
-    if (!TEACHERS.some((name) => name === teacher)) return null;
+    if (!TEACHERS.some((t) => t.name === teacher)) return null;
     return {
       labPackage,
       teacher: teacher as string,
-      withPsychologist: withPsychologist === true,
+      // Never charge the add-on on top of choosing the psychologist herself.
+      withPsychologist: withPsychologist === true && !teacherIsPsychologist(teacher as string),
       installments: false,
     };
   }
@@ -169,7 +183,7 @@ export function labChoiceDueNow(choice: LabChoice) {
   return choice.installments ? PREMIUM_INSTALLMENTS.firstMnt : labChoicePrice(choice);
 }
 
-/** Snapshot stored on the order, e.g. "Pro багц · 1 сар · Багш 2 · Сэтгэлзүйч". */
+/** Snapshot stored on the order, e.g. "Pro багц · 1 сар · О. Намуунзул · Сэтгэлзүйч". */
 export function labChoiceLabel(choice: LabChoice) {
   const info = LAB_PACKAGES[choice.labPackage];
   return [

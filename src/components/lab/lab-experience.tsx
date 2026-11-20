@@ -20,6 +20,7 @@ import {
   PREMIUM_INSTALLMENTS,
   PSYCHOLOGIST_ADDON_MNT,
   TEACHERS,
+  teacherIsPsychologist,
 } from "@/lib/lab/packages";
 import {
   availableIn,
@@ -337,37 +338,51 @@ function PackagePicker({
                 <div>
                   <p className="m-0 mb-1.5 font-semibold text-sm">{t.pickTeacher}</p>
                   <div className="grid grid-cols-2 gap-1.5">
-                    {TEACHERS.map((name) => (
+                    {TEACHERS.map(({ name, role, psychologist: isPsychologist }) => (
                       <button
                         key={name}
                         type="button"
-                        onClick={() => setTeacher(name)}
+                        onClick={() => {
+                          setTeacher(name);
+                          // Her sessions come with her, so drop the paid add-on.
+                          if (isPsychologist) setPsychologist(false);
+                        }}
                         aria-pressed={teacher === name}
-                        className={`min-h-10 cursor-pointer rounded-lg border px-2 font-semibold text-sm transition ${
+                        className={`flex min-h-12 cursor-pointer flex-col items-center justify-center rounded-lg border px-2 py-1.5 font-semibold text-sm leading-tight transition ${
                           teacher === name
                             ? "border-mg-blue bg-mg-blue text-white"
                             : "border-white/15 text-mg-on-dark hover:border-mg-sky"
                         }`}
                       >
                         {name}
+                        {/* Subjects are written in Mongolian only */}
+                        {lang === "mn" && (
+                          <span
+                            className={`mt-0.5 font-normal text-[11px] ${teacher === name ? "text-white/80" : "text-white/55"}`}
+                          >
+                            {role}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
                 </div>
-                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg border border-white/15 px-3 py-2 text-sm">
-                  <span className="flex items-center gap-2.5">
-                    <input
-                      type="checkbox"
-                      checked={psychologist}
-                      onChange={(e) => setPsychologist(e.target.checked)}
-                      className="size-4 accent-mg-blue"
-                    />
-                    {t.addPsychologist}
-                  </span>
-                  <span className="font-semibold text-mg-sky">
-                    +{formatMnt(PSYCHOLOGIST_ADDON_MNT)}
-                  </span>
-                </label>
+                {!teacherIsPsychologist(teacher) && (
+                  <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg border border-white/15 px-3 py-2 text-sm">
+                    <span className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={psychologist}
+                        onChange={(e) => setPsychologist(e.target.checked)}
+                        className="size-4 accent-mg-blue"
+                      />
+                      {t.addPsychologist}
+                    </span>
+                    <span className="font-semibold text-mg-sky">
+                      +{formatMnt(PSYCHOLOGIST_ADDON_MNT)}
+                    </span>
+                  </label>
+                )}
               </div>
             )}
 
