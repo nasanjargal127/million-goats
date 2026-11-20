@@ -1,6 +1,7 @@
 // Single source of truth for brand + SEO settings.
 // TODO: set NEXT_PUBLIC_SITE_URL to the production domain (https://www.milliongoats.mn).
 
+import { team } from "./content";
 import { ROOM_IDS, TOTAL_SEATS } from "./lab/seats";
 
 function resolveSiteUrl(): string {
@@ -14,8 +15,19 @@ export const site = {
   name: "Million Goats",
   shortName: "Million Goats",
   tagline: "One community. A million goals.",
-  description: `Million Goats — шинэ үеийн трейдерүүдийн хамт олон. Trading Lab: ${ROOM_IDS.length} танхим, ${TOTAL_SEATS} суудал, QPay-ээр захиалга.`,
-  keywords: ["Million Goats", "трейдинг", "Trading Lab", "Forex", "трейдерүүдийн хамт олон"],
+  /** Home page <title>; other pages use "<page> | Million Goats". */
+  homeTitle: "Million Goats — Forex трейдинг сургалт ба Trading Lab",
+  description: `Million Goats — шинэ үеийн трейдерүүдийн хамт олон. ${team.length} багштай Forex трейдинг сургалт, Trading Lab: ${ROOM_IDS.length} танхим, ${TOTAL_SEATS} суудал. Улаанбаатар.`,
+  keywords: [
+    "Million Goats",
+    "трейдинг",
+    "трейдинг сургалт",
+    "Forex",
+    "Forex сургалт",
+    "Trading Lab",
+    "трейдерүүдийн хамт олон",
+    "Улаанбаатар",
+  ],
   url: resolveSiteUrl().replace(/\/$/, ""),
   locale: "mn_MN",
   colors: {
@@ -37,6 +49,10 @@ export const site = {
     phone: "9978 3585",
     phoneHref: "tel:+97699783585",
     address: "Улаанбаатарын Их Сургууль, Улаанбаатар",
+    /** Structured parts of `address` for schema.org. */
+    streetAddress: "Улаанбаатарын Их Сургууль",
+    locality: "Улаанбаатар",
+    country: "MN",
     /** Google Maps pin for the address. */
     mapUrl: "https://maps.app.goo.gl/wGmqxhpBwc4SY6nK6",
   },

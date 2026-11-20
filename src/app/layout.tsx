@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import { Suspense } from "react";
+import { JsonLd } from "@/components/json-ld";
 import { GoatBackdrop } from "@/components/motion/goat-backdrop";
 import { MotionProvider } from "@/components/motion/reveal";
 import { socialLinks } from "@/lib/content";
+import { ORGANIZATION_ID } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -18,7 +20,7 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: site.name,
+    default: site.homeTitle,
     template: `%s | ${site.name}`,
   },
   description: site.description,
@@ -27,20 +29,18 @@ export const metadata: Metadata = {
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
   publisher: site.name,
-  alternates: {
-    canonical: "/",
-  },
+  // Canonical URLs and og:url are set per page (see pageMetadata in lib/seo.ts), so
+  // pages without one, like 404s, don't point search engines at the home page.
   openGraph: {
     type: "website",
-    url: "/",
     siteName: site.name,
-    title: site.name,
+    title: site.homeTitle,
     description: site.description,
     locale: site.locale,
   },
   twitter: {
     card: "summary_large_image",
-    title: site.name,
+    title: site.homeTitle,
     description: site.description,
   },
   robots: {
@@ -71,28 +71,42 @@ export const viewport: Viewport = {
   ],
 };
 
-const organizationJsonLd = {
+const siteJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: site.name,
-  url: site.url,
-  logo: `${site.url}${site.logos.stackedOnLight}`,
-  telephone: site.contact.phoneHref.replace("tel:", ""),
-  email: site.contact.email,
-  sameAs: socialLinks.flatMap((s) => (s.href ? [s.href] : [])),
+  "@graph": [
+    {
+      "@type": "EducationalOrganization",
+      "@id": ORGANIZATION_ID,
+      name: site.name,
+      url: site.url,
+      logo: `${site.url}${site.logos.stackedOnLight}`,
+      description: site.description,
+      telephone: site.contact.phoneHref.replace("tel:", ""),
+      email: site.contact.email,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: site.contact.streetAddress,
+        addressLocality: site.contact.locality,
+        addressCountry: site.contact.country,
+      },
+      sameAs: socialLinks.flatMap((s) => (s.href ? [s.href] : [])),
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${site.url}/#website`,
+      name: site.name,
+      url: site.url,
+      inLanguage: "mn",
+      publisher: { "@id": ORGANIZATION_ID },
+    },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="mn" className={`${rubik.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <script
-          type="application/ld+json"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: static JSON-LD with "<" escaped, per the Next.js JSON-LD guide
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
-          }}
-        />
+        <JsonLd data={siteJsonLd} />
         <MotionProvider>
           {children}
           {/* Reads the pathname, which on dynamic routes is request data. */}

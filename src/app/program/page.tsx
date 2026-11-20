@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionTitle } from "@/components/brand";
 import { ClassSchedule } from "@/components/class-schedule";
+import { JsonLd } from "@/components/json-ld";
 import { SectionGoat } from "@/components/motion/goat-backdrop";
 import { Reveal } from "@/components/motion/reveal";
 import { ProgramTabs } from "@/components/program/program-tabs";
@@ -9,18 +10,83 @@ import { SyllabusPdf } from "@/components/program/syllabus-pdf";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { team } from "@/lib/content";
-import { PROGRAM_NOTE, PROGRAM_TOPICS, PROGRAM_WEEKS } from "@/lib/program";
+import { LAB_PACKAGE_IDS, LAB_PACKAGES } from "@/lib/lab/packages";
+import {
+  CLASS_LOCATION,
+  PROGRAM_NOTE,
+  PROGRAM_TOPICS,
+  PROGRAM_WEEKS,
+  programDates,
+} from "@/lib/program";
+import { ORGANIZATION_ID, pageMetadata } from "@/lib/seo";
+import { site } from "@/lib/site";
 
 const first = PROGRAM_WEEKS[0].split("–")[0];
 const last = PROGRAM_WEEKS[PROGRAM_WEEKS.length - 1].split("–")[1];
 const description = `Million Goats Trading Lab-ын ${PROGRAM_WEEKS.length} долоо хоногийн хөтөлбөр: ${team.length} багш, ${first}–${last}. Анхан шатнаас фундаментал шинжилгээ, трейдингийн сэтгэл зүй хүртэл.`;
 
-export const metadata: Metadata = {
-  title: "Хичээлийн хөтөлбөр",
+export const metadata: Metadata = pageMetadata({
+  path: "/program",
+  title: "Трейдинг сургалтын хөтөлбөр",
+  socialTitle: "Million Goats — Трейдинг сургалтын хөтөлбөр",
   description,
-  alternates: { canonical: "/program" },
-  openGraph: { title: "Million Goats — Хичээлийн хөтөлбөр", description },
-  twitter: { title: "Million Goats — Хичээлийн хөтөлбөр", description },
+});
+
+const dates = programDates();
+const prices = LAB_PACKAGE_IDS.map((id) => LAB_PACKAGES[id].priceMnt);
+
+const courseJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  name: "Million Goats Trading Lab — Forex трейдинг сургалт",
+  description,
+  url: `${site.url}/program`,
+  inLanguage: "mn",
+  provider: { "@id": ORGANIZATION_ID },
+  teaches: team.map((t) => t.role),
+  syllabusSections: team.map((t) => ({
+    "@type": "Syllabus",
+    name: t.role,
+    description: PROGRAM_TOPICS[t.id]?.join("; "),
+  })),
+  offers: {
+    "@type": "AggregateOffer",
+    category: "Paid",
+    priceCurrency: "MNT",
+    lowPrice: Math.min(...prices),
+    highPrice: Math.max(...prices),
+    url: `${site.url}/lab`,
+  },
+  hasCourseInstance: {
+    "@type": "CourseInstance",
+    courseMode: "Onsite",
+    startDate: dates.start,
+    endDate: dates.end,
+    courseSchedule: {
+      "@type": "Schedule",
+      repeatFrequency: "P1W",
+      repeatCount: PROGRAM_WEEKS.length,
+      startDate: dates.start,
+      endDate: dates.end,
+    },
+    location: {
+      "@type": "Place",
+      name: CLASS_LOCATION,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: site.contact.streetAddress,
+        addressLocality: site.contact.locality,
+        addressCountry: site.contact.country,
+      },
+    },
+    instructor: team.map((t) => ({
+      "@type": "Person",
+      name: t.name,
+      jobTitle: t.role,
+      image: `${site.url}${t.photo}`,
+      url: `${site.url}/program#${t.id}`,
+    })),
+  },
 };
 
 /** Desktop view: weeks down, teachers across, like the printed schedule. */
@@ -98,6 +164,7 @@ const sectionPad = "px-4 sm:px-[clamp(16px,4vw,64px)]";
 export default function ProgramPage() {
   return (
     <>
+      <JsonLd data={courseJsonLd} />
       <SiteHeader current="/program" />
       {/* One navy run with the goat drawn behind it, like the home page */}
       <main className="relative isolate flex flex-1 flex-col bg-mg-navy text-white">
