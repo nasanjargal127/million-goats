@@ -212,7 +212,16 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
   return (
     <div className="flex flex-wrap gap-6">
       <OrderStatusPoller orderId={order.id} status={order.status} />
-      <section className="flex min-w-0 flex-[1_1_360px] flex-col items-center gap-5 rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_70%_90%_at_100%_100%,rgba(0,104,255,0.32),transparent_70%)] p-6 text-white sm:p-8">
+      <section className="relative isolate flex min-w-0 flex-[1_1_360px] flex-col items-center gap-5 overflow-hidden rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_70%_90%_at_100%_100%,rgba(0,104,255,0.32),transparent_70%)] p-6 pb-[clamp(96px,14vw,150px)] text-white sm:p-8 sm:pb-[clamp(96px,14vw,150px)]">
+        {/* A logo coin standing among others on the floor of the card */}
+        <Image
+          src="/brand/3d/coin.webp"
+          alt=""
+          width={1920}
+          height={619}
+          sizes="(min-width: 768px) 640px, 100vw"
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-auto w-full opacity-70 [mask-image:linear-gradient(to_bottom,transparent,#000_40%)]"
+        />
         <div className="flex w-full items-center justify-between gap-4">
           <h1 className="m-0 font-bold text-2xl uppercase">
             {deposit === null ? "QPay-ээр төлөх" : balancePhase ? "Үлдэгдэл төлөх" : "1-р төлөлт"}

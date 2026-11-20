@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { SectionTitle } from "@/components/brand";
@@ -140,8 +141,17 @@ export default function MerchPage() {
           </Reveal>
         </section>
 
-        <section className="flex-1 px-4 pb-24 sm:px-[clamp(16px,4vw,64px)]">
-          <div className="mx-auto max-w-6xl">
+        <section className="relative flex-1 overflow-hidden px-4 pb-[clamp(140px,30vw,420px)] sm:px-[clamp(16px,4vw,64px)]">
+          {/* A floor of logo coins under the shop, fading into the footer */}
+          <Image
+            src="/brand/3d/coins.webp"
+            alt=""
+            width={1920}
+            height={820}
+            sizes="100vw"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full opacity-55 [mask-image:linear-gradient(to_bottom,transparent,#000_35%,#000_80%,transparent)]"
+          />
+          <div className="relative mx-auto max-w-6xl">
             <Suspense fallback={<div className="h-120 animate-pulse rounded-2xl bg-mg-card" />}>
               <Shop />
             </Suspense>

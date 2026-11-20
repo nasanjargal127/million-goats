@@ -6,6 +6,7 @@ import { site } from "@/lib/site";
 import { ArrowRight, Eyebrow, SectionTitle } from "../brand";
 import { ClassSchedule } from "../class-schedule";
 import { Reveal } from "../motion/reveal";
+import { ScrollFrames } from "../motion/scroll-frames";
 
 const sectionPad = "px-4 py-20 sm:px-[clamp(16px,4vw,64px)] lg:py-30";
 
@@ -17,12 +18,14 @@ export function Manifesto() {
         aria-hidden="true"
         className="absolute inset-0 bg-[radial-gradient(ellipse_50%_55%_at_20%_60%,rgba(0,104,255,0.22),transparent_70%)]"
       />
-      <Image
-        src={site.logos.symbolOnDark}
-        alt=""
-        width={512}
-        height={308}
-        className="pointer-events-none absolute top-1/2 -right-20 w-[min(720px,90vw)] -translate-y-1/2 opacity-[0.05]"
+      {/* The 3D logo turning from its angled view to face the visitor */}
+      <ScrollFrames
+        frames={["/brand/3d/logo-angle.webp", "/brand/3d/logo-front.webp"]}
+        width={1801}
+        height={1042}
+        sizes="(min-width: 768px) 640px, 90vw"
+        range={[0.2, 0.55]}
+        className="absolute top-1/2 -right-[6%] w-[min(640px,90vw)] -translate-y-1/2 opacity-45"
       />
       <div className="relative mx-auto flex max-w-7xl flex-wrap items-start gap-x-20 gap-y-12">
         <Reveal from="left" className="min-w-0 flex-[1_1_420px]">
