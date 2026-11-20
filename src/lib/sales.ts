@@ -21,12 +21,30 @@ type SaleInput = {
   depositChargedMnt: number | null;
   labPackage: string | null;
   quantity: number | null;
+  qpayInvoiceId: string | null;
+  depositInvoiceId: string | null;
 };
 
 type MoneyInput = Pick<
   SaleInput,
-  "status" | "amountMnt" | "chargedMnt" | "depositMnt" | "depositChargedMnt"
+  | "status"
+  | "amountMnt"
+  | "chargedMnt"
+  | "depositMnt"
+  | "depositChargedMnt"
+  | "qpayInvoiceId"
+  | "depositInvoiceId"
 >;
+
+/**
+ * Paid without QPay: an admin booked it by hand (bank transfer or cash), so it
+ * never had an invoice. Every QPay order keeps its invoice id once paid.
+ */
+export function isManualOrder(
+  order: Pick<SaleInput, "status" | "qpayInvoiceId" | "depositInvoiceId">,
+) {
+  return order.status === "PAID" && order.qpayInvoiceId === null && order.depositInvoiceId === null;
+}
 
 /**
  * The price of what the order's current QPay invoice is for: the first part of
@@ -41,6 +59,10 @@ export function invoicePartMnt(
 
 /** What QPay actually collected, its fee and what reaches the business. */
 export function saleMoney(order: MoneyInput) {
+  // Booked by hand at the full price, with no QPay fee.
+  if (isManualOrder(order)) {
+    return { received: order.amountMnt, fee: 0, net: order.amountMnt, test: false };
+  }
   let received: number;
   let price: number;
   if (order.depositChargedMnt === null) {

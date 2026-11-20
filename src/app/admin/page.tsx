@@ -11,7 +11,13 @@ import { prisma } from "@/lib/db";
 import { formatEventDate, formatMnt } from "@/lib/format";
 import { INSTALLMENT_DUE_TEXT } from "@/lib/lab/packages";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
-import { MONEY_STATUSES, QPAY_FEE_RATE, saleMoney, summarizeSales } from "@/lib/sales";
+import {
+  isManualOrder,
+  MONEY_STATUSES,
+  QPAY_FEE_RATE,
+  saleMoney,
+  summarizeSales,
+} from "@/lib/sales";
 
 export const metadata: Metadata = {
   title: "Админ · Борлуулалт",
@@ -94,6 +100,8 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
         depositChargedMnt: true,
         labPackage: true,
         quantity: true,
+        qpayInvoiceId: true,
+        depositInvoiceId: true,
       },
     }),
   ]);
@@ -267,6 +275,11 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
                           {money.test && (
                             <span className="rounded-md bg-[#FFF4DB] px-2 py-0.5 font-bold text-[#8A5A00] text-xs">
                               ТЕСТ
+                            </span>
+                          )}
+                          {isManualOrder(o) && (
+                            <span className="rounded-md border border-mg-navy px-2 py-0.5 font-bold text-mg-navy text-xs">
+                              Гараар
                             </span>
                           )}
                           <span className="font-semibold text-mg-navy">
