@@ -26,6 +26,7 @@ export function FilterLink({
 
 const SECTIONS = [
   { href: "/admin", key: "sales", label: "Борлуулалт" },
+  { href: "/admin/seats", key: "seats", label: "Суудал" },
   { href: "/admin/users", key: "users", label: "Хэрэглэгчид" },
 ] as const;
 
