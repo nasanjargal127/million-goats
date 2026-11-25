@@ -100,7 +100,7 @@ function softenMasked(d: Uint8ClampedArray, mask: Uint8Array, w: number, h: numb
  * Replaces, in place, the shirts' rims and every pixel up to `maxDistance` px
  * outside them with softened inner fabric. `d` is RGBA, `w`×`h` pixels.
  */
-export function bleedPixels(d: Uint8ClampedArray, w: number, h: number, maxDistance = 200) {
+function bleedPixels(d: Uint8ClampedArray, w: number, h: number, maxDistance = 200) {
   const n = w * h;
 
   // Distance from each pixel to the nearest non-shirt pixel, to find the rim.
