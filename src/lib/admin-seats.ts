@@ -98,7 +98,7 @@ async function addManualLabBooking(
   if (!seat) throw new AdminSeatError("Суудал олдсонгүй.");
 
   // Paid in full: installments only apply to QPay payments.
-  const lab: LabChoice = { ...input.lab, installments: false };
+  const lab: LabChoice = { ...input.lab, parts: 1 };
   const now = new Date();
   const order = await db.order.create({
     data: {

@@ -19,22 +19,61 @@ type SaleInput = {
   chargedMnt: number | null;
   depositMnt: number | null;
   depositChargedMnt: number | null;
+  depositPaidAt: Date | null;
+  installmentCount: number | null;
+  partsPaid: number;
+  partPayments: unknown;
   labPackage: string | null;
   quantity: number | null;
   qpayInvoiceId: string | null;
   depositInvoiceId: string | null;
 };
 
-type MoneyInput = Pick<
+type InstallmentInput = Pick<
   SaleInput,
-  | "status"
-  | "amountMnt"
-  | "chargedMnt"
-  | "depositMnt"
-  | "depositChargedMnt"
-  | "qpayInvoiceId"
-  | "depositInvoiceId"
+  "amountMnt" | "depositMnt" | "depositPaidAt" | "installmentCount" | "partsPaid"
 >;
+
+type MoneyInput = InstallmentInput &
+  Pick<
+    SaleInput,
+    | "status"
+    | "chargedMnt"
+    | "depositChargedMnt"
+    | "partPayments"
+    | "qpayInvoiceId"
+    | "depositInvoiceId"
+  >;
+
+/** How many parts an installment order is paid in; null when it is paid in full. */
+export function installmentCount(order: Pick<SaleInput, "depositMnt" | "installmentCount">) {
+  if (order.depositMnt === null) return null;
+  return order.installmentCount ?? 2; // rows from before 4 parts existed
+}
+
+/**
+ * Parts paid before the last one. An order whose first part was paid just
+ * before partsPaid existed only has depositPaidAt set.
+ */
+export function partsPaidBeforeLast(order: Pick<SaleInput, "partsPaid" | "depositPaidAt">) {
+  return Math.max(order.partsPaid, order.depositPaidAt === null ? 0 : 1);
+}
+
+/** The price of part `part` (from 1) of an installment order; the total otherwise. */
+export function partMnt(order: InstallmentInput, part: number) {
+  const count = installmentCount(order);
+  if (count === null || order.depositMnt === null) return order.amountMnt;
+  return part < count ? order.depositMnt : order.amountMnt - order.depositMnt * (count - 1);
+}
+
+/** What QPay collected for the parts between the first and the last. */
+function middlePartsChargedMnt(partPayments: unknown) {
+  if (!Array.isArray(partPayments)) return 0;
+  return partPayments.reduce<number>((sum, p) => {
+    const charged = (p as { chargedMnt?: unknown } | null)?.chargedMnt;
+    return sum + (typeof charged === "number" ? charged : 0);
+  }, 0);
+}
 
 /**
  * Paid without QPay: an admin booked it by hand (bank transfer or cash), so it
@@ -47,14 +86,11 @@ export function isManualOrder(
 }
 
 /**
- * The price of what the order's current QPay invoice is for: the first part of
- * an installment order until it is paid, then the balance; otherwise the total.
+ * The price of what the order's current QPay invoice is for: the next unpaid
+ * part of an installment order (the last one once it is PAID); otherwise the total.
  */
-export function invoicePartMnt(
-  order: Pick<SaleInput, "amountMnt" | "depositMnt" | "depositChargedMnt">,
-) {
-  if (order.depositMnt === null) return order.amountMnt;
-  return order.depositChargedMnt === null ? order.depositMnt : order.amountMnt - order.depositMnt;
+export function invoicePartMnt(order: InstallmentInput) {
+  return partMnt(order, partsPaidBeforeLast(order) + 1);
 }
 
 /** What QPay actually collected, its fee and what reaches the business. */
@@ -69,14 +105,18 @@ export function saleMoney(order: MoneyInput) {
     // One invoice so far: a normal order, or an installment order's first part.
     price = invoicePartMnt(order);
     received = order.chargedMnt ?? price;
-  } else if (order.status === "PAID" || order.status === "REFUND_REQUIRED") {
-    // Both parts of an installment order are paid.
-    price = order.amountMnt;
-    received = order.depositChargedMnt + (order.chargedMnt ?? invoicePartMnt(order));
   } else {
-    // Only the first part is paid.
-    price = order.depositMnt ?? order.amountMnt;
-    received = order.depositChargedMnt;
+    // Installment order with parts already paid and moved aside.
+    const paidBefore = order.depositChargedMnt + middlePartsChargedMnt(order.partPayments);
+    const paidBeforePrice = (order.depositMnt ?? 0) * partsPaidBeforeLast(order);
+    if (order.status === "PAID" || order.status === "REFUND_REQUIRED") {
+      // The current invoice was paid too: the last part, or a part paid too late.
+      price = paidBeforePrice + invoicePartMnt(order);
+      received = paidBefore + (order.chargedMnt ?? invoicePartMnt(order));
+    } else {
+      price = paidBeforePrice;
+      received = paidBefore;
+    }
   }
   const fee = Math.round(received * QPAY_FEE_RATE);
   return {
@@ -100,7 +140,7 @@ export function summarizeSales(orders: SaleInput[]) {
     merchItems: 0,
     testOrders: 0,
     refundRequired: 0,
-    /** Installment orders with only the first part paid, balance still due. */
+    /** Installment orders with some parts paid and the rest still due. */
     balanceDue: 0,
     balanceUnpaid: 0,
   };

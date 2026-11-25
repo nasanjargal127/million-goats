@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { LabExperience } from "@/components/lab/lab-experience";
 import { getSession } from "@/lib/auth";
 import { getEventWithSeats, HOLD_MINUTES } from "@/lib/booking";
-import { installmentsOpen } from "@/lib/lab/packages";
+import { discountedPackages, installmentsOpen } from "@/lib/lab/packages";
 import { fromDbSeat, LAB_EVENT_SLUG, ROOM_IDS, TOTAL_SEATS } from "@/lib/lab/seats";
 import { pageMetadata } from "@/lib/seo";
 
@@ -35,7 +35,8 @@ async function LabWithBooking() {
           ? {
               holdMinutes: HOLD_MINUTES,
               signedIn: Boolean(session),
-              installments: installmentsOpen(),
+              twoParts: installmentsOpen(2),
+              discounted: discountedPackages(),
             }
           : null
       }

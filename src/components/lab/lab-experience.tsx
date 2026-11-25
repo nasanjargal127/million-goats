@@ -9,7 +9,8 @@ import { reserveLabSeatAction } from "@/app/lab/actions";
 import { formatMnt } from "@/lib/format";
 import { DICT } from "@/lib/lab/i18n";
 import {
-  INSTALLMENT_DUE_TEXT,
+  dueText,
+  installmentPartMnt,
   LAB_PACKAGE_IDS,
   LAB_PACKAGES,
   type LabChoice,
@@ -17,6 +18,7 @@ import {
   LOWEST_PACKAGE_PRICE_MNT,
   labChoiceDueNow,
   labChoicePrice,
+  type PaymentParts,
   PREMIUM_INSTALLMENTS,
   PSYCHOLOGIST_ADDON_MNT,
   TEACHERS,
@@ -42,8 +44,10 @@ import { SectionTitle } from "../brand";
 export type LabBooking = {
   holdMinutes: number;
   signedIn: boolean;
-  /** Premium can still be paid in two parts (see PREMIUM_INSTALLMENTS). */
-  installments: boolean;
+  /** The 6-month Premium can still be paid in 2 parts (4 parts is always offered). */
+  twoParts: boolean;
+  /** Packages whose discount has not ended yet (see LAB_PACKAGES[id].discount). */
+  discounted: LabPackageId[];
 } | null;
 
 const LabScene = dynamic(() => import("./lab-scene"), {
@@ -182,54 +186,65 @@ function WarningIcon() {
   );
 }
 
-/** 6-month Premium only: pay everything now, or in two parts before the two deadlines. */
+/**
+ * 6-month Premium only: pay everything now, in 2 parts (until the 2-part
+ * deadline) or in 4 parts (part n within 30 × (n − 1) days of booking).
+ */
 function InstallmentPicker({
-  installments,
-  setInstallments,
+  parts,
+  setParts,
+  twoParts,
   total,
 }: {
-  installments: boolean;
-  setInstallments: (on: boolean) => void;
+  parts: PaymentParts;
+  setParts: (parts: PaymentParts) => void;
+  twoParts: boolean;
   total: number;
 }) {
   const lang = useLab((s) => s.lang);
   const t = DICT[lang];
-  const due = INSTALLMENT_DUE_TEXT[lang];
-  const first = PREMIUM_INSTALLMENTS.firstMnt;
-  const parts = [
-    [t.firstPart, first, due.first],
-    [t.secondPart, total - first, due.balance],
-  ] as const;
+  const options: PaymentParts[] = twoParts ? [1, 2, 4] : [1, 4];
+  const part = installmentPartMnt(total, parts);
+  const schedule = Array.from({ length: parts }, (_, i) => ({
+    label: t.nthPart(i + 1),
+    amount: i + 1 < parts ? part : total - part * (parts - 1),
+    when:
+      parts === 2
+        ? dueText(
+            i === 0
+              ? PREMIUM_INSTALLMENTS.twoPartsOpenUntil
+              : PREMIUM_INSTALLMENTS.twoPartsBalanceDueAt,
+            lang,
+          )
+        : i === 0
+          ? t.now
+          : t.withinDays(PREMIUM_INSTALLMENTS.fourPartsEveryDays * i),
+  }));
 
   return (
     <div className="flex flex-col gap-2 border-white/10 border-t p-3.5">
       <p className="m-0 font-semibold text-sm">{t.howToPay}</p>
-      <div className="grid grid-cols-2 gap-1.5">
-        {(
-          [
-            [false, t.payInFull],
-            [true, t.payInTwo],
-          ] as const
-        ).map(([value, label]) => (
+      <div className={`grid gap-1.5 ${options.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+        {options.map((value) => (
           <button
-            key={label}
+            key={value}
             type="button"
-            onClick={() => setInstallments(value)}
-            aria-pressed={installments === value}
+            onClick={() => setParts(value)}
+            aria-pressed={parts === value}
             className={`min-h-10 cursor-pointer rounded-lg border px-2 font-semibold text-sm transition ${
-              installments === value
+              parts === value
                 ? "border-mg-blue bg-mg-blue text-white"
                 : "border-white/15 text-mg-on-dark hover:border-mg-sky"
             }`}
           >
-            {label}
+            {value === 1 ? t.payInFull : t.payInParts(value)}
           </button>
         ))}
       </div>
-      {installments && (
+      {parts > 1 && (
         <>
           <ul className="m-0 flex list-none flex-col gap-1 p-0 text-sm">
-            {parts.map(([label, amount, when]) => (
+            {schedule.map(({ label, amount, when }) => (
               <li key={label} className="flex items-baseline justify-between gap-3">
                 <span>
                   {label}
@@ -257,9 +272,10 @@ function PackagePicker({
   setTeacher,
   psychologist,
   setPsychologist,
-  installments,
-  setInstallments,
-  installmentsAvailable,
+  parts,
+  setParts,
+  twoParts,
+  discounted,
 }: {
   pkg: LabPackageId;
   setPkg: (id: LabPackageId) => void;
@@ -267,9 +283,10 @@ function PackagePicker({
   setTeacher: (name: string) => void;
   psychologist: boolean;
   setPsychologist: (on: boolean) => void;
-  installments: boolean;
-  setInstallments: (on: boolean) => void;
-  installmentsAvailable: boolean;
+  parts: PaymentParts;
+  setParts: (parts: PaymentParts) => void;
+  twoParts: boolean;
+  discounted: LabPackageId[];
 }) {
   const lang = useLab((s) => s.lang);
   const t = DICT[lang];
@@ -283,6 +300,7 @@ function PackagePicker({
         const info = LAB_PACKAGES[id];
         const text = info.text[lang];
         const active = id === pkg;
+        const discount = discounted.includes(id) ? info.discount : undefined;
         return (
           <div
             key={id}
@@ -311,6 +329,16 @@ function PackagePicker({
                   </span>
                 </span>
                 <span className="flex shrink-0 flex-col items-end">
+                  {discount && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="rounded-full bg-[#FF4D6D] px-1.5 py-0.5 font-bold text-[10px] text-white leading-none">
+                        −{Math.round((1 - info.priceMnt / discount.originalPriceMnt) * 100)}%
+                      </span>
+                      <span className="text-mg-on-dark-muted text-xs line-through">
+                        {formatMnt(discount.originalPriceMnt)}
+                      </span>
+                    </span>
+                  )}
                   <span className="font-bold text-base text-white">{formatMnt(info.priceMnt)}</span>
                   <span className="font-semibold text-mg-on-dark-muted text-xs">
                     / {text.period}
@@ -325,6 +353,12 @@ function PackagePicker({
                   </li>
                 ))}
               </ul>
+              {discount && (
+                <span className="ml-6.5 flex items-center gap-2 rounded-lg border border-[#FF4D6D]/50 bg-[#FF4D6D]/15 px-2.5 py-2 font-semibold text-[#FF8FA3] text-xs">
+                  <WarningIcon />
+                  {discount.until[lang]}
+                </span>
+              )}
               {text.notice && (
                 <span className="ml-6.5 flex gap-2 rounded-lg border border-[#FFC24D]/40 bg-[#FFC24D]/10 px-2.5 py-2 font-medium text-[#FFD27A] text-xs">
                   <WarningIcon />
@@ -386,10 +420,11 @@ function PackagePicker({
               </div>
             )}
 
-            {id === "PREMIUM" && active && installmentsAvailable && (
+            {id === "PREMIUM" && active && (
               <InstallmentPicker
-                installments={installments}
-                setInstallments={setInstallments}
+                parts={parts}
+                setParts={setParts}
+                twoParts={twoParts}
                 total={info.priceMnt}
               />
             )}
@@ -407,7 +442,7 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
   const [pkg, setPkg] = useState<LabPackageId>("PRO");
   const [teacher, setTeacher] = useState<string | null>(null);
   const [psychologist, setPsychologist] = useState(false);
-  const [installments, setInstallments] = useState(false);
+  const [parts, setParts] = useState<PaymentParts>(1);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -417,12 +452,13 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
 
   const choice: LabChoice =
     pkg === "PRO"
-      ? { labPackage: "PRO", teacher, withPsychologist: psychologist, installments: false }
+      ? { labPackage: "PRO", teacher, withPsychologist: psychologist, parts: 1 }
       : {
           labPackage: pkg,
           teacher: null,
           withPsychologist: false,
-          installments: pkg === "PREMIUM" && installments && booking.installments,
+          parts:
+            pkg === "PREMIUM" && (parts === 4 || (parts === 2 && booking.twoParts)) ? parts : 1,
         };
   const needsTeacher = pkg === "PRO" && !teacher;
 
@@ -447,21 +483,20 @@ function BookSeat({ seatId, booking }: { seatId: string; booking: LabBooking }) 
         setTeacher={setTeacher}
         psychologist={psychologist}
         setPsychologist={setPsychologist}
-        installments={installments}
-        setInstallments={setInstallments}
-        installmentsAvailable={booking.installments}
+        parts={parts}
+        setParts={setParts}
+        twoParts={booking.twoParts}
+        discounted={booking.discounted}
       />
       <div className="mt-4 flex items-baseline justify-between gap-3">
         <span className="text-mg-on-dark-muted text-sm">{t.total}</span>
         <span
-          className={
-            choice.installments ? "font-semibold text-base" : "font-bold text-2xl text-white"
-          }
+          className={choice.parts > 1 ? "font-semibold text-base" : "font-bold text-2xl text-white"}
         >
           {formatMnt(labChoicePrice(choice))}
         </span>
       </div>
-      {choice.installments && (
+      {choice.parts > 1 && (
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-mg-on-dark-muted text-sm">{t.dueNow}</span>
           <span className="font-bold text-2xl text-white">
