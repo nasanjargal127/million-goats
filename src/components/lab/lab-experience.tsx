@@ -11,7 +11,6 @@ import { DICT } from "@/lib/lab/i18n";
 import {
   dueText,
   installmentPartMnt,
-  LAB_PACKAGE_IDS,
   LAB_PACKAGES,
   type LabChoice,
   type LabPackageId,
@@ -264,6 +263,9 @@ function InstallmentPicker({
   );
 }
 
+/** One card per package; the Premium card holds both lengths (2 and 6 months). */
+const PACKAGE_CARDS: LabPackageId[][] = [["PRO"], ["PREMIUM_2M", "PREMIUM"]];
+
 /** Pro / Premium cards; Pro also asks for a teacher and the optional psychologist. */
 function PackagePicker({
   pkg,
@@ -290,35 +292,45 @@ function PackagePicker({
 }) {
   const lang = useLab((s) => s.lang);
   const t = DICT[lang];
+  // Which Premium length the Premium card shows while Pro is picked.
+  const [premiumLength, setPremiumLength] = useState<LabPackageId>("PREMIUM");
 
   return (
     <fieldset className="m-0 mt-4 flex flex-col gap-2 border-0 p-0">
       <legend className="mb-2 p-0 font-semibold text-mg-on-dark-muted text-xs uppercase tracking-[0.12em]">
         {t.pickPackage}
       </legend>
-      {LAB_PACKAGE_IDS.map((id) => {
+      {PACKAGE_CARDS.map((ids) => {
+        const lengths = ids.length > 1 ? ids : null;
+        const id = ids.includes(pkg) ? pkg : lengths ? premiumLength : ids[0];
         const info = LAB_PACKAGES[id];
         const text = info.text[lang];
         const active = id === pkg;
         const discount = discounted.includes(id) ? info.discount : undefined;
+        const radioId = `lab-package-${ids[0]}`;
+        const pick = (next: LabPackageId) => {
+          if (lengths) setPremiumLength(next);
+          setPkg(next);
+        };
         return (
           <div
-            key={id}
+            key={ids[0]}
             className={`rounded-xl border transition ${
               active
                 ? "border-mg-blue bg-mg-blue/15 shadow-[0_0_28px_rgba(0,104,255,0.3)]"
                 : "border-white/15 hover:border-mg-sky"
             }`}
           >
-            <label className="flex cursor-pointer flex-col gap-2 p-3.5">
+            <label htmlFor={radioId} className="flex cursor-pointer flex-col gap-2 p-3.5 pb-0">
               <span className="flex items-start justify-between gap-3">
                 <span className="flex items-center gap-2.5">
                   <input
+                    id={radioId}
                     type="radio"
                     name="lab-package"
                     value={id}
                     checked={active}
-                    onChange={() => setPkg(id)}
+                    onChange={() => pick(id)}
                     className="size-4 accent-mg-blue"
                   />
                   <span>
@@ -345,6 +357,45 @@ function PackagePicker({
                   </span>
                 </span>
               </span>
+            </label>
+
+            {lengths && (
+              <fieldset className="m-0 mt-2.5 ml-10 mr-3.5 grid grid-cols-2 gap-1.5 border-0 p-0">
+                <legend className="sr-only">{t.pickLength}</legend>
+                {lengths.map((length) => {
+                  const lengthInfo = LAB_PACKAGES[length];
+                  const lengthDiscount = discounted.includes(length)
+                    ? lengthInfo.discount
+                    : undefined;
+                  return (
+                    <button
+                      key={length}
+                      type="button"
+                      onClick={() => pick(length)}
+                      aria-pressed={id === length}
+                      className={`flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2 font-semibold text-sm transition ${
+                        id === length
+                          ? "border-mg-blue bg-mg-blue text-white"
+                          : "border-white/15 text-mg-on-dark hover:border-mg-sky"
+                      }`}
+                    >
+                      {lengthInfo.text[lang].period}
+                      {lengthDiscount && (
+                        <span className="rounded-full bg-[#FF4D6D] px-1.5 py-0.5 font-bold text-[10px] text-white leading-none">
+                          −
+                          {Math.round(
+                            (1 - lengthInfo.priceMnt / lengthDiscount.originalPriceMnt) * 100,
+                          )}
+                          %
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </fieldset>
+            )}
+
+            <label htmlFor={radioId} className="flex cursor-pointer flex-col gap-2 p-3.5 pt-2.5">
               <ul className="m-0 flex list-none flex-col gap-1 p-0 pl-6.5 text-sm text-white/85">
                 {text.features.map((feature) => (
                   <li key={feature} className="flex gap-2">
