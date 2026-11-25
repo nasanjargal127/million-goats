@@ -5,57 +5,26 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { MERCH_DESIGNS, type ShirtMockup } from "@/lib/merch-shirt";
+import { buildShirtSurfaces } from "@/lib/shirt-geometry";
 
-// Shirt size in scene units; width follows the traced front's aspect ratio.
+// Shirt height in scene units; width follows the traced front's aspect ratio.
 const HEIGHT = 2.4;
-const DEPTH = 0.14;
-const BEVEL = 0.08;
-const FACE_Z = DEPTH / 2 + BEVEL + 0.002;
-
-function makeShape(mockup: ShirtMockup, width: number) {
-  const pts = mockup.outline.map(
-    ([nx, ny]) => new THREE.Vector2((nx - 0.5) * width, (0.5 - ny) * HEIGHT),
-  );
-  return new THREE.Shape(pts);
-}
-
-/** Flat print geometry whose UVs point at one shirt in the mockup image. */
-function makePrint(shape: THREE.Shape, mockup: ShirtMockup, width: number, side: "front" | "back") {
-  const geo = new THREE.ShapeGeometry(shape, 8);
-  const pos = geo.attributes.position;
-  const uv = new Float32Array(pos.count * 2);
-  const box = mockup[side];
-  for (let i = 0; i < pos.count; i++) {
-    const nx = pos.getX(i) / width + 0.5;
-    const ny = 0.5 - pos.getY(i) / HEIGHT;
-    // Seen from behind, the shirt's right side is on the viewer's left.
-    const sx = side === "front" ? nx : 1 - nx;
-    uv[i * 2] = (box.x + sx * box.w) / mockup.width;
-    uv[i * 2 + 1] = 1 - (box.y + ny * box.h) / mockup.height;
-  }
-  geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
-  return geo;
-}
 
 function Shirt({ mockup }: { mockup: ShirtMockup }) {
   const texture = useTexture(mockup.src);
-  const { body, front, back } = useMemo(() => {
+  const { front, back } = useMemo(() => {
     const width = HEIGHT * (mockup.front.w / mockup.front.h);
-    const shape = makeShape(mockup, width);
-    const body = new THREE.ExtrudeGeometry(shape, {
-      depth: DEPTH,
-      bevelEnabled: true,
-      bevelThickness: BEVEL,
-      bevelSize: 0.05,
-      bevelSegments: 6,
-      curveSegments: 6,
+    const outline = mockup.outline.map(
+      ([nx, ny]) => [(nx - 0.5) * width, (0.5 - ny) * HEIGHT] as const,
+    );
+    return buildShirtSurfaces(outline, (x, y, side) => {
+      const nx = x / width + 0.5;
+      const ny = 0.5 - y / HEIGHT;
+      const box = mockup[side];
+      // Seen from behind, the shirt's right side is on the viewer's left.
+      const sx = side === "front" ? nx : 1 - nx;
+      return [(box.x + sx * box.w) / mockup.width, 1 - (box.y + ny * box.h) / mockup.height];
     });
-    body.translate(0, 0, -DEPTH / 2);
-    return {
-      body,
-      front: makePrint(shape, mockup, width, "front"),
-      back: makePrint(shape, mockup, width, "back"),
-    };
   }, [mockup]);
 
   useEffect(() => {
@@ -66,26 +35,33 @@ function Shirt({ mockup }: { mockup: ShirtMockup }) {
 
   useEffect(
     () => () => {
-      body.dispose();
       front.dispose();
       back.dispose();
     },
-    [body, front, back],
+    [front, back],
   );
 
   return (
     <group>
-      <mesh geometry={body}>
-        {/* Matches the fabric colour in the mockup. Where the outline overshoots a shirt,
-            the mockup is transparent and alphaTest lets this body show through. */}
-        <meshStandardMaterial color={mockup.fabric} roughness={0.95} />
-      </mesh>
-      <mesh geometry={front} position={[0, 0, FACE_Z]}>
-        <meshStandardMaterial map={texture} roughness={0.9} alphaTest={0.5} />
-      </mesh>
-      <mesh geometry={back} position={[0, 0, -FACE_Z]}>
-        <meshStandardMaterial map={texture} roughness={0.9} alphaTest={0.5} side={THREE.BackSide} />
-      </mesh>
+      {[front, back].map((geo) => (
+        <group key={geo.uuid}>
+          {/* Fabric matched to the mockup. Where the outline overshoots the shirt in the
+              mockup, the print is transparent and alphaTest lets this show through. */}
+          <mesh geometry={geo}>
+            <meshStandardMaterial color={mockup.fabric} roughness={0.95} />
+          </mesh>
+          <mesh geometry={geo}>
+            <meshStandardMaterial
+              map={texture}
+              roughness={0.9}
+              alphaTest={0.5}
+              polygonOffset
+              polygonOffsetFactor={-1}
+              polygonOffsetUnits={-1}
+            />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
