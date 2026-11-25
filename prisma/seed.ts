@@ -62,7 +62,7 @@ const MERCH = {
   priceMnt: 99_000,
   imagePath: "/merch/million-goats-tee.webp",
 };
-const MERCH_SIZES = ["S", "M", "L", "XL", "XXL"];
+const MERCH_SIZES = ["S", "M", "L", "XL", "XXL", "3XL"];
 
 async function seedMerch() {
   const product = await prisma.product.upsert({
