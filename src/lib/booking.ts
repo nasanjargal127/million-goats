@@ -3,15 +3,18 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { userIdsFromEnv } from "./admin";
 import { prisma } from "./db";
-import { sendDepositEmail } from "./installment-emails";
+import { sendDepositEmail, sendPartEmail } from "./installment-emails";
 import {
+  type InstallmentParts,
+  installmentDueAt,
+  installmentPartMnt,
   installmentsOpen,
   type LabChoice,
   labChoiceLabel,
   labChoicePrice,
-  PREMIUM_INSTALLMENTS,
 } from "./lab/packages";
 import { cancelInvoice, checkInvoicePayment, createInvoice, qpayConfigured } from "./qpay";
+import { installmentCount, invoicePartMnt, partsPaidBeforeLast } from "./sales";
 import { site } from "./site";
 
 /** How long selected seats stay reserved (and invoices stay open) while the visitor pays. */
@@ -109,7 +112,8 @@ export async function reserveSeats(input: {
 
   const event = await prisma.event.findUnique({ where: { id: input.eventId } });
   if (!event?.published) throw new BookingError("INVALID", "Эвент олдсонгүй.");
-  if (input.lab?.installments && !installmentsOpen()) {
+  const parts = input.lab?.parts ?? 1;
+  if (parts !== 1 && !installmentsOpen(parts)) {
     throw new BookingError(
       "INVALID",
       "Хувааж төлөх хугацаа дууссан. Нэг дор төлөх сонголтыг сонгоно уу.",
@@ -121,9 +125,7 @@ export async function reserveSeats(input: {
   const seatPrice = input.lab ? labChoicePrice(input.lab) : event.priceMnt;
   const itemLabel = input.lab ? labChoiceLabel(input.lab) : null;
   // Installments: the first invoice is only for the first part of each seat.
-  const depositMnt = input.lab?.installments
-    ? PREMIUM_INSTALLMENTS.firstMnt * seatIds.length
-    : null;
+  const depositMnt = parts === 1 ? null : installmentPartMnt(seatPrice, parts) * seatIds.length;
 
   const order = await prisma.$transaction(async (tx) => {
     const seats = await tx.seat.findMany({
@@ -136,6 +138,7 @@ export async function reserveSeats(input: {
       data: {
         userId: input.userId,
         eventId: event.id,
+        createdAt: now,
         amountMnt: seatPrice * seats.length,
         seatLabels: seats.map((s) => seatLabel(s.row, s.number)),
         itemLabel,
@@ -144,9 +147,10 @@ export async function reserveSeats(input: {
           teacher: input.lab.teacher,
           withPsychologist: input.lab.withPsychologist,
         }),
-        ...(depositMnt !== null && {
+        ...(parts !== 1 && {
           depositMnt,
-          balanceDueAt: PREMIUM_INSTALLMENTS.balanceDueAt,
+          installmentCount: parts,
+          balanceDueAt: installmentDueAt(parts, 2, now),
         }),
         expiresAt,
       },
@@ -171,7 +175,7 @@ export async function reserveSeats(input: {
     description: [
       `${event.title}: ${order.seatLabels.join(", ")}`,
       itemLabel,
-      depositMnt !== null ? "1-р төлөлт" : null,
+      parts !== 1 ? `1/${parts} төлөлт` : null,
     ]
       .filter(Boolean)
       .join(" · "),
@@ -240,8 +244,8 @@ async function issueInvoice(input: {
 }
 
 /**
- * Creates the QPay invoice for the balance of an installment order whose first
- * part is paid. Does nothing if that invoice already exists.
+ * Creates the QPay invoice for the next part of an installment order whose
+ * first part is paid. Does nothing if that invoice already exists.
  */
 export async function startBalancePayment(orderId: string, userId: string) {
   assertPaymentAvailable();
@@ -258,20 +262,21 @@ export async function startBalancePayment(orderId: string, userId: string) {
     throw new BookingError("INVALID", "Үлдэгдэл төлөх хугацаа дууссан.");
   }
 
+  const part = partsPaidBeforeLast(order) + 1;
   let data: Awaited<ReturnType<typeof issueInvoice>>;
   try {
     data = await issueInvoice({
       orderId: order.id,
-      invoiceNo: `${order.id}-2`,
+      invoiceNo: `${order.id}-${part}`,
       userId,
       description: [
         `${order.event?.title}: ${order.seatLabels.join(", ")}`,
         order.itemLabel,
-        "Үлдэгдэл",
+        `${part}/${installmentCount(order)} төлөлт`,
       ]
         .filter(Boolean)
         .join(" · "),
-      amount: order.amountMnt - order.depositMnt,
+      amount: invoicePartMnt(order),
     });
   } catch (error) {
     console.error("QPay balance invoice creation failed", error);
@@ -303,25 +308,62 @@ async function releaseOrder(orderId: string, status: "EXPIRED" | "CANCELLED") {
 }
 
 /**
- * The first part of an installment order is paid: hold its seats until the
- * balance is due, and move the paid invoice aside so the balance can get its
- * own. If the seats went to someone else meanwhile, flag it for a refund.
+ * A part of an installment order other than the last is paid: hold its seats
+ * until the next part is due, and move the paid invoice aside (the first into
+ * deposit*, later ones into partPayments) so the next part can get its own.
+ * If the seats went to someone else meanwhile, flag it for a refund.
  */
-async function confirmDepositPaid(
+async function confirmPartPaid(
   order: {
     id: string;
     eventId: string | null;
     seatLabels: string[];
-    balanceDueAt: Date | null;
+    createdAt: Date;
+    depositMnt: number | null;
+    depositPaidAt: Date | null;
+    installmentCount: number | null;
+    partsPaid: number;
+    partPayments: Prisma.JsonValue;
     qpayInvoiceId: string | null;
     chargedMnt: number | null;
   },
   paymentId: string | null,
 ) {
   const eventId = order.eventId;
-  const due = order.balanceDueAt;
-  if (!eventId || !due) throw new Error(`Installment order ${order.id} has no event or due date`);
+  const count = installmentCount(order) as InstallmentParts | null;
+  if (!eventId || !count) throw new Error(`Installment order ${order.id} has no event or parts`);
+  const part = partsPaidBeforeLast(order) + 1;
+  const due = installmentDueAt(count, part + 1, order.createdAt);
   const now = new Date();
+  const invoice = {
+    chargedMnt: null,
+    qpayInvoiceId: null,
+    qpayQrText: null,
+    qpayQrImage: null,
+    qpayShortUrl: null,
+    qpayUrls: Prisma.DbNull,
+    checkedAt: null,
+  };
+  const moveAside =
+    part === 1
+      ? {
+          depositPaidAt: now,
+          depositPaymentId: paymentId,
+          depositInvoiceId: order.qpayInvoiceId,
+          depositChargedMnt: order.chargedMnt,
+        }
+      : {
+          partPayments: [
+            ...(Array.isArray(order.partPayments) ? order.partPayments : []),
+            {
+              part,
+              invoiceId: order.qpayInvoiceId,
+              paymentId,
+              chargedMnt: order.chargedMnt,
+              paidAt: now.toISOString(),
+            },
+          ],
+        };
   try {
     await prisma.$transaction(async (tx) => {
       const held = await tx.seat.updateMany({
@@ -339,22 +381,17 @@ async function confirmDepositPaid(
         data: { status: "HELD", heldUntil: due, orderId: order.id },
       });
       if (held.count !== order.seatLabels.length) throw new Error("SEATS_LOST");
+      // Conditional on the part, so a payment seen twice is recorded once.
       await tx.order.updateMany({
-        where: { id: order.id, depositPaidAt: null },
+        where: { id: order.id, partsPaid: order.partsPaid, qpayInvoiceId: order.qpayInvoiceId },
         data: {
           status: "DEPOSIT_PAID",
+          partsPaid: part,
+          balanceDueAt: due,
           expiresAt: due,
-          depositPaidAt: now,
-          depositPaymentId: paymentId,
-          depositInvoiceId: order.qpayInvoiceId,
-          depositChargedMnt: order.chargedMnt,
-          chargedMnt: null,
-          qpayInvoiceId: null,
-          qpayQrText: null,
-          qpayQrImage: null,
-          qpayShortUrl: null,
-          qpayUrls: Prisma.DbNull,
-          checkedAt: null,
+          balanceRemindersSent: 0,
+          ...moveAside,
+          ...invoice,
         },
       });
     });
@@ -365,6 +402,7 @@ async function confirmDepositPaid(
       data: { status: "REFUND_REQUIRED", paidAt: now, qpayPaymentId: paymentId },
     });
   }
+  return part;
 }
 
 /** The balance was not paid in time: release the seats and keep the first part. */
@@ -468,9 +506,11 @@ export async function syncOrder(orderId: string, { force = false } = {}) {
 
   const payment = await checkInvoicePayment(order.qpayInvoiceId);
   if (payment.paid && payment.paidAmount >= (order.chargedMnt ?? order.amountMnt)) {
-    if (order.depositMnt !== null && order.depositPaidAt === null) {
-      await confirmDepositPaid(order, payment.paymentId);
-      await sendDepositEmail(order.id);
+    const count = installmentCount(order);
+    if (count !== null && partsPaidBeforeLast(order) + 1 < count) {
+      const part = await confirmPartPaid(order, payment.paymentId);
+      if (part === 1) await sendDepositEmail(order.id);
+      else await sendPartEmail(order.id, part);
     } else {
       await confirmPaid(order, payment.paymentId);
     }

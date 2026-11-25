@@ -31,7 +31,7 @@ export async function addManualBookingAction(
     labPackage: form.get("package"),
     teacher: form.get("teacher") || null,
     withPsychologist: form.get("psychologist") === "on",
-    installments: false,
+    parts: 1,
   });
   if (!lab) return { error: "Багц болон багшаа сонгоно уу.", done: null };
 

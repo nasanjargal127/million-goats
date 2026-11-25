@@ -177,10 +177,20 @@ model Order {
   labPackage           LabPackage?
   teacher              String?
   withPsychologist     Boolean         @default(false)
-  /// Installment orders (Premium in two parts) only: the price of the first part.
-  /// The balance is amountMnt - depositMnt and is due by balanceDueAt.
+  /// Installment orders (Premium in 2 or 4 parts) only: the price of one part.
+  /// Every part costs depositMnt except the last, which is what is left of
+  /// amountMnt. The next unpaid part is due by balanceDueAt.
   depositMnt           Int?
   balanceDueAt         DateTime?
+  /// Installment orders: how many parts (2 or 4). Older rows have null with a
+  /// depositMnt, which means 2.
+  installmentCount     Int?
+  /// Installment orders: parts paid before the last one. The last part's
+  /// payment is the order's own qpay* invoice once it is PAID.
+  partsPaid            Int             @default(0)
+  /// QPay payments for the parts between the first (deposit*) and the last:
+  /// [{ part, invoiceId, paymentId, chargedMnt, paidAt }].
+  partPayments         Json?
   /// The paid first-part invoice. Once it is paid, the qpay* fields below are
   /// cleared and later hold the balance invoice.
   depositChargedMnt    Int?

@@ -10,9 +10,14 @@ import { SiteHeader } from "@/components/site-header";
 import { getSession } from "@/lib/auth";
 import { getOrderForUser, syncOrder } from "@/lib/booking";
 import { formatEventDate, formatMnt } from "@/lib/format";
-import { INSTALLMENT_DUE_TEXT } from "@/lib/lab/packages";
+import {
+  dueText,
+  type InstallmentParts,
+  installmentDueAt,
+  PREMIUM_INSTALLMENTS,
+} from "@/lib/lab/packages";
 import type { QPayBankLink } from "@/lib/qpay";
-import { invoicePartMnt } from "@/lib/sales";
+import { installmentCount, invoicePartMnt, partMnt, partsPaidBeforeLast } from "@/lib/sales";
 import { site } from "@/lib/site";
 import { payBalanceAction } from "./actions";
 
@@ -52,11 +57,30 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
     order = (await getOrderForUser(id, session.user.id)) ?? order;
   }
 
-  const due = INSTALLMENT_DUE_TEXT.mn;
-  const deposit = order.depositMnt;
-  const balance = deposit === null ? 0 : order.amountMnt - deposit;
-  const balancePhase = order.depositPaidAt !== null;
+  const count = installmentCount(order);
+  const paidParts = partsPaidBeforeLast(order);
+  const balancePhase = paidParts > 0;
   const partPrice = invoicePartMnt(order);
+  const nextName = count === 2 ? "Үлдэгдэл" : `${paidParts + 1}-р төлөлт`;
+  const nextDue = order.balanceDueAt ? dueText(order.balanceDueAt) : "";
+  // Every part with its price, whether it is paid and when it is due.
+  const parts =
+    count === null
+      ? []
+      : Array.from({ length: count }, (_, i) => {
+          const part = i + 1;
+          return {
+            label: `${part}-р төлөлт`,
+            amount: partMnt(order, part),
+            paid: order.status === "PAID" || part <= paidParts,
+            when:
+              part === 1
+                ? count === 2
+                  ? dueText(PREMIUM_INSTALLMENTS.twoPartsOpenUntil)
+                  : "захиалахдаа"
+                : dueText(installmentDueAt(count as InstallmentParts, part, order.createdAt)),
+          };
+        });
 
   const merch = order.kind === "MERCH";
   const summary = (
@@ -90,14 +114,9 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         <span className="text-mg-body">Нийт дүн</span>
         <span className="font-bold text-2xl">{formatMnt(order.amountMnt)}</span>
       </div>
-      {deposit !== null && (
+      {parts.length > 0 && (
         <ul className="m-0 flex list-none flex-col gap-2 p-0 text-sm">
-          {(
-            [
-              ["1-р төлөлт", deposit, balancePhase, due.first],
-              ["2-р төлөлт", balance, order.status === "PAID", due.balance],
-            ] as const
-          ).map(([label, amount, paid, when]) => (
+          {parts.map(({ label, amount, paid, when }) => (
             <li key={label} className="flex items-baseline justify-between gap-3">
               <span>
                 {label}{" "}
@@ -158,16 +177,16 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-start gap-4 rounded-xl bg-mg-navy bg-[radial-gradient(ellipse_70%_90%_at_100%_100%,rgba(0,104,255,0.32),transparent_70%)] p-8 text-white">
           <h1 className="m-0 font-bold text-[clamp(28px,4vw,44px)] uppercase leading-tight tracking-[-0.01em]">
-            Эхний төлөлт орлоо
+            {paidParts === 1 ? "Эхний төлөлт орлоо" : `${paidParts}-р төлөлт орлоо`}
           </h1>
           <p className="m-0 text-white/80">
-            Суудал таны нэр дээр хадгалагдаж байна. Үлдэгдэл {formatMnt(balance)}-ийг {due.balance}{" "}
-            төлж баталгаажуулна уу. Хугацаандаа төлөөгүй бол суудал чөлөөлөгдөж, эхний төлбөр
+            Суудал таны нэр дээр хадгалагдаж байна. {nextName} {formatMnt(partPrice)}-ийг {nextDue}{" "}
+            төлж баталгаажуулна уу. Хугацаандаа төлөөгүй бол суудал чөлөөлөгдөж, төлсөн төлбөр
             буцаагдахгүй.
           </p>
           <PayBalanceButton
             action={payBalanceAction.bind(null, order.id)}
-            label={`Үлдэгдэл ${formatMnt(balance)} төлөх`}
+            label={`${nextName} ${formatMnt(partPrice)} төлөх`}
           />
         </div>
         {summary}
@@ -224,14 +243,10 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         />
         <div className="flex w-full items-center justify-between gap-4">
           <h1 className="m-0 font-bold text-2xl uppercase">
-            {deposit === null ? "QPay-ээр төлөх" : balancePhase ? "Үлдэгдэл төлөх" : "1-р төлөлт"}
+            {count === null ? "QPay-ээр төлөх" : balancePhase ? `${nextName} төлөх` : "1-р төлөлт"}
           </h1>
           <span className="rounded-full bg-white/10 px-3 py-1.5 font-semibold text-sm">
-            {balancePhase ? (
-              due.balance
-            ) : (
-              <HoldCountdown expiresAt={order.expiresAt.toISOString()} />
-            )}
+            {balancePhase ? nextDue : <HoldCountdown expiresAt={order.expiresAt.toISOString()} />}
           </span>
         </div>
         {src ? (
@@ -246,7 +261,7 @@ async function OrderView({ params }: { params: PageProps<"/orders/[id]">["params
         ) : (
           <p className="m-0 text-mg-on-dark">QR код үүсгэж чадсангүй.</p>
         )}
-        {deposit !== null && (
+        {count !== null && (
           <p className="m-0 font-bold text-3xl text-white">{formatMnt(partPrice)}</p>
         )}
         <p className="m-0 text-center text-mg-on-dark text-sm leading-relaxed">

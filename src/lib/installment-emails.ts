@@ -2,16 +2,17 @@ import "server-only";
 import { prisma } from "./db";
 import { emailConfigured, escapeHtml, sendEmail } from "./email";
 import { formatMnt } from "./format";
-import { INSTALLMENT_DUE_TEXT } from "./lab/packages";
+import { dueText } from "./lab/packages";
+import { installmentCount, invoicePartMnt, partsPaidBeforeLast } from "./sales";
 import { site } from "./site";
 
-// Emails for Premium installment orders: one when the first part is paid, and
-// reminders before the balance is due. Each is recorded on the order before it
+// Emails for Premium installment orders: one when each part but the last is
+// paid, and reminders before the next part is due. Each is recorded on the order before it
 // is sent (and un-recorded if sending fails), so it goes out once.
 
 const DAY_MS = 24 * 60 * 60_000;
 
-/** Reminder stages: a week before the balance is due, then on the last day. */
+/** Reminder stages: a week before the next part is due, then on the last day. */
 const REMINDERS = [
   { stage: 1, withinMs: 7 * DAY_MS },
   { stage: 2, withinMs: DAY_MS },
@@ -21,6 +22,10 @@ type InstallmentOrder = {
   id: string;
   amountMnt: number;
   depositMnt: number | null;
+  depositPaidAt: Date | null;
+  installmentCount: number | null;
+  partsPaid: number;
+  balanceDueAt: Date | null;
   seatLabels: string[];
   user: { name: string; email: string };
   event: { title: string } | null;
@@ -31,47 +36,45 @@ const orderInclude = {
   event: { select: { title: true } },
 } as const;
 
-function letter(order: InstallmentOrder, kind: "deposit" | 1 | 2) {
-  const balance = formatMnt(order.amountMnt - (order.depositMnt ?? 0));
-  const due = INSTALLMENT_DUE_TEXT.mn.balance;
+/** "Үлдэгдэл" for the second of two parts, else e.g. "3-р төлөлт". */
+function partName(order: InstallmentOrder, part: number) {
+  return installmentCount(order) === 2 ? "Үлдэгдэл" : `${part}-р төлөлт`;
+}
+
+function letter(order: InstallmentOrder, kind: "paid" | 1 | 2) {
+  const paid = partsPaidBeforeLast(order);
+  const next = partName(order, paid + 1);
+  const amount = formatMnt(invoicePartMnt(order));
+  const due = order.balanceDueAt ? dueText(order.balanceDueAt) : "";
   const url = `${site.url}/orders/${order.id}`;
   const what = `${order.event?.title ?? "Trading Lab"} · Premium · суудал ${order.seatLabels.join(", ")}`;
   const greeting = order.user.name ? `Сайн байна уу, ${order.user.name}!` : "Сайн байна уу!";
 
   const { subject, lead } =
-    kind === "deposit"
+    kind === "paid"
       ? {
-          subject: "Эхний төлөлт орлоо — үлдэгдлээ 1-р сарын 1-ээс өмнө төлнө үү",
-          lead: `Таны эхний төлөлт ${formatMnt(order.depositMnt ?? 0)} амжилттай орлоо. Суудал таны нэр дээр хадгалагдаж байна.`,
+          subject: `${paid === 1 ? "Эхний төлөлт" : `${paid}-р төлөлт`} орлоо — дараагийнхаа ${due} төлнө үү`,
+          lead: `Таны ${paid === 1 ? "эхний" : `${paid}-р`} төлөлт ${formatMnt(order.depositMnt ?? 0)} амжилттай орлоо. Суудал таны нэр дээр хадгалагдаж байна.`,
         }
       : kind === 1
         ? {
-            subject: "Үлдэгдэл төлөх хугацаа 7 хоног үлдлээ",
-            lead: "Premium багцын үлдэгдэл төлөх хугацаа дуусахад 7 хоног үлдлээ.",
+            subject: `${next} төлөх хугацаа 7 хоног үлдлээ`,
+            lead: `Premium багцын ${next.toLowerCase()} төлөх хугацаа дуусахад 7 хоног үлдлээ.`,
           }
         : {
-            subject: "Өнөөдөр үлдэгдэл төлөх сүүлийн өдөр",
-            lead: "Premium багцын үлдэгдэл төлөх сүүлийн өдөр өнөөдөр.",
+            subject: `Өнөөдөр ${next.toLowerCase()} төлөх сүүлийн өдөр`,
+            lead: `Premium багцын ${next.toLowerCase()} төлөх сүүлийн өдөр өнөөдөр.`,
           };
-  const ask = `Үлдэгдэл ${balance}-ийг ${due} төлж суудлаа баталгаажуулна уу. Хугацаандаа төлөөгүй бол суудал чөлөөлөгдөж, эхний төлбөр буцаагдахгүй.`;
+  const ask = `${next} ${amount}-ийг ${due} төлж суудлаа баталгаажуулна уу. Хугацаандаа төлөөгүй бол суудал чөлөөлөгдөж, төлсөн төлбөр буцаагдахгүй.`;
 
-  const text = [
-    greeting,
-    "",
-    lead,
-    what,
-    "",
-    ask,
-    "",
-    `Үлдэгдэл төлөх: ${url}`,
-    "",
-    site.name,
-  ].join("\n");
+  const text = [greeting, "", lead, what, "", ask, "", `${next} төлөх: ${url}`, "", site.name].join(
+    "\n",
+  );
   const html = `<div style="font-family:Arial,sans-serif;font-size:16px;line-height:1.5;color:#010D26">
 <p>${escapeHtml(greeting)}</p>
 <p>${escapeHtml(lead)}<br><span style="color:#4A5670">${escapeHtml(what)}</span></p>
 <p>${escapeHtml(ask)}</p>
-<p><a href="${escapeHtml(url)}" style="display:inline-block;background:#FF3600;color:#010D26;font-weight:bold;padding:12px 24px;border-radius:10px;text-decoration:none">Үлдэгдэл ${escapeHtml(balance)} төлөх</a></p>
+<p><a href="${escapeHtml(url)}" style="display:inline-block;background:#FF3600;color:#010D26;font-weight:bold;padding:12px 24px;border-radius:10px;text-decoration:none">${escapeHtml(next)} ${escapeHtml(amount)} төлөх</a></p>
 <p style="color:#4A5670">${escapeHtml(site.name)}</p>
 </div>`;
   return { subject, html, text };
@@ -97,7 +100,7 @@ export async function sendDepositEmail(orderId: string) {
     try {
       await sendEmail({
         to: order.user.email,
-        ...letter(order, "deposit"),
+        ...letter(order, "paid"),
         idempotencyKey: `deposit-${order.id}`,
       });
     } catch (error) {
@@ -106,6 +109,28 @@ export async function sendDepositEmail(orderId: string) {
     }
   } catch (error) {
     console.error(`Could not send the deposit email for order ${orderId}`, error);
+  }
+}
+
+/**
+ * Sends the "part received" email for a part after the first. Best effort: it
+ * is not retried, but the reminders for the next part still go out.
+ */
+export async function sendPartEmail(orderId: string, part: number) {
+  if (!emailConfigured) return;
+  try {
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      include: orderInclude,
+    });
+    if (order.status !== "DEPOSIT_PAID" || partsPaidBeforeLast(order) !== part) return;
+    await sendEmail({
+      to: order.user.email,
+      ...letter(order, "paid"),
+      idempotencyKey: `part-${order.id}-${part}`,
+    });
+  } catch (error) {
+    console.error(`Could not send the part ${part} email for order ${orderId}`, error);
   }
 }
 
@@ -142,7 +167,7 @@ export async function sendBalanceReminders(now = new Date()) {
       await sendEmail({
         to: order.user.email,
         ...letter(order, stage),
-        idempotencyKey: `balance-${order.id}-${stage}`,
+        idempotencyKey: `balance-${order.id}-${partsPaidBeforeLast(order) + 1}-${stage}`,
       });
       sent += 1;
     } catch (error) {

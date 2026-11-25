@@ -9,11 +9,14 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { formatEventDate, formatMnt } from "@/lib/format";
-import { INSTALLMENT_DUE_TEXT } from "@/lib/lab/packages";
+import { dueText } from "@/lib/lab/packages";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 import {
+  installmentCount,
+  invoicePartMnt,
   isManualOrder,
   MONEY_STATUSES,
+  partsPaidBeforeLast,
   QPAY_FEE_RATE,
   saleMoney,
   summarizeSales,
@@ -98,6 +101,10 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
         chargedMnt: true,
         depositMnt: true,
         depositChargedMnt: true,
+        depositPaidAt: true,
+        installmentCount: true,
+        partsPaid: true,
+        partPayments: true,
         labPackage: true,
         quantity: true,
         qpayInvoiceId: true,
@@ -185,9 +192,9 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
           {totals.refundRequired > 0 &&
             `${totals.refundRequired} захиалгад буцаан олголт хийх шаардлагатай. `}
           {totals.balanceDue > 0 &&
-            `${totals.balanceDue} захиалга хувааж төлж байгаа: эхний төлөлт орсон, үлдэгдэл хүлээгдэж байна. `}
+            `${totals.balanceDue} захиалга хувааж төлж байгаа: үлдсэн төлөлтүүд хүлээгдэж байна. `}
           {totals.balanceUnpaid > 0 &&
-            `${totals.balanceUnpaid} захиалгын үлдэгдэл хугацаандаа төлөгдөөгүй тул суудал чөлөөлөгдсөн (эхний төлөлт орлогод орсон).`}
+            `${totals.balanceUnpaid} захиалгын төлөлт хугацаандаа төлөгдөөгүй тул суудал чөлөөлөгдсөн (төлсөн хэсэг нь орлогод орсон).`}
         </p>
       )}
 
@@ -301,8 +308,9 @@ async function SalesView({ searchParams }: { searchParams: PageProps<"/admin">["
                         )}
                         {o.status === "DEPOSIT_PAID" && o.depositMnt !== null && (
                           <span className="block font-semibold text-[#8A5A00] text-xs">
-                            үлдэгдэл {formatMnt(o.amountMnt - o.depositMnt)} ·{" "}
-                            {INSTALLMENT_DUE_TEXT.mn.balance}
+                            {partsPaidBeforeLast(o)}/{installmentCount(o)} төлсөн · дараагийнх{" "}
+                            {formatMnt(invoicePartMnt(o))}
+                            {o.balanceDueAt && ` · ${dueText(o.balanceDueAt)}`}
                           </span>
                         )}
                         {money.test && (
