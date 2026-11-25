@@ -66,7 +66,9 @@ export function MerchShop({
           </legend>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
             {designs.map((d) => (
-              <label key={d.key} className="cursor-pointer">
+              // Grid rows stretch every card to the tallest one (names that wrap to
+              // two lines), so all cards are the same size.
+              <label key={d.key} className="flex cursor-pointer">
                 <input
                   type="radio"
                   name="design"
@@ -76,17 +78,21 @@ export function MerchShop({
                   aria-label={designLabel(d)}
                   className="peer sr-only"
                 />
-                <span className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-mg-card transition hover:border-mg-blue/60 peer-checked:border-mg-blue peer-checked:shadow-[0_8px_24px_rgba(0,104,255,0.35)] peer-focus-visible:outline-2 peer-focus-visible:outline-mg-sky">
-                  {/* The back carries each design's print, so the tile shows that half. */}
-                  <Image
-                    src={d.mockup.src}
-                    alt=""
-                    width={d.mockup.width}
-                    height={d.mockup.height}
-                    sizes="200px"
-                    className="aspect-square w-full object-cover object-right p-1"
-                  />
-                  <span className="px-2 pb-2 text-center text-[11px] text-white/80 leading-tight">
+                <span className="flex w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-mg-card transition hover:border-mg-blue/60 peer-checked:border-mg-blue peer-checked:shadow-[0_8px_24px_rgba(0,104,255,0.35)] peer-focus-visible:outline-2 peer-focus-visible:outline-mg-sky">
+                  {/* The back carries each design's print, so the card shows only the
+                      right half of the mockup: the image is twice the card's width,
+                      shifted left by half. */}
+                  <span className="relative block aspect-[6/7] w-full overflow-hidden">
+                    <Image
+                      src={d.mockup.src}
+                      alt=""
+                      width={d.mockup.width}
+                      height={d.mockup.height}
+                      sizes="400px"
+                      className="absolute top-1/2 left-0 h-auto w-[200%] max-w-none -translate-x-1/2 -translate-y-1/2"
+                    />
+                  </span>
+                  <span className="flex flex-1 flex-col justify-center px-2 pt-1 pb-2 text-center text-[11px] text-white/80 leading-tight">
                     <span className="block font-semibold text-white">{d.name}</span>
                     {d.color}
                   </span>
