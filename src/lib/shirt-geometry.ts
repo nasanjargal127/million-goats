@@ -1,7 +1,9 @@
 // Builds the 3D T-shirt for the /merch viewer from a traced 2D outline.
-// The shirt is a soft "pillow": front and back surfaces meet in a thin seam at
-// the outline and puff out towards the middle (thin sleeves, fuller torso),
-// and the whole garment curves back slightly at the sides like a worn tee.
+// Front and back surfaces meet in a seam at the outline and bulge out
+// symmetrically, so the torso has a rounded, body-like cross-section from
+// above and both faces are convex. The bulge rises faster near the hem and
+// shoulders than near the side seams, so the hem looks like a rolled edge
+// rather than a knife edge.
 
 import Delaunator from "delaunator";
 import * as THREE from "three";
@@ -15,13 +17,17 @@ export type ShirtSurfaces = {
 
 /** Distance between mesh points, in scene units. */
 const STEP = 0.035;
-/** How far in from the edge the puff reaches its full height. */
-const ROUND = 0.32;
+/** How far in from a side seam the bulge reaches its full height. */
+const ROUND = 0.42;
 /** Half-thickness of the torso at its fullest. */
-const PUFF = 0.17;
-/** How far the sides of the shirt curve back from the centre. */
-const BEND = 0.22;
-const SMOOTHING_PASSES = 10;
+const PUFF = 0.27;
+/**
+ * Vertical distances count this many times over when measuring how far a point
+ * is from the edge, so the hem, neck and shoulders round off over a short
+ * distance while the side seams curve gently like a body.
+ */
+const VERTICAL_WEIGHT = 2.5;
+const SMOOTHING_PASSES = 6;
 
 function inside(p: Pt, poly: readonly Pt[]) {
   let hit = false;
@@ -100,9 +106,10 @@ export function buildShirtSurfaces(
 
   // Puff height: a rounded edge profile, then smoothed so narrow parts like
   // the sleeves don't get a ridge down the middle. The seam stays at zero.
-  const height = points.map((p, i) => {
+  const stretched = outline.map(([x, y]) => [x, y * VERTICAL_WEIGHT] as const);
+  const height = points.map(([x, y], i) => {
     if (i < edgeCount) return 0;
-    const s = Math.min(edgeDistance(p, outline) / ROUND, 1);
+    const s = Math.min(edgeDistance([x, y * VERTICAL_WEIGHT], stretched) / ROUND, 1);
     return PUFF * Math.sqrt(1 - (1 - s) ** 2);
   });
   const neighbours = points.map(() => new Set<number>());
@@ -121,14 +128,12 @@ export function buildShirtSurfaces(
     }
   }
 
-  const halfWidth = Math.max(-minX, maxX);
   const surface = (side: "front" | "back") => {
     const sign = side === "front" ? 1 : -1;
     const position = new Float32Array(points.length * 3);
     const uv = new Float32Array(points.length * 2);
     points.forEach(([x, y], i) => {
-      const bend = -BEND * (x / halfWidth) ** 2;
-      position.set([x, y, bend + sign * height[i]], i * 3);
+      position.set([x, y, sign * height[i]], i * 3);
       uv.set(toUv(x, y, side), i * 2);
     });
     // The back's triangles are flipped so it faces -z.

@@ -4,6 +4,7 @@ import { CameraControls, useTexture } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { bleedEdges } from "@/lib/bleed-edges";
 import { MERCH_DESIGNS, type ShirtMockup } from "@/lib/merch-shirt";
 import { buildShirtSurfaces } from "@/lib/shirt-geometry";
 
@@ -11,7 +12,16 @@ import { buildShirtSurfaces } from "@/lib/shirt-geometry";
 const HEIGHT = 2.4;
 
 function Shirt({ mockup }: { mockup: ShirtMockup }) {
-  const texture = useTexture(mockup.src);
+  const loaded = useTexture(mockup.src);
+  // A bled copy of the mockup, so outline overshoot shows the photo's fabric.
+  const texture = useMemo(() => {
+    const t = new THREE.CanvasTexture(bleedEdges(loaded.image as HTMLImageElement));
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 8;
+    return t;
+  }, [loaded]);
+  useEffect(() => () => texture.dispose(), [texture]);
+
   const { front, back } = useMemo(() => {
     const width = HEIGHT * (mockup.front.w / mockup.front.h);
     const outline = mockup.outline.map(
@@ -27,12 +37,6 @@ function Shirt({ mockup }: { mockup: ShirtMockup }) {
     });
   }, [mockup]);
 
-  useEffect(() => {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 8;
-    texture.needsUpdate = true;
-  }, [texture]);
-
   useEffect(
     () => () => {
       front.dispose();
@@ -45,8 +49,8 @@ function Shirt({ mockup }: { mockup: ShirtMockup }) {
     <group>
       {[front, back].map((geo) => (
         <group key={geo.uuid}>
-          {/* Fabric matched to the mockup. Where the outline overshoots the shirt in the
-              mockup, the print is transparent and alphaTest lets this show through. */}
+          {/* Fabric matched to the mockup. Shows through only where the outline
+              overshoots the shirt in the mockup by more than the bleed reaches. */}
           <mesh geometry={geo}>
             <meshStandardMaterial color={mockup.fabric} roughness={0.95} />
           </mesh>
