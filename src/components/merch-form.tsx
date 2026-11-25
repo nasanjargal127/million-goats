@@ -28,7 +28,9 @@ export function MerchForm({
     error: null,
   });
   const [quantity, setQuantity] = useState(1);
-  const firstSize = sizes[0]?.id ?? "";
+  // Kept by label, so the chosen size stays chosen when the buyer switches design.
+  const [sizeLabel, setSizeLabel] = useState(sizes[0]?.size ?? "");
+  const checkedSize = sizes.find((s) => s.size === sizeLabel) ?? sizes[0];
 
   if (!signedIn) {
     return (
@@ -62,7 +64,8 @@ export function MerchForm({
                 name="variantId"
                 aria-label={`Хэмжээ ${s.size}`}
                 value={s.id}
-                defaultChecked={s.id === firstSize}
+                checked={s.id === checkedSize?.id}
+                onChange={() => setSizeLabel(s.size)}
                 required
                 className="peer sr-only"
               />

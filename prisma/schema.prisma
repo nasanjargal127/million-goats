@@ -166,7 +166,7 @@ model Order {
   chargedMnt           Int?
   /// Snapshot of the seat labels, e.g. ["B-5", "B-6"].
   seatLabels           String[]
-  /// Merch orders: what was bought, e.g. "Traders Dept. футболк · L × 2".
+  /// Merch orders: what was bought, e.g. "Million Goats футболк · Goat · Хар · L × 2".
   itemLabel            String?
   variantId            String?
   variant              ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
@@ -243,11 +243,13 @@ model ProductVariant {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// Which print, a key of MERCH_DESIGNS in src/lib/merch-shirt.ts.
+  design    String  @default("goat-black")
   size      String
   sortOrder Int     @default(0)
   orders    Order[]
 
-  @@unique([productId, size])
+  @@unique([productId, design, size])
   @@map("product_variant")
 }
 

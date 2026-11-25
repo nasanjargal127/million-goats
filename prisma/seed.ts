@@ -1,6 +1,6 @@
 // Seeds the Trading Lab (4 rooms: 27 + 28 + 18 + 10 = 83 seats, see
 // src/lib/lab/seats.ts) that /lab books through QPay and
-// the merch shop's T-shirt with its sizes (/merch).
+// the merch shop's T-shirt with its designs and sizes (/merch).
 // Run: pnpm db:seed (idempotent — re-running keeps existing seats and orders;
 // it only adds seats, never removes ones a room no longer has).
 import "dotenv/config";
@@ -14,6 +14,7 @@ import {
   SEATS,
   TOTAL_SEATS,
 } from "../src/lib/lab/seats";
+import { MERCH_DESIGNS } from "../src/lib/merch-shirt";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is not set");
@@ -57,7 +58,7 @@ const MERCH = {
   slug: "traders-dept-tee",
   name: "Million Goats футболк",
   description:
-    "Million Goats-ын хар футболк. Урд талд лого, ар талд MILLION GOATS бичиг болон ямааны дүрс.",
+    "Million Goats-ын албан ёсны футболк. Урд талд лого, ар талд таны сонгосон загварын хэвлэл.",
   priceMnt: 99_000,
   imagePath: "/merch/million-goats-tee.webp",
 };
@@ -70,10 +71,17 @@ async function seedMerch() {
     create: MERCH,
   });
   const { count } = await prisma.productVariant.createMany({
-    data: MERCH_SIZES.map((size, i) => ({ productId: product.id, size, sortOrder: i })),
+    data: MERCH_DESIGNS.flatMap((design) =>
+      MERCH_SIZES.map((size, i) => ({
+        productId: product.id,
+        design: design.key,
+        size,
+        sortOrder: i,
+      })),
+    ),
     skipDuplicates: true,
   });
-  console.log(`Product "${product.name}" ready (${count} new sizes).`);
+  console.log(`Product "${product.name}" ready (${count} new design × size variants).`);
 }
 
 async function main() {
