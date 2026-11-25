@@ -4,26 +4,24 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { SectionTitle } from "@/components/brand";
 import { JsonLd } from "@/components/json-ld";
-import { ShirtViewer } from "@/components/merch/shirt-viewer";
-import { MerchForm } from "@/components/merch-form";
+import { MerchShop } from "@/components/merch/merch-shop";
 import { SectionGoat } from "@/components/motion/goat-backdrop";
 import { Reveal } from "@/components/motion/reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSession } from "@/lib/auth";
 import { HOLD_MINUTES } from "@/lib/booking";
-import { formatMnt } from "@/lib/format";
 import { getProduct, MAX_MERCH_QUANTITY, MERCH_SLUG } from "@/lib/merch";
-import { SHIRT_IMAGE } from "@/lib/merch-shirt";
+import { MERCH_DESIGNS } from "@/lib/merch-shirt";
 import { ORGANIZATION_ID, pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
   path: "/merch",
-  title: "Merch — албан ёсны футболк",
+  title: "Merch — албан ёсны футболкнууд",
   socialTitle: "Million Goats Merch",
   description:
-    "Million Goats-ын албан ёсны хар футболк. Хэмжээгээ сонгоод QPay-ээр төлөөрэй — худалдан авалт бүрд амралтын өдрийн лекцийн эрх.",
+    "Million Goats-ын албан ёсны футболкнууд — хар, цагаан өнгөөр хэд хэдэн загвартай. Загвар, хэмжээгээ сонгоод QPay-ээр төлөөрэй — худалдан авалт бүрд амралтын өдрийн лекцийн эрх.",
 });
 
 function GiftIcon() {
@@ -61,7 +59,7 @@ async function Shop() {
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: `${site.url}${product.imagePath ?? SHIRT_IMAGE.src}`,
+    image: MERCH_DESIGNS.map((d) => `${site.url}${d.mockup.src}`),
     brand: { "@type": "Brand", name: site.name },
     sku: product.slug,
     offers: {
@@ -76,22 +74,16 @@ async function Shop() {
   };
 
   return (
-    <div className="flex flex-wrap items-start gap-10">
+    <>
       <JsonLd data={productJsonLd} />
-      <Reveal
-        from="left"
-        className="min-w-0 flex-[1_1_520px] overflow-hidden rounded-2xl bg-mg-card ring-1 ring-white/5"
+      <MerchShop
+        name={product.name}
+        priceMnt={product.priceMnt}
+        variants={product.variants.map((v) => ({ id: v.id, design: v.design, size: v.size }))}
+        maxQuantity={MAX_MERCH_QUANTITY}
+        holdMinutes={HOLD_MINUTES}
+        signedIn={Boolean(session)}
       >
-        <ShirtViewer alt={`${product.name} — урд болон ар тал`} />
-      </Reveal>
-      <Reveal from="right" delay={0.1} className="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
-        <div className="flex flex-col gap-3">
-          <h2 className="m-0 font-bold text-[clamp(28px,3vw,40px)] uppercase leading-tight tracking-[-0.01em]">
-            {product.name}
-          </h2>
-          <p className="m-0 font-bold text-3xl text-mg-sky">{formatMnt(product.priceMnt)}</p>
-          <p className="m-0 text-white/75 leading-relaxed">{product.description}</p>
-        </div>
         <div className="flex items-start gap-3 rounded-xl border border-mg-blue/50 bg-mg-blue/10 p-4 shadow-[0_0_32px_rgba(0,104,255,0.18)]">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-mg-blue text-white">
             <GiftIcon />
@@ -103,15 +95,8 @@ async function Shop() {
             </span>
           </p>
         </div>
-        <MerchForm
-          sizes={product.variants.map((v) => ({ id: v.id, size: v.size }))}
-          priceMnt={product.priceMnt}
-          maxQuantity={MAX_MERCH_QUANTITY}
-          holdMinutes={HOLD_MINUTES}
-          signedIn={Boolean(session)}
-        />
-      </Reveal>
-    </div>
+      </MerchShop>
+    </>
   );
 }
 
@@ -136,7 +121,7 @@ export default function MerchPage() {
               className="mt-5"
             />
             <p className="m-0 mt-8 max-w-140 text-[15px] text-white/85 leading-relaxed">
-              Million Goats-ын албан ёсны merch. Хэмжээгээ сонгоод QPay-ээр төлөөрэй.
+              Million Goats-ын албан ёсны merch. Загвар, хэмжээгээ сонгоод QPay-ээр төлөөрэй.
             </p>
           </Reveal>
         </section>

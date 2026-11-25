@@ -1,11 +1,12 @@
 import "server-only";
 import { assertPaymentAvailable, attachInvoice, BookingError, HOLD_MINUTES } from "./booking";
 import { prisma } from "./db";
+import { designLabel, findDesign } from "./merch-shirt";
 
 export const MERCH_SLUG = "traders-dept-tee";
 export const MAX_MERCH_QUANTITY = 5;
 
-/** The shop's product with its sizes, in display order; null if not set up or inactive. */
+/** The shop's product with its design × size variants, in display order; null if not set up or inactive. */
 export async function getProduct(slug: string) {
   const product = await prisma.product.findUnique({
     where: { slug },
@@ -30,9 +31,10 @@ export async function createMerchOrder(input: {
     where: { id: input.variantId },
     include: { product: true },
   });
-  if (!variant?.product.active) throw new BookingError("INVALID", "Бараа олдсонгүй.");
+  const design = variant && findDesign(variant.design);
+  if (!variant?.product.active || !design) throw new BookingError("INVALID", "Бараа олдсонгүй.");
 
-  const itemLabel = `${variant.product.name} · ${variant.size} × ${input.quantity}`;
+  const itemLabel = `${variant.product.name} · ${designLabel(design)} · ${variant.size} × ${input.quantity}`;
   const amount = variant.product.priceMnt * input.quantity;
 
   const order = await prisma.order.create({

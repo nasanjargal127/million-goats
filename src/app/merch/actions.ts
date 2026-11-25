@@ -20,7 +20,7 @@ export async function buyMerchAction(
   const quantity = Number(form.get("quantity"));
   const phone = String(form.get("phone") ?? "").replace(/[\s-]/g, "");
 
-  if (!variantId) return { error: "Хэмжээгээ сонгоно уу." };
+  if (!variantId) return { error: "Загвар, хэмжээгээ сонгоно уу." };
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_MERCH_QUANTITY) {
     return { error: `1–${MAX_MERCH_QUANTITY} ширхэг сонгоно уу.` };
   }

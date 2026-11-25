@@ -3,15 +3,15 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState, useSyncExternalStore } from "react";
-import { SHIRT_IMAGE } from "@/lib/merch-shirt";
+import { DEFAULT_DESIGN, type ShirtMockup } from "@/lib/merch-shirt";
 
-function StaticShirt({ alt }: { alt: string }) {
+function StaticShirt({ mockup, alt }: { mockup: ShirtMockup; alt: string }) {
   return (
     <Image
-      src={SHIRT_IMAGE.src}
+      src={mockup.src}
       alt={alt}
-      width={SHIRT_IMAGE.width}
-      height={SHIRT_IMAGE.height}
+      width={mockup.width}
+      height={mockup.height}
       priority
       sizes="(min-width: 1024px) 50vw, 100vw"
       className="h-auto w-full bg-[radial-gradient(ellipse_70%_60%_at_50%_55%,rgba(0,104,255,0.45),transparent_70%)] p-6"
@@ -33,15 +33,16 @@ function hasWebGL() {
 }
 const subscribeNever = () => () => {};
 
-/** Shown inside the 3D box while the three.js scene downloads. */
+/** Shown inside the 3D box while the three.js scene downloads (always the first design). */
 function LoadingShirt() {
+  const mockup = DEFAULT_DESIGN.mockup;
   return (
     <div className="absolute inset-0 flex items-center justify-center p-6">
       <Image
-        src={SHIRT_IMAGE.src}
+        src={mockup.src}
         alt=""
-        width={SHIRT_IMAGE.width}
-        height={SHIRT_IMAGE.height}
+        width={mockup.width}
+        height={mockup.height}
         sizes="(min-width: 1024px) 50vw, 100vw"
         className="h-auto w-full opacity-80"
       />
@@ -58,13 +59,13 @@ const ShirtScene = dynamic(() => import("./shirt-scene"), {
 });
 
 /** 3D T-shirt you can drag to turn; falls back to the flat mockup without WebGL. */
-export function ShirtViewer({ alt }: { alt: string }) {
+export function ShirtViewer({ mockup, alt }: { mockup: ShirtMockup; alt: string }) {
   // Server render and no-WebGL devices show the flat mockup.
   const webgl = useSyncExternalStore(subscribeNever, hasWebGL, () => false);
   const [face, setFace] = useState<"front" | "back">("front");
   const [auto, setAuto] = useState(true);
 
-  if (!webgl) return <StaticShirt alt={alt} />;
+  if (!webgl) return <StaticShirt mockup={mockup} alt={alt} />;
 
   return (
     <div className="flex flex-col">
@@ -73,7 +74,7 @@ export function ShirtViewer({ alt }: { alt: string }) {
         aria-label={`${alt} — 3D, чирж эргүүлнэ`}
         className="relative aspect-square w-full cursor-grab touch-none bg-[radial-gradient(ellipse_65%_60%_at_50%_55%,rgba(0,104,255,0.5),rgba(1,31,82,0.6)_55%,transparent_80%)] active:cursor-grabbing"
       >
-        <ShirtScene face={face} auto={auto} onInteract={() => setAuto(false)} />
+        <ShirtScene mockup={mockup} face={face} auto={auto} onInteract={() => setAuto(false)} />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-white/10 border-t px-4 py-3">
         <span className="text-sm text-white/55">Чирж эргүүлнэ үү</span>
