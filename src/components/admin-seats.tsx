@@ -6,6 +6,7 @@ import {
   addManualBookingAction,
   cancelSeatOrderAction,
 } from "@/app/admin/seats/actions";
+import { Select } from "@/components/ui/select";
 import { formatMnt } from "@/lib/format";
 import {
   LAB_PACKAGE_IDS,
@@ -54,7 +55,7 @@ export function ManualBookingForm({
 
       <label className="block">
         <span className={labelText}>Суудал</span>
-        <select name="seat" required defaultValue="" className={field}>
+        <Select tone="light" name="seat" required defaultValue="">
           <option value="" disabled>
             Сул суудал сонгох
           </option>
@@ -69,16 +70,16 @@ export function ManualBookingForm({
                 ))}
             </optgroup>
           ))}
-        </select>
+        </Select>
       </label>
 
       <label className="block">
         <span className={labelText}>Багц</span>
-        <select
+        <Select
+          tone="light"
           name="package"
           value={pkg}
           onChange={(e) => setPkg(e.target.value as LabPackageId)}
-          className={field}
         >
           {LAB_PACKAGE_IDS.map((id) => (
             <option key={id} value={id}>
@@ -86,18 +87,18 @@ export function ManualBookingForm({
               {formatMnt(LAB_PACKAGES[id].priceMnt)}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
 
       {pro && (
         <label className="block">
           <span className={labelText}>Багш</span>
-          <select
+          <Select
+            tone="light"
             name="teacher"
             required
             value={teacher}
             onChange={(e) => setTeacher(e.target.value)}
-            className={field}
           >
             <option value="" disabled>
               Багш сонгох
@@ -107,7 +108,7 @@ export function ManualBookingForm({
                 {t.name} · {t.role}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
 

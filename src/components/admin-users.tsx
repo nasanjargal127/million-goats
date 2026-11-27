@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useState } from "react";
 import { type RoleState, setUserRoleAction } from "@/app/admin/users/actions";
+import { Select } from "@/components/ui/select";
 
 const IDLE: RoleState = { error: null, done: null };
 
@@ -22,7 +23,10 @@ export function RoleSelect({ userId, role, name }: { userId: string; role: Role;
 
   return (
     <div className="flex flex-col gap-1">
-      <select
+      <Select
+        tone="light"
+        size="sm"
+        wrapperClassName="w-36"
         aria-label={`${name}-ийн эрх`}
         value={pending && picked ? picked : role}
         disabled={pending}
@@ -32,14 +36,13 @@ export function RoleSelect({ userId, role, name }: { userId: string; role: Role;
           setPicked(next.value);
           startTransition(() => save(next.value));
         }}
-        className="min-h-10 cursor-pointer rounded-lg border border-mg-line bg-white px-3 text-mg-navy text-sm focus:border-mg-blue disabled:cursor-wait disabled:opacity-60"
       >
         {ROLES.map((r) => (
           <option key={r.value} value={r.value}>
             {r.label}
           </option>
         ))}
-      </select>
+      </Select>
       <span aria-live="polite" className="text-xs">
         {state.error && <span className="text-red-600">{state.error}</span>}
         {state.done && !pending && <span className="text-mg-muted">{state.done}</span>}
