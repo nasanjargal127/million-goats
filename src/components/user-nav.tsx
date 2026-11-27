@@ -24,7 +24,9 @@ export async function UserNav() {
     <Link
       href="/account"
       aria-label={`Миний бүртгэл (${name})`}
-      className={`${pill} border border-white/25 pl-1.5 hover:border-white`}
+      // Below sm the name is hidden: a square the size of the menu button next to
+      // it, with the initial centred. From sm a pill with the name.
+      className="inline-flex size-11 items-center justify-center rounded-[10px] border border-white/25 font-semibold text-sm text-white transition hover:border-white sm:size-auto sm:min-h-11 sm:justify-start sm:gap-2 sm:rounded-md sm:pr-4 sm:pl-1.5 lg:min-h-9"
     >
       <span
         aria-hidden="true"
