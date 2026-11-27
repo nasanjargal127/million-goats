@@ -54,6 +54,20 @@ export function ManualBookingForm({
       </label>
 
       <label className="block">
+        <span className={labelText}>
+          Утасны дугаар <span className="font-normal text-mg-muted">(заавал биш)</span>
+        </span>
+        <input
+          type="tel"
+          name="phone"
+          inputMode="tel"
+          autoComplete="off"
+          placeholder="9911 2233"
+          className={field}
+        />
+      </label>
+
+      <label className="block">
         <span className={labelText}>Суудал</span>
         <Select tone="light" name="seat" required defaultValue="">
           <option value="" disabled>
