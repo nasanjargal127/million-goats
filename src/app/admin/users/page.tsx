@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminNav, FilterLink } from "@/components/admin-nav";
+import { RoleSelect } from "@/components/admin-users";
 import { BrandDot } from "@/components/brand";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import type { Prisma } from "@/generated/prisma/client";
-import { requireAdmin } from "@/lib/admin";
+import { isEnvAdmin, requireAdmin, userIdsFromEnv } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { formatEventDate } from "@/lib/format";
 import { MONEY_STATUSES } from "@/lib/sales";
@@ -24,6 +25,13 @@ const SHOWS = {
   all: { label: "Бүгд", where: {} },
   buyers: { label: "Худалдан авалт хийсэн", where: { orders: { some: paidOrder } } },
   none: { label: "Худалдан аваагүй", where: { orders: { none: paidOrder } } },
+  admins: {
+    label: "Админ",
+    // A getter: ADMIN_USER_IDS is read on every request, like everywhere else.
+    get where(): Prisma.UserWhereInput {
+      return { OR: [{ role: "ADMIN" }, { id: { in: [...userIdsFromEnv("ADMIN_USER_IDS")] } }] };
+    },
+  },
 } satisfies Record<string, { label: string; where: Prisma.UserWhereInput }>;
 
 type Show = keyof typeof SHOWS;
@@ -42,7 +50,7 @@ async function UsersView({
 }: {
   searchParams: PageProps<"/admin/users">["searchParams"];
 }) {
-  await requireAdmin("/admin/users");
+  const session = await requireAdmin("/admin/users");
   const query = await searchParams;
   const show: Show =
     typeof query.show === "string" && query.show in SHOWS ? (query.show as Show) : "all";
@@ -61,7 +69,7 @@ async function UsersView({
         ],
       }
     : {};
-  const where = { ...SHOWS[show].where, ...bySearch };
+  const where: Prisma.UserWhereInput = { AND: [SHOWS[show].where, bySearch] };
 
   const [users, matching, total, buyers] = await Promise.all([
     prisma.user.findMany({
@@ -71,6 +79,7 @@ async function UsersView({
         name: true,
         email: true,
         createdAt: true,
+        role: true,
         _count: { select: { orders: { where: paidOrder } } },
       },
       orderBy: { createdAt: "desc" },
@@ -156,7 +165,7 @@ async function UsersView({
           </p>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-mg-line bg-white">
-            <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[860px] border-collapse text-left text-sm">
               <thead className="bg-mg-surface text-mg-muted text-xs uppercase tracking-wide">
                 <tr>
                   <th className="px-4 py-3 font-semibold">#</th>
@@ -164,6 +173,7 @@ async function UsersView({
                   <th className="px-4 py-3 font-semibold">Email</th>
                   <th className="px-4 py-3 font-semibold">Бүртгүүлсэн</th>
                   <th className="px-4 py-3 font-semibold">Худалдан авалт</th>
+                  <th className="px-4 py-3 font-semibold">Эрх</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,6 +195,22 @@ async function UsersView({
                         </Link>
                       ) : (
                         <span className="text-mg-muted">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.id === session.user.id || isEnvAdmin(u.id) ? (
+                        <span
+                          className="font-semibold text-mg-navy"
+                          title={
+                            u.id === session.user.id
+                              ? "Өөрийнхөө эрхийг өөрчлөх боломжгүй"
+                              : "ADMIN_USER_IDS-д бүртгэлтэй"
+                          }
+                        >
+                          Админ{u.id === session.user.id ? " (та)" : ""}
+                        </span>
+                      ) : (
+                        <RoleSelect userId={u.id} role={u.role} name={u.name || u.email} />
                       )}
                     </td>
                   </tr>
