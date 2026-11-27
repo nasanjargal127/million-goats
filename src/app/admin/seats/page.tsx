@@ -95,6 +95,9 @@ async function SeatsView() {
                                   {order.user.name || "—"}
                                 </span>
                                 <span className="block text-mg-muted">{order.user.email}</span>
+                                {order.contactPhone && (
+                                  <span className="block text-mg-muted">{order.contactPhone}</span>
+                                )}
                               </td>
                               <td className="px-4 py-3">
                                 <span className="flex flex-wrap items-center gap-1.5">

@@ -44,6 +44,7 @@ export async function getLabSeatBoard() {
               depositPaidAt: true,
               qpayInvoiceId: true,
               depositInvoiceId: true,
+              contactPhone: true,
               user: { select: { name: true, email: true } },
             },
           },
@@ -77,7 +78,7 @@ export async function getLabSeatBoard() {
  */
 async function addManualLabBooking(
   db: Db,
-  input: { email: string; seatId: string; lab: LabChoice },
+  input: { email: string; phone: string | null; seatId: string; lab: LabChoice },
 ) {
   const email = input.email.trim();
   const user = await db.user.findFirst({
@@ -112,6 +113,7 @@ async function addManualLabBooking(
       labPackage: lab.labPackage,
       teacher: lab.teacher,
       withPsychologist: lab.withPsychologist,
+      contactPhone: input.phone,
       expiresAt: now,
       paidAt: now,
     },

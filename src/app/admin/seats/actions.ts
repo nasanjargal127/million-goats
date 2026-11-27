@@ -8,6 +8,8 @@ import { syncOrder } from "@/lib/booking";
 import { parseLabChoice } from "@/lib/lab/packages";
 import { ROOM_NAMES, type RoomId } from "@/lib/lab/seats";
 
+const PHONE = /^\+?\d{8,15}$/;
+
 export type AdminSeatState = { error: string | null; done: string | null };
 
 async function signedInAdmin() {
@@ -26,6 +28,8 @@ export async function addManualBookingAction(
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "Зөв email оруулна уу.", done: null };
   }
+  const phone = String(form.get("phone") ?? "").replace(/[\s-]/g, "");
+  if (phone && !PHONE.test(phone)) return { error: "Утасны дугаараа зөв оруулна уу.", done: null };
   const seatId = String(form.get("seat") ?? "");
   const lab = parseLabChoice({
     labPackage: form.get("package"),
@@ -36,7 +40,7 @@ export async function addManualBookingAction(
   if (!lab) return { error: "Багц болон багшаа сонгоно уу.", done: null };
 
   try {
-    await addManualLabBookingNow({ email, seatId, lab });
+    await addManualLabBookingNow({ email, phone: phone || null, seatId, lab });
   } catch (error) {
     if (error instanceof AdminSeatError) return { error: error.message, done: null };
     throw error;
