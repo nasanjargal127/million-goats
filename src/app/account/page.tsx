@@ -21,11 +21,14 @@ async function AccountView() {
   const session = await getSession();
   if (!session) redirect("/sign-in?next=/account");
 
-  const orders = await prisma.order.findMany({
-    where: { userId: session.user.id },
-    include: { event: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [orders, admin] = await Promise.all([
+    prisma.order.findMany({
+      where: { userId: session.user.id },
+      include: { event: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    isAdmin(session.user.id),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -37,7 +40,7 @@ async function AccountView() {
           <span className="truncate text-mg-on-dark">{session.user.email}</span>
         </div>
         <div className="flex flex-wrap gap-3">
-          {isAdmin(session.user.id) && (
+          {admin && (
             <Link
               href="/admin"
               className="inline-flex min-h-11 items-center rounded-md border border-mg-blue bg-linear-to-b from-[#0b2a6e] to-[#051540] px-5 font-semibold text-white transition hover:from-[#0f3588] hover:to-[#071c55]"

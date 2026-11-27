@@ -12,7 +12,7 @@ export type AdminSeatState = { error: string | null; done: string | null };
 
 async function signedInAdmin() {
   const session = await getSession();
-  return session && isAdmin(session.user.id);
+  return session !== null && (await isAdmin(session.user.id));
 }
 
 /** Books a Lab seat for an existing account by email, as already paid. */

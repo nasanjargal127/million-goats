@@ -17,12 +17,19 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  /// Set from /admin/users. ADMIN_USER_IDS are admins whatever this says.
+  role          UserRole  @default(USER)
   sessions      Session[]
   accounts      Account[]
   orders        Order[]
 
   @@unique([email])
   @@map("user")
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Session {
